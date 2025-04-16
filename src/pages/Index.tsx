@@ -2,9 +2,10 @@
 import React, { useState } from 'react';
 import TabNavigation from '@/components/TabNavigation';
 import SimulationResult from '@/components/SimulationResult';
+import SimulationData from '@/components/SimulationData';
 
 const Index = () => {
-  const [activeTab, setActiveTab] = useState('results');
+  const [activeTab, setActiveTab] = useState('simulation-data');
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -12,12 +13,7 @@ const Index = () => {
         <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
         
         <div className="p-0">
-          {activeTab === 'simulation-data' && (
-            <div className="p-6">
-              <h1 className="text-xl font-medium">Simulation Data</h1>
-              <p className="text-gray-500">This tab would contain the simulation data inputs.</p>
-            </div>
-          )}
+          {activeTab === 'simulation-data' && <SimulationData />}
           
           {activeTab === 'results' && <SimulationResult />}
           
