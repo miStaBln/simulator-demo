@@ -1,7 +1,9 @@
 
 import React, { useState } from 'react';
-import { Search, Filter, SlidersHorizontal, Maximize, Star } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Search, Filter, SlidersHorizontal, Maximize, Star, FileText } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import {
   Table,
   TableBody,
@@ -15,6 +17,7 @@ import { useStarred, IndexItem } from '@/contexts/StarredContext';
 const Inventory = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const { toggleStar, isStarred } = useStarred();
+  const navigate = useNavigate();
   
   const indices = [
     { id: '94498', name: 'Solactive Transatlantic Equity Selection EUR PR Index', ticker: 'SOLATSP Index', ric: '.SOLATSP', isin: 'DE000SL0QLK6', family: 'DEFAULT_DEFAULT', currency: 'EUR', owner: 'SOLAC' },
@@ -34,6 +37,10 @@ const Inventory = () => {
     index.ticker.toLowerCase().includes(searchTerm.toLowerCase()) ||
     index.ric.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const viewDetails = (index: IndexItem) => {
+    navigate('/index-details', { state: { indexData: index } });
+  };
   
   return (
     <div className="p-4">
@@ -110,9 +117,15 @@ const Inventory = () => {
                     <TableCell>{index.currency}</TableCell>
                     <TableCell>{index.owner}</TableCell>
                     <TableCell>
-                      <button className="bg-teal-500 text-white px-3 py-1 rounded text-xs">
+                      <Button
+                        onClick={() => viewDetails(index as IndexItem)}
+                        size="sm"
+                        variant="secondary" 
+                        className="bg-teal-500 hover:bg-teal-600 text-white"
+                      >
+                        <FileText className="h-3.5 w-3.5 mr-1" />
                         Details
-                      </button>
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}

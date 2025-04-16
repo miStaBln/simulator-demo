@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import Inventory from "./pages/Inventory";
 import StarredIndices from "./pages/StarredIndices";
+import IndexDetails from "./pages/IndexDetails";
 import NotFound from "./pages/NotFound";
 import SideLayout from "./components/SideLayout";
 import { StarredProvider } from "./contexts/StarredContext";
@@ -35,6 +36,11 @@ const App = () => (
             <Route path="/starred" element={
               <SideLayout>
                 <StarredIndices />
+              </SideLayout>
+            } />
+            <Route path="/index-details" element={
+              <SideLayout>
+                <IndexDetails />
               </SideLayout>
             } />
             <Route path="*" element={<NotFound />} />
