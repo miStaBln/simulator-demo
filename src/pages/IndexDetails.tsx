@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { 
   FileText, 
@@ -7,18 +7,21 @@ import {
   FileBarChart, 
   Building, 
   ArrowLeft,
-  BarChart2
+  BarChart2,
+  Clock
 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useStarred, IndexItem } from '@/contexts/StarredContext';
+import IndexTimeline from '@/components/IndexTimeline';
 
 const IndexDetails = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { state } = location;
   const indexData = state?.indexData as IndexItem;
+  const [activeTimelineEvent, setActiveTimelineEvent] = useState<string | null>(null);
   
   if (!indexData) {
     return (
@@ -75,6 +78,10 @@ const IndexDetails = () => {
             <TabsTrigger value="corporate-actions" className="flex items-center">
               <Building className="mr-2 h-4 w-4" />
               CORPORATE ACTIONS
+            </TabsTrigger>
+            <TabsTrigger value="timeline" className="flex items-center">
+              <Clock className="mr-2 h-4 w-4" />
+              INDEX TIMELINE
             </TabsTrigger>
           </TabsList>
 
@@ -193,6 +200,19 @@ const IndexDetails = () => {
               <CardContent className="pt-6">
                 <h2 className="text-xl font-medium mb-4">Corporate Actions</h2>
                 <p className="text-gray-500">This tab is not implemented in the prototype.</p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="timeline">
+            <Card>
+              <CardContent className="pt-6">
+                <h2 className="text-xl font-medium mb-4">Index Timeline</h2>
+                <IndexTimeline 
+                  indexData={extendedData} 
+                  activeEvent={activeTimelineEvent}
+                  setActiveEvent={setActiveTimelineEvent}
+                />
               </CardContent>
             </Card>
           </TabsContent>
