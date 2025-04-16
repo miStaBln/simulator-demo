@@ -1,0 +1,69 @@
+
+import React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Package, BarChart2 } from 'lucide-react';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarProvider,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarHeader,
+} from '@/components/ui/sidebar';
+
+interface SideLayoutProps {
+  children: React.ReactNode;
+}
+
+const SideLayout = ({ children }: SideLayoutProps) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const menuItems = [
+    {
+      title: 'Index Inventory',
+      path: '/inventory',
+      icon: Package,
+    },
+    {
+      title: 'Simulator',
+      path: '/simulator',
+      icon: BarChart2,
+    },
+  ];
+
+  return (
+    <SidebarProvider>
+      <div className="flex min-h-screen w-full">
+        <Sidebar variant="inset" collapsible="icon">
+          <SidebarHeader className="px-2 py-4">
+            <div className="text-teal-500 font-bold text-lg">SOLACTIVE</div>
+          </SidebarHeader>
+          <SidebarContent>
+            <SidebarMenu>
+              {menuItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton 
+                    isActive={location.pathname === item.path}
+                    tooltip={item.title}
+                    onClick={() => navigate(item.path)}
+                  >
+                    <item.icon className="h-5 w-5" />
+                    <span>{item.title}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarContent>
+        </Sidebar>
+        
+        <div className="flex-1 overflow-auto">
+          {children}
+        </div>
+      </div>
+    </SidebarProvider>
+  );
+};
+
+export default SideLayout;

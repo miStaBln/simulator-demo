@@ -29,7 +29,7 @@ const TabNavigation = ({ activeTab, onTabChange }: TabNavigationProps) => {
               className={cn(
                 "flex items-center px-4 py-3 text-sm font-medium transition-colors",
                 isActive 
-                  ? "border-b-2 border-green-500 text-green-500" 
+                  ? "border-b-2 border-teal-500 text-teal-500" 
                   : "text-gray-600 hover:text-gray-900"
               )}
             >
