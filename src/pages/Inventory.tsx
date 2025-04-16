@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Search, Filter, SlidersHorizontal, Maximize } from 'lucide-react';
+import { Search, Filter, SlidersHorizontal, Maximize, Star } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   Table,
@@ -10,9 +10,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { useStarred, IndexItem } from '@/contexts/StarredContext';
 
 const Inventory = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const { toggleStar, isStarred } = useStarred();
   
   const indices = [
     { id: '94498', name: 'Solactive Transatlantic Equity Selection EUR PR Index', ticker: 'SOLATSP Index', ric: '.SOLATSP', isin: 'DE000SL0QLK6', family: 'DEFAULT_DEFAULT', currency: 'EUR', owner: 'SOLAC' },
@@ -74,6 +76,7 @@ const Inventory = () => {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-8"></TableHead>
                   <TableHead className="w-24">Giant id</TableHead>
                   <TableHead className="w-64">Name</TableHead>
                   <TableHead className="w-32">Ticker</TableHead>
@@ -88,6 +91,16 @@ const Inventory = () => {
               <TableBody>
                 {filteredIndices.map((index) => (
                   <TableRow key={index.id}>
+                    <TableCell>
+                      <button 
+                        onClick={() => toggleStar(index as IndexItem)}
+                        className="p-1 hover:bg-gray-100 rounded-full"
+                      >
+                        <Star 
+                          className={`h-4 w-4 ${isStarred(index.id) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} 
+                        />
+                      </button>
+                    </TableCell>
                     <TableCell>{index.id}</TableCell>
                     <TableCell>{index.name}</TableCell>
                     <TableCell>{index.ticker}</TableCell>

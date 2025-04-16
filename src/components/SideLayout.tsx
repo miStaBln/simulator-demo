@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Package, BarChart2 } from 'lucide-react';
+import { Package, BarChart2, Star } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -11,6 +11,7 @@ import {
   SidebarMenuButton,
   SidebarHeader,
 } from '@/components/ui/sidebar';
+import { useStarred } from '@/contexts/StarredContext';
 
 interface SideLayoutProps {
   children: React.ReactNode;
@@ -19,6 +20,7 @@ interface SideLayoutProps {
 const SideLayout = ({ children }: SideLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { starredIndices } = useStarred();
 
   const menuItems = [
     {
@@ -30,6 +32,12 @@ const SideLayout = ({ children }: SideLayoutProps) => {
       title: 'Simulator',
       path: '/simulator',
       icon: BarChart2,
+    },
+    {
+      title: 'Starred Indices',
+      path: '/starred',
+      icon: Star,
+      badge: starredIndices.length > 0 ? starredIndices.length : undefined,
     },
   ];
 
@@ -49,8 +57,13 @@ const SideLayout = ({ children }: SideLayoutProps) => {
                     tooltip={item.title}
                     onClick={() => navigate(item.path)}
                   >
-                    <item.icon className="h-5 w-5" />
+                    <item.icon className={`h-5 w-5 ${item.path === '/starred' && starredIndices.length > 0 ? 'text-yellow-400' : ''}`} />
                     <span>{item.title}</span>
+                    {item.badge && (
+                      <span className="ml-auto bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-0.5 rounded-full">
+                        {item.badge}
+                      </span>
+                    )}
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
