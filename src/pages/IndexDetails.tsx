@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useStarred, IndexItem } from '@/contexts/StarredContext';
 import IndexTimeline from '@/components/IndexTimeline';
+import IndexReport from '@/components/IndexReport';
 
 const IndexDetails = () => {
   const location = useLocation();
@@ -187,12 +188,7 @@ const IndexDetails = () => {
           </TabsContent>
 
           <TabsContent value="report">
-            <Card>
-              <CardContent className="pt-6">
-                <h2 className="text-xl font-medium mb-4">Report</h2>
-                <p className="text-gray-500">This tab is not implemented in the prototype.</p>
-              </CardContent>
-            </Card>
+            <IndexReport indexData={extendedData} />
           </TabsContent>
 
           <TabsContent value="corporate-actions">
