@@ -16,6 +16,7 @@ import { StarredProvider } from "./contexts/StarredContext";
 import ChatBot from "./components/ChatBot";
 import DashboardEditor from "./components/dashboards/DashboardEditor";
 import WhatsNewModal from "./components/WhatsNewModal";
+import CorporateEvents from "./pages/CorporateEvents";
 
 const queryClient = new QueryClient();
 
@@ -58,6 +59,13 @@ const App = () => (
               <ProtectedRoute>
                 <SideLayout>
                   <Inventory />
+                </SideLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/corporate-events" element={
+              <ProtectedRoute>
+                <SideLayout>
+                  <CorporateEvents />
                 </SideLayout>
               </ProtectedRoute>
             } />
