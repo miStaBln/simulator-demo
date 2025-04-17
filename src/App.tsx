@@ -3,16 +3,35 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Index from "./pages/Index";
 import Inventory from "./pages/Inventory";
 import StarredIndices from "./pages/StarredIndices";
 import IndexDetails from "./pages/IndexDetails";
+import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import SideLayout from "./components/SideLayout";
 import { StarredProvider } from "./contexts/StarredContext";
+import ChatBot from "./components/ChatBot";
 
 const queryClient = new QueryClient();
+
+// Protected route wrapper
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+  const location = useLocation();
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return (
+    <>
+      {children}
+      <ChatBot />
+    </>
+  );
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -22,26 +41,35 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Navigate to="/simulator" replace />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/simulator" element={
-              <SideLayout>
-                <Index />
-              </SideLayout>
+              <ProtectedRoute>
+                <SideLayout>
+                  <Index />
+                </SideLayout>
+              </ProtectedRoute>
             } />
             <Route path="/inventory" element={
-              <SideLayout>
-                <Inventory />
-              </SideLayout>
+              <ProtectedRoute>
+                <SideLayout>
+                  <Inventory />
+                </SideLayout>
+              </ProtectedRoute>
             } />
             <Route path="/starred" element={
-              <SideLayout>
-                <StarredIndices />
-              </SideLayout>
+              <ProtectedRoute>
+                <SideLayout>
+                  <StarredIndices />
+                </SideLayout>
+              </ProtectedRoute>
             } />
             <Route path="/index-details" element={
-              <SideLayout>
-                <IndexDetails />
-              </SideLayout>
+              <ProtectedRoute>
+                <SideLayout>
+                  <IndexDetails />
+                </SideLayout>
+              </ProtectedRoute>
             } />
             <Route path="*" element={<NotFound />} />
           </Routes>

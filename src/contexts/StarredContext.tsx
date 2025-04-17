@@ -10,6 +10,7 @@ export interface IndexItem {
   family: string;
   currency: string;
   owner: string;
+  level?: number;
 }
 
 interface StarredContextType {
