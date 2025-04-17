@@ -15,6 +15,7 @@ import SideLayout from "./components/SideLayout";
 import { StarredProvider } from "./contexts/StarredContext";
 import ChatBot from "./components/ChatBot";
 import DashboardEditor from "./components/dashboards/DashboardEditor";
+import WhatsNewModal from "./components/WhatsNewModal";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     <>
       {children}
       <ChatBot />
+      <WhatsNewModal />
     </>
   );
 };
