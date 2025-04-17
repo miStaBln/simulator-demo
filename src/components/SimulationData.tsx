@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
@@ -55,7 +54,11 @@ const mockIndices = [
   },
 ];
 
-const SimulationData = () => {
+interface SimulationDataProps {
+  onSimulationComplete?: (isComplete: boolean, stocks: any[]) => void;
+}
+
+const SimulationData = ({ onSimulationComplete = () => {} }: SimulationDataProps) => {
   const navigate = useNavigate();
   const [startDate, setStartDate] = useState('11.04.2025');
   const [endDate, setEndDate] = useState('15.04.2025');
@@ -211,6 +214,12 @@ const SimulationData = () => {
     setTimeout(() => {
       setLoading(false);
       setSimulationComplete(true);
+      
+      // Notify parent component about simulation completion
+      if (onSimulationComplete) {
+        onSimulationComplete(true, stocks);
+      }
+      
       toast({
         title: "Simulation complete",
         description: "Your index simulation is ready to view",
@@ -220,7 +229,7 @@ const SimulationData = () => {
 
   const viewResults = () => {
     // Update the global state or use a callback to inform the parent component to switch tabs
-    navigate('/simulator?tab=time-series');
+    navigate('/simulator?tab=results');
   };
 
   return (

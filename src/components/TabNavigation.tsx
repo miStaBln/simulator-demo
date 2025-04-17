@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { FileText, BarChart2, LineChart } from 'lucide-react';
+import { FileText, BarChart2, LineChart, Hexagon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface TabNavigationProps {
@@ -13,6 +13,7 @@ const TabNavigation = ({ activeTab, onTabChange }: TabNavigationProps) => {
     { id: 'simulation-data', label: 'SIMULATION DATA', icon: FileText },
     { id: 'results', label: 'RESULTS', icon: BarChart2 },
     { id: 'time-series', label: 'TIME SERIES', icon: LineChart },
+    { id: 'proximity', label: 'SOLACTIVE PROXIMITY INDEX', icon: Hexagon },
   ];
 
   return (
