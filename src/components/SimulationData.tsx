@@ -641,6 +641,7 @@ const SimulationData = () => {
                 </div>
                 <div className="col-span-4">
                   <DatePicker 
+                    label="Date"
                     value={override.date} 
                     onChange={(value) => updatePriceOverride(index, 'date', value)} 
                     sublabel=""
