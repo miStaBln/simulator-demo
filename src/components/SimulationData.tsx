@@ -28,6 +28,52 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { toast } from '@/hooks/use-toast';
 
+// Mock index data with parameters
+const mockIndices = [
+  { 
+    id: 'SOLACTIVE1', 
+    name: 'Solactive Tech Index', 
+    currency: 'USD', 
+    returnType: 'NTR', 
+    divisor: '100000',
+    constituents: [
+      { ric: 'AAPL.OQ', shares: '10000', weight: '25' },
+      { ric: 'MSFT.OQ', shares: '5000', weight: '20' },
+      { ric: 'GOOGL.OQ', shares: '2000', weight: '18' },
+      { ric: 'AMZN.OQ', shares: '3000', weight: '22' },
+      { ric: 'META.OQ', shares: '4000', weight: '15' },
+    ]
+  },
+  { 
+    id: 'SOLACTIVE2', 
+    name: 'Solactive Energy Index', 
+    currency: 'EUR', 
+    returnType: 'GTR', 
+    divisor: '50000',
+    constituents: [
+      { ric: 'XOM.N', shares: '15000', weight: '22' },
+      { ric: 'CVX.N', shares: '12000', weight: '20' },
+      { ric: 'BP.L', shares: '30000', weight: '18' },
+      { ric: 'SHEL.L', shares: '25000', weight: '20' },
+      { ric: 'TTE.PA', shares: '10000', weight: '20' },
+    ]
+  },
+  { 
+    id: 'SOLACTIVE3', 
+    name: 'Solactive Healthcare Index', 
+    currency: 'GBP', 
+    returnType: 'PR', 
+    divisor: '75000',
+    constituents: [
+      { ric: 'JNJ.N', shares: '8000', weight: '22' },
+      { ric: 'PFE.N', shares: '25000', weight: '18' },
+      { ric: 'MRK.N', shares: '15000', weight: '20' },
+      { ric: 'NOVN.S', shares: '10000', weight: '20' },
+      { ric: 'ROG.S', shares: '5000', weight: '20' },
+    ]
+  },
+];
+
 const SimulationData = () => {
   const navigate = useNavigate();
   const [startDate, setStartDate] = useState('11.04.2025');
@@ -58,13 +104,6 @@ const SimulationData = () => {
     { ric: 'F.N', shares: '130400.8574', weight: '12.0' },
   ]);
 
-  // Mock indices for selection
-  const indices = [
-    { id: 'SOLACTIVE1', name: 'Solactive Tech Index' },
-    { id: 'SOLACTIVE2', name: 'Solactive Energy Index' },
-    { id: 'SOLACTIVE3', name: 'Solactive Healthcare Index' },
-  ];
-
   const addRow = () => {
     setStocks([...stocks, { ric: '', shares: '', weight: '' }]);
   };
@@ -85,13 +124,33 @@ const SimulationData = () => {
       description: `Fetching data for ${selectedIndex} on ${indexDate}`,
     });
     
-    // Simulate fetching data
-    setTimeout(() => {
+    // Find the selected index data
+    const selectedIndexData = mockIndices.find(index => index.id === selectedIndex);
+    
+    if (selectedIndexData) {
+      // Update parameters based on the selected index
+      setCurrency(selectedIndexData.currency);
+      setReturnType(selectedIndexData.returnType);
+      setDivisor(selectedIndexData.divisor);
+      
+      // Update stocks based on the selected index
+      setStocks(selectedIndexData.constituents);
+      
       toast({
         title: "Data loaded",
-        description: "Index data has been successfully loaded",
+        description: "Index data has been successfully loaded and parameters prefilled",
       });
-    }, 1000);
+    } else {
+      toast({
+        title: "Error",
+        description: "Selected index data not found",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSelectedIndexChange = (indexId: string) => {
+    setSelectedIndex(indexId);
   };
 
   const addRebalancing = () => {
@@ -310,12 +369,12 @@ const SimulationData = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
               <div>
                 <label className="block text-sm font-medium text-gray-900 mb-1">Select Index</label>
-                <Select value={selectedIndex} onValueChange={setSelectedIndex}>
+                <Select value={selectedIndex} onValueChange={handleSelectedIndexChange}>
                   <SelectTrigger className="w-full h-9">
                     <SelectValue placeholder="Select Index" />
                   </SelectTrigger>
                   <SelectContent>
-                    {indices.map(index => (
+                    {mockIndices.map((index) => (
                       <SelectItem key={index.id} value={index.id}>
                         {index.name}
                       </SelectItem>
