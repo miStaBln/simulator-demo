@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { 
@@ -7,7 +6,7 @@ import {
   FileBarChart, 
   Building, 
   ArrowLeft,
-  BarChart2,
+  Download,
   Clock,
   LineChart,
   Activity
@@ -15,6 +14,7 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
 import { useStarred, IndexItem } from '@/contexts/StarredContext';
 import IndexTimeline from '@/components/IndexTimeline';
 import IndexReport from '@/components/IndexReport';
@@ -25,9 +25,20 @@ import TickHistory from '@/components/TickHistory';
 const IndexDetails = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { state } = location;
   const indexData = state?.indexData as IndexItem;
   
+  const handleDownloadGuideline = () => {
+    // TODO: Replace with actual PDF download logic when available
+    // For now, show a toast indicating no guideline is available
+    toast({
+      title: "Guideline Download",
+      description: "No guideline PDF is currently available for this index.",
+      variant: "default"
+    });
+  };
+
   if (!indexData) {
     return (
       <div className="p-8 text-center">
@@ -99,9 +110,14 @@ const IndexDetails = () => {
               <CardContent className="pt-6">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-xl font-medium">Index Details</h2>
-                  <Button variant="outline" size="sm" className="flex items-center">
-                    <BarChart2 className="mr-2 h-4 w-4" />
-                    ANALYSE
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex items-center"
+                    onClick={handleDownloadGuideline}
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    DOWNLOAD GUIDELINE
                   </Button>
                 </div>
 
