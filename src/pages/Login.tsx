@@ -111,7 +111,7 @@ const Login = () => {
               <span>Secured by Solactive</span>
             </div>
             <div className="text-xs text-gray-400 text-center">
-              For demo purposes, use "test" as username and "test123" as password
+              
             </div>
           </CardFooter>
         </Card>
