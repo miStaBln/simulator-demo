@@ -72,11 +72,7 @@ const DashboardCreator = () => {
           
           <Card className="p-6 border border-dashed">
             <CardContent className="p-0 flex flex-col items-center justify-center text-center h-36">
-              <h3 className="text-lg font-medium mb-1">Import a dashboard</h3>
-              <p className="text-gray-500 mb-4 text-sm">
-                Import dashboards from files or grafana.com.
-              </p>
-              
+              <h3 className="text-lg font-medium mb-1">Import a dashboard</h3>              
               <Button variant="outline">
                 <Upload className="mr-2 h-4 w-4" />
                 Import dashboard
