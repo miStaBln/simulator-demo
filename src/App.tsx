@@ -14,6 +14,7 @@ import NotFound from "./pages/NotFound";
 import SideLayout from "./components/SideLayout";
 import { StarredProvider } from "./contexts/StarredContext";
 import ChatBot from "./components/ChatBot";
+import DashboardEditor from "./components/dashboards/DashboardEditor";
 
 const queryClient = new QueryClient();
 
@@ -76,6 +77,18 @@ const App = () => (
               <ProtectedRoute>
                 <SideLayout>
                   <Dashboards />
+                </SideLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/dashboard-editor" element={
+              <ProtectedRoute>
+                <SideLayout>
+                  <DashboardEditor onSave={(name, widgets) => {
+                    // This gets the Dashboards component to handle the save
+                    window.location.href = '/dashboards';
+                    // Store the data in localStorage for retrieval
+                    localStorage.setItem('newDashboardData', JSON.stringify({ name, widgets }));
+                  }} />
                 </SideLayout>
               </ProtectedRoute>
             } />

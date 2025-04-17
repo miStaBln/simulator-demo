@@ -29,6 +29,11 @@ const SideLayout = ({ children }: SideLayoutProps) => {
       icon: Package,
     },
     {
+      title: 'My Dashboards',
+      path: '/dashboards',
+      icon: LayoutDashboard,
+    },
+    {
       title: 'Simulator',
       path: '/simulator',
       icon: BarChart2,
@@ -38,11 +43,6 @@ const SideLayout = ({ children }: SideLayoutProps) => {
       path: '/starred',
       icon: Star,
       badge: starredIndices.length > 0 ? starredIndices.length : undefined,
-    },
-    {
-      title: 'My Dashboards',
-      path: '/dashboards',
-      icon: LayoutDashboard,
     },
   ];
 

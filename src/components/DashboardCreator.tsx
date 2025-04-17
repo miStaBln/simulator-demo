@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { PlusCircle, Upload, Grid3X3 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { PlusCircle, Upload, Grid3X3, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
@@ -13,6 +14,12 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 
 const DashboardCreator = () => {
+  const navigate = useNavigate();
+  
+  const handleCreateDashboard = () => {
+    navigate('/dashboard-editor');
+  };
+  
   return (
     <div className="p-8 max-w-6xl mx-auto">
       <div className="mb-8">
@@ -48,7 +55,7 @@ const DashboardCreator = () => {
               Select a data source and then query and visualize your data with charts, stats and tables or create lists, markdowns and other widgets.
             </p>
             
-            <Button size="lg" className="bg-blue-500 hover:bg-blue-600">
+            <Button size="lg" className="bg-blue-500 hover:bg-blue-600" onClick={handleCreateDashboard}>
               <PlusCircle className="mr-2 h-5 w-5" />
               Add visualization
             </Button>
