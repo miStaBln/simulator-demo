@@ -110,6 +110,96 @@ const CorporateEvents = () => {
         'Expected Completion': '2025-05-03',
         'Premium': '11.8%'
       }
+    },
+    // Adding new sample events
+    {
+      id: 'ca6',
+      date: '2025-04-20',
+      constituent: 'AAPL.OQ',
+      ric: 'AAPL.OQ',
+      eventType: 'Stock Split',
+      status: 'Confirmed',
+      details: {
+        'Ratio': '4:1',
+        'Ex-Date': '2025-04-20',
+        'Pay Date': '2025-04-23',
+        'Announcement Date': '2025-04-05',
+        'Record Date': '2025-04-19',
+        'Adjustment Factor': '4.0',
+        'Purpose': 'Increase stock liquidity and accessibility'
+      }
+    },
+    {
+      id: 'ca7',
+      date: '2025-05-10',
+      constituent: 'JPM.N',
+      ric: 'JPM.N',
+      eventType: 'Dividend',
+      status: 'Confirmed',
+      details: {
+        'Dividend Amount': '1.15 USD',
+        'Ex-Date': '2025-05-10',
+        'Pay Date': '2025-05-15',
+        'Announcement Date': '2025-04-25',
+        'Record Date': '2025-05-11',
+        'Dividend Type': 'Regular Cash',
+        'Previous Dividend': '1.00 USD',
+        'Dividend Increase': '15%'
+      }
+    },
+    {
+      id: 'ca8',
+      date: '2025-05-15',
+      constituent: 'MSFT.OQ',
+      ric: 'MSFT.OQ',
+      eventType: 'Dividend',
+      status: 'Pending',
+      details: {
+        'Dividend Amount': '0.75 USD',
+        'Ex-Date': '2025-05-15',
+        'Pay Date': '2025-05-25',
+        'Announcement Date': '2025-04-30',
+        'Record Date': '2025-05-16',
+        'Dividend Type': 'Regular Cash',
+        'Dividend Frequency': 'Quarterly'
+      }
+    },
+    {
+      id: 'ca9',
+      date: '2025-06-01',
+      constituent: 'SBUX.OQ',
+      ric: 'SBUX.OQ',
+      eventType: 'Merger',
+      status: 'Pending',
+      details: {
+        'Target': 'SBUX.OQ',
+        'Acquirer': 'MAJOR.FOOD',
+        'Type': 'All Stock',
+        'Stock Component': '1.2 shares of MAJOR.FOOD per SBUX.OQ share',
+        'Announcement Date': '2025-05-10',
+        'Expected Completion': '2025-06-01',
+        'Shareholder Meeting': '2025-05-25',
+        'Premium': '22.5%',
+        'Expected Synergies': '500M USD annually'
+      }
+    },
+    {
+      id: 'ca10',
+      date: '2025-05-05',
+      constituent: 'IBM.N',
+      ric: 'IBM.N',
+      eventType: 'Spin-off',
+      status: 'Pending',
+      details: {
+        'Parent Company': 'IBM.N',
+        'Spin-off Entity': 'IBM.CLOUD',
+        'Ratio': '0.3 shares of IBM.CLOUD per IBM.N share',
+        'Ex-Date': '2025-05-05',
+        'Distribution Date': '2025-05-12',
+        'Announcement Date': '2025-04-20',
+        'Record Date': '2025-05-06',
+        'Purpose': 'Focus on core businesses and unlock shareholder value'
+      }
     }
   ];
 
