@@ -1,29 +1,35 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import TabNavigation from '@/components/TabNavigation';
-import SimulationResult from '@/components/SimulationResult';
 import SimulationData from '@/components/SimulationData';
+import SimulationResult from '@/components/SimulationResult';
+import TimeSeriesData from '@/components/TimeSeriesData';
 
 const Index = () => {
-  const [activeTab, setActiveTab] = useState('simulation-data');
+  const [searchParams] = useSearchParams();
+  const tabFromUrl = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState(tabFromUrl || 'simulation-data');
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (tabFromUrl) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [tabFromUrl]);
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    navigate(`/simulator?tab=${tab}`);
+  };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="max-w-full mx-auto">
-        <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
-        
-        <div className="p-0">
-          {activeTab === 'simulation-data' && <SimulationData />}
-          
-          {activeTab === 'results' && <SimulationResult />}
-          
-          {activeTab === 'time-series' && (
-            <div className="p-6">
-              <h1 className="text-xl font-medium">Time Series</h1>
-              <p className="text-gray-500">This tab would contain time series charts and data.</p>
-            </div>
-          )}
-        </div>
+    <div className="flex flex-col h-full">
+      <TabNavigation activeTab={activeTab} onTabChange={handleTabChange} />
+      <div className="flex-1 overflow-auto">
+        {activeTab === 'simulation-data' && <SimulationData />}
+        {activeTab === 'results' && <SimulationResult />}
+        {activeTab === 'time-series' && <TimeSeriesData />}
       </div>
     </div>
   );
