@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Package, BarChart2, Star } from 'lucide-react';
+import { Package, BarChart2, Star, LayoutDashboard } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -38,6 +38,11 @@ const SideLayout = ({ children }: SideLayoutProps) => {
       path: '/starred',
       icon: Star,
       badge: starredIndices.length > 0 ? starredIndices.length : undefined,
+    },
+    {
+      title: 'My Dashboards',
+      path: '/dashboards',
+      icon: LayoutDashboard,
     },
   ];
 

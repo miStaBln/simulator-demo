@@ -8,7 +8,9 @@ import {
   Building, 
   ArrowLeft,
   BarChart2,
-  Clock
+  Clock,
+  LineChart,
+  Activity
 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -16,13 +18,15 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useStarred, IndexItem } from '@/contexts/StarredContext';
 import IndexTimeline from '@/components/IndexTimeline';
 import IndexReport from '@/components/IndexReport';
+import CorporateActions from '@/components/CorporateActions';
+import Constituents from '@/components/Constituents';
+import TickHistory from '@/components/TickHistory';
 
 const IndexDetails = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { state } = location;
   const indexData = state?.indexData as IndexItem;
-  const [activeTimelineEvent, setActiveTimelineEvent] = useState<string | null>(null);
   
   if (!indexData) {
     return (
@@ -68,6 +72,10 @@ const IndexDetails = () => {
               <FileText className="mr-2 h-4 w-4" />
               INDEX DETAILS
             </TabsTrigger>
+            <TabsTrigger value="timeline" className="flex items-center">
+              <Clock className="mr-2 h-4 w-4" />
+              INDEX TIMELINE
+            </TabsTrigger>
             <TabsTrigger value="constituents" className="flex items-center">
               <Users className="mr-2 h-4 w-4" />
               CONSTITUENTS
@@ -80,9 +88,9 @@ const IndexDetails = () => {
               <Building className="mr-2 h-4 w-4" />
               CORPORATE ACTIONS
             </TabsTrigger>
-            <TabsTrigger value="timeline" className="flex items-center">
-              <Clock className="mr-2 h-4 w-4" />
-              INDEX TIMELINE
+            <TabsTrigger value="tick-history" className="flex items-center">
+              <Activity className="mr-2 h-4 w-4" />
+              TICK HISTORY
             </TabsTrigger>
           </TabsList>
 
@@ -178,13 +186,12 @@ const IndexDetails = () => {
             </Card>
           </TabsContent>
 
+          <TabsContent value="timeline">
+            <IndexTimeline indexData={extendedData} />
+          </TabsContent>
+
           <TabsContent value="constituents">
-            <Card>
-              <CardContent className="pt-6">
-                <h2 className="text-xl font-medium mb-4">Constituents</h2>
-                <p className="text-gray-500">This tab is not implemented in the prototype.</p>
-              </CardContent>
-            </Card>
+            <Constituents indexData={extendedData} />
           </TabsContent>
 
           <TabsContent value="report">
@@ -192,25 +199,11 @@ const IndexDetails = () => {
           </TabsContent>
 
           <TabsContent value="corporate-actions">
-            <Card>
-              <CardContent className="pt-6">
-                <h2 className="text-xl font-medium mb-4">Corporate Actions</h2>
-                <p className="text-gray-500">This tab is not implemented in the prototype.</p>
-              </CardContent>
-            </Card>
+            <CorporateActions indexData={extendedData} />
           </TabsContent>
           
-          <TabsContent value="timeline">
-            <Card>
-              <CardContent className="pt-6">
-                <h2 className="text-xl font-medium mb-4">Index Timeline</h2>
-                <IndexTimeline 
-                  indexData={extendedData} 
-                  activeEvent={activeTimelineEvent}
-                  setActiveEvent={setActiveTimelineEvent}
-                />
-              </CardContent>
-            </Card>
+          <TabsContent value="tick-history">
+            <TickHistory indexData={extendedData} />
           </TabsContent>
         </Tabs>
       </div>

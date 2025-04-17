@@ -1,11 +1,11 @@
-
 import React, { useState } from 'react';
 import { 
   PieChart, 
   Pie, 
   Cell, 
   ResponsiveContainer, 
-  Legend 
+  Legend,
+  Tooltip
 } from 'recharts';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,11 +15,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { IndexItem } from '@/contexts/StarredContext';
 import { CalendarIcon, Download } from 'lucide-react';
 import { format } from 'date-fns';
-import { 
-  ChartContainer, 
-  ChartTooltip, 
-  ChartTooltipContent 
-} from '@/components/ui/chart';
 
 // Mock data for the charts
 const mockCurrencyData = [
@@ -86,25 +81,13 @@ const mockTableData = [
   }
 ];
 
-// Chart config for styling
-const chartConfig = {
-  usd: { color: '#0088FE' },
-  eur: { color: '#00C49F' },
-  cad: { color: '#FFBB28' },
-  gbp: { color: '#FF8042' },
-  usa: { color: '#0088FE' },
-  germany: { color: '#00C49F' },
-  canada: { color: '#FFBB28' },
-  uk: { color: '#FF8042' },
-  others: { color: '#8884D8' }
-};
-
 interface IndexReportProps {
   indexData: IndexItem;
 }
 
 const IndexReport: React.FC<IndexReportProps> = ({ indexData }) => {
   const [date, setDate] = useState<Date>(new Date());
+  const [isAnalysisOpen, setIsAnalysisOpen] = useState(false);
   
   return (
     <div className="space-y-6">
@@ -130,15 +113,16 @@ const IndexReport: React.FC<IndexReportProps> = ({ indexData }) => {
                 selected={date}
                 onSelect={(date) => date && setDate(date)}
                 initialFocus
+                className="p-3 pointer-events-auto"
               />
             </PopoverContent>
           </Popover>
+          
+          <Button className="bg-teal-500 hover:bg-teal-600">
+            <Download className="mr-2 h-4 w-4" />
+            Generate
+          </Button>
         </div>
-        
-        <Button className="bg-teal-500 hover:bg-teal-600">
-          <Download className="mr-2 h-4 w-4" />
-          Generate
-        </Button>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -166,6 +150,16 @@ const IndexReport: React.FC<IndexReportProps> = ({ indexData }) => {
                   </tr>
                 </tbody>
               </table>
+              
+              <div className="mt-4">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsAnalysisOpen(true)}
+                  className="text-teal-500 border-teal-500 hover:bg-teal-50"
+                >
+                  Adjustments Explained
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -176,10 +170,7 @@ const IndexReport: React.FC<IndexReportProps> = ({ indexData }) => {
               <CardContent className="pt-6">
                 <h3 className="text-lg font-medium mb-2">Weights by Currency</h3>
                 <div className="h-[250px]">
-                  <ChartContainer 
-                    config={chartConfig}
-                    className="h-full"
-                  >
+                  <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
                         data={mockCurrencyData}
@@ -196,11 +187,9 @@ const IndexReport: React.FC<IndexReportProps> = ({ indexData }) => {
                         ))}
                       </Pie>
                       <Legend />
-                      <ChartTooltip>
-                        <ChartTooltipContent />
-                      </ChartTooltip>
+                      <Tooltip />
                     </PieChart>
-                  </ChartContainer>
+                  </ResponsiveContainer>
                 </div>
               </CardContent>
             </Card>
@@ -209,10 +198,7 @@ const IndexReport: React.FC<IndexReportProps> = ({ indexData }) => {
               <CardContent className="pt-6">
                 <h3 className="text-lg font-medium mb-2">Weights by Country</h3>
                 <div className="h-[250px]">
-                  <ChartContainer 
-                    config={chartConfig}
-                    className="h-full"
-                  >
+                  <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
                         data={mockCountryData}
@@ -229,11 +215,9 @@ const IndexReport: React.FC<IndexReportProps> = ({ indexData }) => {
                         ))}
                       </Pie>
                       <Legend />
-                      <ChartTooltip>
-                        <ChartTooltipContent />
-                      </ChartTooltip>
+                      <Tooltip />
                     </PieChart>
-                  </ChartContainer>
+                  </ResponsiveContainer>
                 </div>
               </CardContent>
             </Card>
@@ -285,6 +269,106 @@ const IndexReport: React.FC<IndexReportProps> = ({ indexData }) => {
           </div>
         </CardContent>
       </Card>
+      
+      {isAnalysisOpen && (
+        <ReportAnalysis onClose={() => setIsAnalysisOpen(false)} indexData={indexData} />
+      )}
+    </div>
+  );
+};
+
+// Implement the Report Analysis component for the "Adjustments Explained" popup
+const ReportAnalysis = ({ onClose, indexData }: { onClose: () => void, indexData: IndexItem }) => {
+  const mockAdjustments = [
+    {
+      constituent: 'TSND.TO',
+      eventType: 'Stock Split',
+      beforeShares: '0.18',
+      afterShares: '0.36',
+      priceBefore: '3.86615058',
+      priceAfter: '1.93307529',
+      adjustmentFactor: '2.0',
+      effectiveDate: '2025-04-15'
+    },
+    {
+      constituent: 'SUNS.OQ',
+      eventType: 'Dividend',
+      beforeShares: '8.53',
+      afterShares: '8.53',
+      priceBefore: '1.42558348',
+      priceAfter: '1.42558348',
+      adjustmentFactor: '1.0',
+      effectiveDate: '2025-04-15'
+    }
+  ];
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl max-h-[90vh] overflow-auto">
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-medium">Adjustments Explained</h2>
+            <Button variant="ghost" size="sm" onClick={onClose}>✕</Button>
+          </div>
+          
+          <div className="mb-4">
+            <table className="w-full text-sm mb-6">
+              <tbody>
+                <tr className="border-b">
+                  <td className="py-2 font-medium">Index</td>
+                  <td className="py-2">{indexData.name}</td>
+                </tr>
+                <tr className="border-b">
+                  <td className="py-2 font-medium">Level Before</td>
+                  <td className="py-2">56.7134689710987</td>
+                </tr>
+                <tr className="border-b">
+                  <td className="py-2 font-medium">Level After</td>
+                  <td className="py-2">56.8520357823687985</td>
+                </tr>
+                <tr className="border-b">
+                  <td className="py-2 font-medium">Divisor Before</td>
+                  <td className="py-2">961664.039596</td>
+                </tr>
+                <tr className="border-b">
+                  <td className="py-2 font-medium">Divisor After</td>
+                  <td className="py-2">961664.039596</td>
+                </tr>
+              </tbody>
+            </table>
+            
+            <h3 className="text-lg font-medium mb-2">Constituent Adjustments</h3>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Constituent</TableHead>
+                  <TableHead>Event Type</TableHead>
+                  <TableHead>Shares Before</TableHead>
+                  <TableHead>Shares After</TableHead>
+                  <TableHead>Price Before</TableHead>
+                  <TableHead>Price After</TableHead>
+                  <TableHead>Adjustment Factor</TableHead>
+                  <TableHead>Effective Date</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {mockAdjustments.map((adj, i) => (
+                  <TableRow key={i}>
+                    <TableCell>{adj.constituent}</TableCell>
+                    <TableCell>{adj.eventType}</TableCell>
+                    <TableCell>{adj.beforeShares}</TableCell>
+                    <TableCell>{adj.afterShares}</TableCell>
+                    <TableCell>{adj.priceBefore}</TableCell>
+                    <TableCell>{adj.priceAfter}</TableCell>
+                    <TableCell>{adj.adjustmentFactor}</TableCell>
+                    <TableCell>{adj.effectiveDate}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
