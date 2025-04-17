@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DatePicker from './DatePicker';
 import { Input } from '@/components/ui/input';
-import { Plus, Eye, Play, Trash2, Download, RefreshCw } from 'lucide-react';
+import { Plus, Eye, Play, Trash2, Download, RefreshCw, Calendar, DollarSign } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -27,6 +26,13 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { toast } from '@/hooks/use-toast';
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 // Mock index data with parameters
 const mockIndices = [
@@ -104,6 +110,9 @@ const SimulationData = () => {
     { ric: 'F.N', shares: '130400.8574', weight: '12.0' },
   ]);
 
+  // Price overrides
+  const [priceOverrides, setPriceOverrides] = useState<Array<{ric: string, date: string, price: string}>>([]);
+  
   const addRow = () => {
     setStocks([...stocks, { ric: '', shares: '', weight: '' }]);
   };
@@ -116,6 +125,20 @@ const SimulationData = () => {
 
   const removeStock = (index: number) => {
     setStocks(stocks.filter((_, i) => i !== index));
+  };
+
+  const addPriceOverride = () => {
+    setPriceOverrides([...priceOverrides, { ric: '', date: startDate, price: '' }]);
+  };
+
+  const updatePriceOverride = (index: number, field: 'ric' | 'date' | 'price', value: string) => {
+    const newPriceOverrides = [...priceOverrides];
+    newPriceOverrides[index][field] = value;
+    setPriceOverrides(newPriceOverrides);
+  };
+
+  const removePriceOverride = (index: number) => {
+    setPriceOverrides(priceOverrides.filter((_, i) => i !== index));
   };
 
   const fetchIndexData = () => {
@@ -226,7 +249,7 @@ const SimulationData = () => {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-6 pb-24 md:pb-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Left Panel */}
         <div className="bg-white rounded-md shadow-sm p-6">
@@ -587,34 +610,134 @@ const SimulationData = () => {
         </button>
       </div>
       
-      <div className="flex justify-end mt-6 space-x-4">
-        {simulationComplete && (
-          <button 
-            onClick={viewResults}
-            className="flex items-center px-4 py-2 border border-teal-500 text-teal-500 rounded-md hover:bg-teal-50"
-          >
-            <Eye className="h-4 w-4 mr-2" />
-            VIEW RESULTS
-          </button>
+      {/* Price Overrides Panel */}
+      <div className="bg-white rounded-md shadow-sm p-6 mt-6">
+        <h2 className="text-lg font-medium mb-4">Price Uploads (Optional)</h2>
+        <p className="text-sm text-gray-500 mb-4">
+          Upload custom prices for specific constituents and dates to override default values used in simulation.
+        </p>
+        
+        {priceOverrides.length === 0 ? (
+          <div className="text-gray-500 text-sm mb-4">No custom prices added yet</div>
+        ) : (
+          <div className="mb-4">
+            <div className="grid grid-cols-12 gap-4 mb-2 font-medium text-sm">
+              <div className="col-span-4">RIC</div>
+              <div className="col-span-4">Date</div>
+              <div className="col-span-3">Price</div>
+              <div className="col-span-1">Actions</div>
+            </div>
+            
+            {priceOverrides.map((override, index) => (
+              <div key={index} className="grid grid-cols-12 gap-4 mb-3 items-center">
+                <div className="col-span-4">
+                  <Input
+                    type="text"
+                    value={override.ric}
+                    onChange={(e) => updatePriceOverride(index, 'ric', e.target.value)}
+                    className="w-full h-9"
+                    placeholder="e.g., AAPL.OQ"
+                  />
+                </div>
+                <div className="col-span-4">
+                  <DatePicker 
+                    value={override.date} 
+                    onChange={(value) => updatePriceOverride(index, 'date', value)} 
+                    sublabel=""
+                  />
+                </div>
+                <div className="col-span-3">
+                  <div className="relative">
+                    <Input
+                      type="text"
+                      value={override.price}
+                      onChange={(e) => updatePriceOverride(index, 'price', e.target.value)}
+                      className="w-full h-9 pl-7"
+                      placeholder="0.00"
+                    />
+                    <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500">
+                      $
+                    </span>
+                  </div>
+                </div>
+                <div className="col-span-1">
+                  <button 
+                    onClick={() => removePriceOverride(index)}
+                    className="p-2 text-gray-500 hover:text-gray-700"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         )}
         
         <button 
-          onClick={handleSimulate}
-          disabled={loading}
-          className="flex items-center px-4 py-2 bg-teal-500 text-white rounded-md hover:bg-teal-600 disabled:bg-teal-300"
+          onClick={addPriceOverride}
+          className="flex items-center px-4 py-2 bg-teal-500 text-white rounded-md hover:bg-teal-600 transition-colors"
         >
-          {loading ? (
-            <>
-              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-              SIMULATING...
-            </>
-          ) : (
-            <>
-              <Play className="h-4 w-4 mr-2" />
-              SIMULATE
-            </>
-          )}
+          <Plus className="h-4 w-4 mr-2" />
+          Add Custom Price
         </button>
+        
+        <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-md">
+          <p className="text-sm text-blue-700">
+            <strong>Tip:</strong> You can also upload a CSV file with price data.
+          </p>
+          <label className="block mt-2">
+            <div className="flex items-center px-4 py-2 bg-white border border-gray-300 rounded cursor-pointer hover:bg-gray-50 transition-colors">
+              <Calendar className="h-4 w-4 mr-2 text-gray-500" />
+              <span className="text-sm text-gray-700">Upload price CSV</span>
+            </div>
+            <input 
+              type="file" 
+              accept=".csv" 
+              className="hidden" 
+              onChange={() => {
+                toast({
+                  title: "CSV Upload",
+                  description: "CSV parsing would happen here in a real implementation.",
+                });
+              }} 
+            />
+          </label>
+          <p className="text-xs text-gray-500 mt-2">
+            Format: RIC,Date,Price (e.g., AAPL.OQ,11.04.2025,150.75)
+          </p>
+        </div>
+      </div>
+      
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-40 md:static md:border-0 md:bg-transparent md:p-0 md:mt-6">
+        <div className="flex justify-end space-x-4">
+          {simulationComplete && (
+            <button 
+              onClick={viewResults}
+              className="flex items-center px-4 py-2 border border-teal-500 text-teal-500 rounded-md hover:bg-teal-50"
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              VIEW RESULTS
+            </button>
+          )}
+          
+          <button 
+            onClick={handleSimulate}
+            disabled={loading}
+            className="flex items-center px-4 py-2 bg-teal-500 text-white rounded-md hover:bg-teal-600 disabled:bg-teal-300"
+          >
+            {loading ? (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                SIMULATING...
+              </>
+            ) : (
+              <>
+                <Play className="h-4 w-4 mr-2" />
+                SIMULATE
+              </>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );
