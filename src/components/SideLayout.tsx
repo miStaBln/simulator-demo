@@ -10,6 +10,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarHeader,
+  SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { useStarred } from '@/contexts/StarredContext';
 
@@ -60,8 +61,11 @@ const SideLayout = ({ children }: SideLayoutProps) => {
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
         <Sidebar variant="inset" collapsible="icon">
-          <SidebarHeader className="px-2 py-4">
+          <SidebarHeader className="flex items-center justify-between px-2 py-4">
             <div className="text-teal-500 font-bold text-lg">SOLACTIVE</div>
+            <div className="md:hidden">
+              <SidebarTrigger />
+            </div>
           </SidebarHeader>
           <SidebarContent>
             <SidebarMenu>
@@ -87,6 +91,10 @@ const SideLayout = ({ children }: SideLayoutProps) => {
         </Sidebar>
         
         <div className="flex-1 overflow-auto">
+          <div className="md:hidden flex items-center p-4">
+            <SidebarTrigger />
+            <span className="ml-2 font-semibold">SOLACTIVE</span>
+          </div>
           {children}
         </div>
       </div>
