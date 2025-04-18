@@ -1,0 +1,106 @@
+
+import React, { useState } from 'react';
+import { Plus, Calendar, Trash2, Upload } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
+import { Input } from '@/components/ui/input';
+import DatePicker from '../DatePicker';
+
+interface RebalancingUploadProps {
+  rebalancingUploads: Array<{ date: string, file: string }>;
+  addRebalancingUpload: (date: string, file: string) => void;
+  removeRebalancingUpload: (index: number) => void;
+}
+
+const RebalancingUpload = ({
+  rebalancingUploads,
+  addRebalancingUpload,
+  removeRebalancingUpload
+}: RebalancingUploadProps) => {
+  const [selectedDate, setSelectedDate] = useState('11.04.2025');
+
+  const handleFileUpload = () => {
+    // In a real implementation, this would handle actual file processing
+    addRebalancingUpload(selectedDate, 'rebalancing_data.csv');
+  };
+
+  return (
+    <div className="bg-white rounded-md shadow-sm p-6 mt-6">
+      <h2 className="text-lg font-medium mb-4">Rebalancing Uploads (Optional)</h2>
+      <p className="text-sm text-gray-500 mb-4">
+        Upload rebalancing data in CSV format to include in your simulation.
+      </p>
+      
+      {rebalancingUploads.length > 0 && (
+        <div className="mb-4">
+          <div className="grid grid-cols-12 gap-4 mb-2 font-medium text-sm">
+            <div className="col-span-5">Rebalancing Date</div>
+            <div className="col-span-5">File</div>
+            <div className="col-span-2">Actions</div>
+          </div>
+          
+          {rebalancingUploads.map((upload, index) => (
+            <div key={index} className="grid grid-cols-12 gap-4 mb-3 items-center">
+              <div className="col-span-5">
+                <div className="py-2 px-3 border border-gray-200 rounded-md text-sm">
+                  {upload.date}
+                </div>
+              </div>
+              <div className="col-span-5">
+                <div className="py-2 px-3 border border-gray-200 rounded-md text-sm truncate">
+                  {upload.file}
+                </div>
+              </div>
+              <div className="col-span-2">
+                <button 
+                  onClick={() => removeRebalancingUpload(index)}
+                  className="p-2 text-gray-500 hover:text-red-500"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      
+      <div className="grid grid-cols-12 gap-4 mb-4 items-end">
+        <div className="col-span-5">
+          <DatePicker
+            label="Rebalancing Date"
+            value={selectedDate}
+            onChange={setSelectedDate}
+          />
+        </div>
+        <div className="col-span-7">
+          <label className="block">
+            <div className="flex items-center px-4 py-2 bg-white border border-gray-300 rounded cursor-pointer hover:bg-gray-50 transition-colors">
+              <Upload className="h-4 w-4 mr-2 text-gray-500" />
+              <span className="text-sm text-gray-700">Upload rebalancing CSV</span>
+            </div>
+            <input 
+              type="file" 
+              accept=".csv" 
+              className="hidden" 
+              onChange={handleFileUpload} 
+            />
+          </label>
+        </div>
+      </div>
+      
+      <div className="p-3 bg-blue-50 border border-blue-100 rounded-md">
+        <p className="text-sm text-blue-700">
+          <strong>Tip:</strong> CSV format should contain RIC, Weight/Shares columns.
+        </p>
+        <p className="text-xs text-gray-500 mt-2">
+          Example: RIC,Shares,Weight
+          <br />
+          AAPL.OQ,1000,25.5
+          <br />
+          MSFT.OQ,800,20.3
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export default RebalancingUpload;

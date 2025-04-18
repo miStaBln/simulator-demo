@@ -7,6 +7,7 @@ import Composition from './simulator/Composition';
 import Rebalancings from './simulator/Rebalancings';
 import PriceOverrides from './simulator/PriceOverrides';
 import BottomActions from './simulator/BottomActions';
+import RebalancingUpload from './simulator/RebalancingUpload';
 
 // Mock index data with parameters
 const mockIndices = [
@@ -55,7 +56,7 @@ const mockIndices = [
 ];
 
 interface SimulationDataProps {
-  onSimulationComplete?: (isComplete: boolean, stocks: any[]) => void;
+  onSimulationComplete?: (isComplete: boolean, stocks: any[], selectedIndex?: string) => void;
 }
 
 const SimulationData = ({ onSimulationComplete = () => {} }: SimulationDataProps) => {
@@ -91,6 +92,9 @@ const SimulationData = ({ onSimulationComplete = () => {} }: SimulationDataProps
   // Price overrides
   const [priceOverrides, setPriceOverrides] = useState<Array<{ric: string, date: string, price: string}>>([]);
   
+  // Rebalancing upload data
+  const [rebalancingUploads, setRebalancingUploads] = useState<Array<{date: string, file: string}>>([]);
+  
   const addRow = () => {
     setStocks([...stocks, { ric: '', shares: '', weight: '' }]);
   };
@@ -117,6 +121,18 @@ const SimulationData = ({ onSimulationComplete = () => {} }: SimulationDataProps
 
   const removePriceOverride = (index: number) => {
     setPriceOverrides(priceOverrides.filter((_, i) => i !== index));
+  };
+
+  const addRebalancingUpload = (date: string, file: string) => {
+    setRebalancingUploads([...rebalancingUploads, { date, file }]);
+    toast({
+      title: "Rebalancing uploaded",
+      description: `Rebalancing for ${date} has been added to the simulation`,
+    });
+  };
+
+  const removeRebalancingUpload = (index: number) => {
+    setRebalancingUploads(rebalancingUploads.filter((_, i) => i !== index));
   };
 
   const fetchIndexData = () => {
@@ -217,7 +233,7 @@ const SimulationData = ({ onSimulationComplete = () => {} }: SimulationDataProps
       
       // Notify parent component about simulation completion
       if (onSimulationComplete) {
-        onSimulationComplete(true, stocks);
+        onSimulationComplete(true, stocks, selectedIndex);
       }
       
       toast({
@@ -284,6 +300,13 @@ const SimulationData = ({ onSimulationComplete = () => {} }: SimulationDataProps
         addRebalancingComponent={addRebalancingComponent}
         updateRebalancingComponent={updateRebalancingComponent}
         removeRebalancingComponent={removeRebalancingComponent}
+      />
+      
+      {/* Rebalancing Upload Panel */}
+      <RebalancingUpload
+        rebalancingUploads={rebalancingUploads}
+        addRebalancingUpload={addRebalancingUpload}
+        removeRebalancingUpload={removeRebalancingUpload}
       />
       
       {/* Price Overrides Panel */}

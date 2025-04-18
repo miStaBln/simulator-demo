@@ -13,6 +13,7 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState(tabFromUrl || 'simulation-data');
   const [simulationComplete, setSimulationComplete] = useState(false);
   const [simulationStocks, setSimulationStocks] = useState([]);
+  const [selectedIndex, setSelectedIndex] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -26,9 +27,10 @@ const Index = () => {
     navigate(`/simulator?tab=${tab}`);
   };
 
-  const handleSimulationComplete = (isComplete: boolean, stocks: any[]) => {
+  const handleSimulationComplete = (isComplete: boolean, stocks: any[], selectedIdx: string = '') => {
     setSimulationComplete(isComplete);
     setSimulationStocks(stocks);
+    setSelectedIndex(selectedIdx);
   };
 
   return (
@@ -39,7 +41,12 @@ const Index = () => {
           <SimulationData onSimulationComplete={handleSimulationComplete} />
         )}
         {activeTab === 'results' && <SimulationResult />}
-        {activeTab === 'time-series' && <TimeSeriesData />}
+        {activeTab === 'time-series' && (
+          <TimeSeriesData 
+            simulationComplete={simulationComplete} 
+            selectedIndex={selectedIndex} 
+          />
+        )}
         {activeTab === 'proximity' && (
           <ProximityIndexData 
             simulationComplete={simulationComplete} 

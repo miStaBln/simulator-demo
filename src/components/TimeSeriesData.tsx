@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   LineChart, 
   Line, 
@@ -10,36 +10,61 @@ import {
   ResponsiveContainer,
   Legend
 } from 'recharts';
-import { Search, ChevronLeft, ChevronRight, Download, Filter, Columns, Maximize2, ArrowUpDown } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, Download, Filter, Columns, Maximize2, ArrowUpDown, ChevronDown, ChevronUp } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card } from '@/components/ui/card';
 
-const TimeSeriesData = () => {
+interface TimeSeriesDataProps {
+  simulationComplete?: boolean;
+  selectedIndex?: string;
+}
+
+const TimeSeriesData = ({ simulationComplete = false, selectedIndex = '' }: TimeSeriesDataProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [rowsPerPage, setRowsPerPage] = useState(50);
   const [reportType, setReportType] = useState('Closing');
+  const [comparisonExpanded, setComparisonExpanded] = useState(true);
   
-  // Sample data for the table and chart
-  const data = [
-    { date: '15/04/2025', level: 202.14 },
-    { date: '16/04/2025', level: 194.27 },
+  // Sample data for the table
+  const originalData = [
+    { date: '15/04/2025', originalLevel: 202.14, simulatedLevel: 204.31 },
+    { date: '16/04/2025', originalLevel: 194.27, simulatedLevel: 196.82 },
   ];
   
   // Generate more sample data points for the chart
   const chartData = [
-    { date: '11/04/2025', level: 202.45 },
-    { date: '12/04/2025', level: 201.89 },
-    { date: '13/04/2025', level: 200.32 },
-    { date: '14/04/2025', level: 198.76 },
-    { date: '15/04/2025', level: 202.14 },
-    { date: '16/04/2025', level: 194.27 },
-    { date: '17/04/2025', level: 190.11 },
-    { date: '18/04/2025', level: 186.34 },
-    { date: '19/04/2025', level: 184.14 },
+    { date: '11/04/2025', originalLevel: 202.45, simulatedLevel: 203.76 },
+    { date: '12/04/2025', originalLevel: 201.89, simulatedLevel: 203.15 },
+    { date: '13/04/2025', originalLevel: 200.32, simulatedLevel: 202.12 },
+    { date: '14/04/2025', originalLevel: 198.76, simulatedLevel: 200.93 },
+    { date: '15/04/2025', originalLevel: 202.14, simulatedLevel: 204.31 },
+    { date: '16/04/2025', originalLevel: 194.27, simulatedLevel: 196.82 },
+    { date: '17/04/2025', originalLevel: 190.11, simulatedLevel: 192.38 },
+    { date: '18/04/2025', originalLevel: 186.34, simulatedLevel: 188.56 },
+    { date: '19/04/2025', originalLevel: 184.14, simulatedLevel: 186.42 },
   ];
+
+  // Comparison data
+  const comparisonData = {
+    levelDelta: '+2.17',
+    divisorDelta: '0',
+    percentageDeviation: '+1.07%',
+    componentChanges: [
+      { ric: 'AAPL.OQ', originalWeight: '25.00%', simulatedWeight: '25.00%', delta: '0.00%' },
+      { ric: 'MSFT.OQ', originalWeight: '20.00%', simulatedWeight: '22.50%', delta: '+2.50%' },
+      { ric: 'GOOGL.OQ', originalWeight: '18.00%', simulatedWeight: '17.00%', delta: '-1.00%' },
+      { ric: 'AMZN.OQ', originalWeight: '22.00%', simulatedWeight: '20.50%', delta: '-1.50%' },
+      { ric: 'META.OQ', originalWeight: '15.00%', simulatedWeight: '15.00%', delta: '0.00%' },
+    ]
+  };
 
   const sortTable = () => {
     // Sort implementation would go here
+  };
+
+  const toggleComparison = () => {
+    setComparisonExpanded(!comparisonExpanded);
   };
 
   return (
@@ -61,6 +86,68 @@ const TimeSeriesData = () => {
             </Select>
           </div>
         </div>
+        
+        {simulationComplete && selectedIndex && (
+          <Card className="p-4 mb-6">
+            <div className="flex justify-between items-center mb-2" onClick={toggleComparison} style={{ cursor: 'pointer' }}>
+              <h3 className="text-base font-medium">Comparison Overview</h3>
+              <button className="p-1 rounded hover:bg-gray-100">
+                {comparisonExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              </button>
+            </div>
+            
+            {comparisonExpanded && (
+              <>
+                <div className="grid grid-cols-3 gap-4 mb-4">
+                  <div className="bg-gray-50 p-3 rounded">
+                    <div className="text-xs text-gray-500">Level Delta</div>
+                    <div className={`text-lg font-medium ${comparisonData.levelDelta.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
+                      {comparisonData.levelDelta}
+                    </div>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded">
+                    <div className="text-xs text-gray-500">Divisor Delta</div>
+                    <div className="text-lg font-medium">
+                      {comparisonData.divisorDelta}
+                    </div>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded">
+                    <div className="text-xs text-gray-500">Percentage Deviation</div>
+                    <div className={`text-lg font-medium ${comparisonData.percentageDeviation.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
+                      {comparisonData.percentageDeviation}
+                    </div>
+                  </div>
+                </div>
+                
+                <h4 className="text-sm font-medium mb-2">Component Weight Comparison</h4>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead>
+                      <tr className="bg-gray-50">
+                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">RIC</th>
+                        <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Original Weight</th>
+                        <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Simulated Weight</th>
+                        <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Delta</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {comparisonData.componentChanges.map((comp, idx) => (
+                        <tr key={idx} className="hover:bg-gray-50">
+                          <td className="px-3 py-2 text-sm">{comp.ric}</td>
+                          <td className="px-3 py-2 text-sm text-right">{comp.originalWeight}</td>
+                          <td className="px-3 py-2 text-sm text-right">{comp.simulatedWeight}</td>
+                          <td className={`px-3 py-2 text-sm text-right ${comp.delta.startsWith('+') ? 'text-green-600' : comp.delta.startsWith('-') ? 'text-red-600' : 'text-gray-600'}`}>
+                            {comp.delta}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
+          </Card>
+        )}
         
         <h3 className="text-sm font-medium mb-4">Time Series Data</h3>
         
@@ -98,23 +185,34 @@ const TimeSeriesData = () => {
                   <tr className="bg-gray-100">
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       <button className="flex items-center" onClick={sortTable}>
-                        Simulation Date
+                        Date
                         <ArrowUpDown className="h-3 w-3 ml-1" />
                       </button>
                     </th>
+                    {selectedIndex && (
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <button className="flex items-center" onClick={sortTable}>
+                          Original Index
+                          <ArrowUpDown className="h-3 w-3 ml-1" />
+                        </button>
+                      </th>
+                    )}
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       <button className="flex items-center" onClick={sortTable}>
-                        Index Level
+                        Simulated Index
                         <ArrowUpDown className="h-3 w-3 ml-1" />
                       </button>
                     </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {data.map((row, index) => (
+                  {originalData.map((row, index) => (
                     <tr key={index} className="hover:bg-gray-50">
                       <td className="px-4 py-3 text-sm">{row.date}</td>
-                      <td className="px-4 py-3 text-sm">{row.level}</td>
+                      {selectedIndex && (
+                        <td className="px-4 py-3 text-sm">{row.originalLevel.toFixed(2)}</td>
+                      )}
+                      <td className="px-4 py-3 text-sm">{row.simulatedLevel.toFixed(2)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -188,13 +286,24 @@ const TimeSeriesData = () => {
                 />
                 <Line 
                   type="monotone" 
-                  dataKey="level" 
-                  name="Index Level" 
+                  dataKey="simulatedLevel" 
+                  name="Simulated Index" 
                   stroke="#10b981" 
                   strokeWidth={2} 
                   dot={{ stroke: '#10b981', strokeWidth: 2, r: 4 }}
                   activeDot={{ r: 6 }}
                 />
+                {selectedIndex && (
+                  <Line 
+                    type="monotone" 
+                    dataKey="originalLevel" 
+                    name="Original Index" 
+                    stroke="#3b82f6" 
+                    strokeWidth={2} 
+                    dot={{ stroke: '#3b82f6', strokeWidth: 2, r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                )}
               </LineChart>
             </ResponsiveContainer>
           </div>
