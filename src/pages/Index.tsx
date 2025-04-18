@@ -6,21 +6,36 @@ import SimulationData from '@/components/SimulationData';
 import SimulationResult from '@/components/SimulationResult';
 import TimeSeriesData from '@/components/TimeSeriesData';
 import ProximityIndexData from '@/components/ProximityIndexData';
+import { toast } from '@/hooks/use-toast';
+
+const initialSimulationState = {
+  stocks: [],
+  selectedIndex: '',
+  complete: false
+};
 
 const Index = () => {
   const [searchParams] = useSearchParams();
   const tabFromUrl = searchParams.get('tab');
   const [activeTab, setActiveTab] = useState(tabFromUrl || 'simulation-data');
-  const [simulationComplete, setSimulationComplete] = useState(false);
-  const [simulationStocks, setSimulationStocks] = useState([]);
-  const [selectedIndex, setSelectedIndex] = useState('');
+  const [simulationState, setSimulationState] = useState(initialSimulationState);
   const navigate = useNavigate();
 
   useEffect(() => {
     if (tabFromUrl) {
-      setActiveTab(tabFromUrl);
+      // Only allow navigation to other tabs if simulation is complete
+      if (tabFromUrl !== 'simulation-data' && !simulationState.complete) {
+        navigate('/simulator?tab=simulation-data');
+        toast({
+          title: "Simulation Required",
+          description: "Please run a simulation first to view results",
+          variant: "destructive",
+        });
+      } else {
+        setActiveTab(tabFromUrl);
+      }
     }
-  }, [tabFromUrl]);
+  }, [tabFromUrl, simulationState.complete]);
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
@@ -28,29 +43,44 @@ const Index = () => {
   };
 
   const handleSimulationComplete = (isComplete: boolean, stocks: any[], selectedIdx: string = '') => {
-    setSimulationComplete(isComplete);
-    setSimulationStocks(stocks);
-    setSelectedIndex(selectedIdx);
+    setSimulationState({
+      complete: isComplete,
+      stocks,
+      selectedIndex: selectedIdx,
+    });
+  };
+
+  const handleRefresh = () => {
+    setSimulationState(initialSimulationState);
+    toast({
+      title: "Simulation Reset",
+      description: "All simulation data has been reset",
+    });
   };
 
   return (
     <div className="flex flex-col h-full">
-      <TabNavigation activeTab={activeTab} onTabChange={handleTabChange} />
+      <TabNavigation 
+        activeTab={activeTab} 
+        onTabChange={handleTabChange} 
+        simulationComplete={simulationState.complete}
+        onRefresh={handleRefresh}
+      />
       <div className="flex-1 overflow-auto">
         {activeTab === 'simulation-data' && (
           <SimulationData onSimulationComplete={handleSimulationComplete} />
         )}
-        {activeTab === 'results' && <SimulationResult />}
-        {activeTab === 'time-series' && (
+        {activeTab === 'results' && simulationState.complete && <SimulationResult />}
+        {activeTab === 'time-series' && simulationState.complete && (
           <TimeSeriesData 
-            simulationComplete={simulationComplete} 
-            selectedIndex={selectedIndex} 
+            simulationComplete={simulationState.complete} 
+            selectedIndex={simulationState.selectedIndex} 
           />
         )}
-        {activeTab === 'proximity' && (
+        {activeTab === 'proximity' && simulationState.complete && (
           <ProximityIndexData 
-            simulationComplete={simulationComplete} 
-            stocks={simulationStocks} 
+            simulationComplete={simulationState.complete} 
+            stocks={simulationState.stocks} 
           />
         )}
       </div>
