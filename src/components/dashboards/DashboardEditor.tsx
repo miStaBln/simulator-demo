@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { Layout, ChevronLeft, Plus, Calendar, Star } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Layout, ChevronLeft, Plus, Calendar, Star, Bell, GripVertical, X, Maximize2, Minimize2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,14 +18,77 @@ import { toast } from '@/hooks/use-toast';
 import DashboardWindow from './DashboardWindow';
 import StarredIndicesWidget from './StarredIndicesWidget';
 import UpcomingEventsWidget from './UpcomingEventsWidget';
+import { IndexEventsWidget } from '@/pages/Events';
+import { useStarred } from '@/contexts/StarredContext';
+import { DndContext, DragOverlay, useSensor, useSensors, PointerSensor } from '@dnd-kit/core';
+import { SortableContext, useSortable, arrayMove, rectSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
-export type WidgetType = 'starred' | 'events';
+export type WidgetType = 'starred' | 'events' | 'indexEvents';
 
 export interface Widget {
   id: string;
   type: WidgetType;
   title: string;
+  size?: 'small' | 'medium' | 'large';
 }
+
+interface SortableWidgetProps {
+  widget: Widget;
+  children: React.ReactNode;
+  onRemove: () => void;
+  onSizeChange: (size: 'small' | 'medium' | 'large') => void;
+}
+
+const SortableWidget = ({ widget, children, onRemove, onSizeChange }: SortableWidgetProps) => {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
+    id: widget.id,
+  });
+  
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  const sizeClass = widget.size === 'small' 
+    ? 'col-span-1 h-64' 
+    : widget.size === 'large' 
+      ? 'col-span-2 h-96' 
+      : 'col-span-1 h-80';
+
+  return (
+    <div ref={setNodeRef} style={style} className={sizeClass}>
+      <div className="border rounded-lg shadow-sm h-full overflow-hidden bg-white flex flex-col">
+        <div className="flex items-center justify-between p-3 border-b bg-gray-50">
+          <div className="flex items-center">
+            <div {...attributes} {...listeners} className="cursor-move mr-2">
+              <GripVertical className="h-4 w-4 text-gray-400" />
+            </div>
+            <h3 className="font-medium text-sm">{widget.title}</h3>
+          </div>
+          <div className="flex items-center gap-1">
+            {widget.size !== 'small' && (
+              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onSizeChange('small')}>
+                <Minimize2 className="h-3 w-3" />
+              </Button>
+            )}
+            {widget.size !== 'large' && (
+              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onSizeChange('large')}>
+                <Maximize2 className="h-3 w-3" />
+              </Button>
+            )}
+            <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-500 hover:text-red-500" onClick={onRemove}>
+              <X className="h-3 w-3" />
+            </Button>
+          </div>
+        </div>
+        <div className="flex-1 p-4 overflow-auto">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 interface DashboardEditorProps {
   onSave: (name: string, widgets: Widget[]) => void;
@@ -35,18 +98,41 @@ const DashboardEditor: React.FC<DashboardEditorProps> = ({ onSave }) => {
   const navigate = useNavigate();
   const [dashboardName, setDashboardName] = useState('');
   const [widgets, setWidgets] = useState<Widget[]>([]);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const { starredIndices } = useStarred();
+  
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    })
+  );
 
   const addWidget = (type: WidgetType) => {
+    const titles = {
+      starred: 'Starred Indices',
+      events: 'Upcoming Events',
+      indexEvents: 'Index Events',
+    };
+    
     const newWidget: Widget = {
       id: `widget-${Date.now()}`,
       type,
-      title: type === 'starred' ? 'Starred Indices' : 'Upcoming Events'
+      title: titles[type],
+      size: 'medium'
     };
     setWidgets([...widgets, newWidget]);
   };
 
   const removeWidget = (id: string) => {
     setWidgets(widgets.filter(widget => widget.id !== id));
+  };
+
+  const changeWidgetSize = (id: string, size: 'small' | 'medium' | 'large') => {
+    setWidgets(widgets.map(widget => 
+      widget.id === id ? { ...widget, size } : widget
+    ));
   };
 
   const handleSave = () => {
@@ -63,12 +149,31 @@ const DashboardEditor: React.FC<DashboardEditorProps> = ({ onSave }) => {
     navigate('/dashboards');
   };
 
+  const handleDragStart = (event: any) => {
+    setActiveId(event.active.id);
+  };
+
+  const handleDragEnd = (event: any) => {
+    const { active, over } = event;
+    setActiveId(null);
+
+    if (active.id !== over.id) {
+      setWidgets((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  };
+
   const renderWidget = (widget: Widget) => {
     switch (widget.type) {
       case 'starred':
         return <StarredIndicesWidget />;
       case 'events':
         return <UpcomingEventsWidget />;
+      case 'indexEvents':
+        return <IndexEventsWidget indices={starredIndices} />;
       default:
         return <div>Unknown widget type</div>;
     }
@@ -130,6 +235,14 @@ const DashboardEditor: React.FC<DashboardEditorProps> = ({ onSave }) => {
                 <Calendar className="mr-2 h-4 w-4" />
                 Upcoming Events
               </Button>
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start" 
+                onClick={() => addWidget('indexEvents')}
+              >
+                <Bell className="mr-2 h-4 w-4" />
+                Index Events
+              </Button>
             </div>
           </PopoverContent>
         </Popover>
@@ -167,23 +280,52 @@ const DashboardEditor: React.FC<DashboardEditorProps> = ({ onSave }) => {
                   <Calendar className="mr-2 h-4 w-4" />
                   Upcoming Events
                 </Button>
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start" 
+                  onClick={() => addWidget('indexEvents')}
+                >
+                  <Bell className="mr-2 h-4 w-4" />
+                  Index Events
+                </Button>
               </div>
             </PopoverContent>
           </Popover>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-4">
-          {widgets.map((widget) => (
-            <div key={widget.id} className="h-64">
-              <DashboardWindow 
-                title={widget.title}
-                onRemove={() => removeWidget(widget.id)}
-              >
-                {renderWidget(widget)}
-              </DashboardWindow>
+        <DndContext 
+          sensors={sensors}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext items={widgets.map(w => w.id)} strategy={rectSortingStrategy}>
+            <div className="grid grid-cols-2 gap-4">
+              {widgets.map((widget) => (
+                <SortableWidget 
+                  key={widget.id} 
+                  widget={widget}
+                  onRemove={() => removeWidget(widget.id)}
+                  onSizeChange={(size) => changeWidgetSize(widget.id, size)}
+                >
+                  {renderWidget(widget)}
+                </SortableWidget>
+              ))}
             </div>
-          ))}
-        </div>
+          </SortableContext>
+          
+          <DragOverlay>
+            {activeId ? (
+              <div className="border rounded-lg shadow-lg h-80 w-full bg-white opacity-70">
+                <div className="flex items-center justify-between p-3 border-b bg-gray-50">
+                  <h3 className="font-medium text-sm">
+                    {widgets.find(w => w.id === activeId)?.title}
+                  </h3>
+                </div>
+                <div className="p-4 h-full"></div>
+              </div>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
       )}
     </div>
   );

@@ -6,8 +6,8 @@ import { Input } from '@/components/ui/input';
 import DatePicker from '../DatePicker';
 
 interface RebalancingUploadProps {
-  rebalancingUploads: Array<{ date: string, file: string }>;
-  addRebalancingUpload: (date: string, file: string) => void;
+  rebalancingUploads: Array<{ selectionDate: string, rebalancingDate: string, file: string }>;
+  addRebalancingUpload: (selectionDate: string, rebalancingDate: string, file: string) => void;
   removeRebalancingUpload: (index: number) => void;
 }
 
@@ -16,11 +16,12 @@ const RebalancingUpload = ({
   addRebalancingUpload,
   removeRebalancingUpload
 }: RebalancingUploadProps) => {
-  const [selectedDate, setSelectedDate] = useState('11.04.2025');
+  const [selectedSelectionDate, setSelectedSelectionDate] = useState('04.04.2025');
+  const [selectedRebalancingDate, setSelectedRebalancingDate] = useState('11.04.2025');
 
   const handleFileUpload = () => {
     // In a real implementation, this would handle actual file processing
-    addRebalancingUpload(selectedDate, 'rebalancing_data.csv');
+    addRebalancingUpload(selectedSelectionDate, selectedRebalancingDate, 'rebalancing_data.csv');
   };
 
   return (
@@ -33,24 +34,30 @@ const RebalancingUpload = ({
       {rebalancingUploads.length > 0 && (
         <div className="mb-4">
           <div className="grid grid-cols-12 gap-4 mb-2 font-medium text-sm">
-            <div className="col-span-5">Rebalancing Date</div>
-            <div className="col-span-5">File</div>
-            <div className="col-span-2">Actions</div>
+            <div className="col-span-4">Selection Date</div>
+            <div className="col-span-4">Rebalancing Date</div>
+            <div className="col-span-3">File</div>
+            <div className="col-span-1">Actions</div>
           </div>
           
           {rebalancingUploads.map((upload, index) => (
             <div key={index} className="grid grid-cols-12 gap-4 mb-3 items-center">
-              <div className="col-span-5">
+              <div className="col-span-4">
                 <div className="py-2 px-3 border border-gray-200 rounded-md text-sm">
-                  {upload.date}
+                  {upload.selectionDate}
                 </div>
               </div>
-              <div className="col-span-5">
+              <div className="col-span-4">
+                <div className="py-2 px-3 border border-gray-200 rounded-md text-sm">
+                  {upload.rebalancingDate}
+                </div>
+              </div>
+              <div className="col-span-3">
                 <div className="py-2 px-3 border border-gray-200 rounded-md text-sm truncate">
                   {upload.file}
                 </div>
               </div>
-              <div className="col-span-2">
+              <div className="col-span-1">
                 <button 
                   onClick={() => removeRebalancingUpload(index)}
                   className="p-2 text-gray-500 hover:text-red-500"
@@ -64,14 +71,21 @@ const RebalancingUpload = ({
       )}
       
       <div className="grid grid-cols-12 gap-4 mb-4 items-end">
-        <div className="col-span-5">
+        <div className="col-span-4">
           <DatePicker
-            label="Rebalancing Date"
-            value={selectedDate}
-            onChange={setSelectedDate}
+            label="Selection Date"
+            value={selectedSelectionDate}
+            onChange={setSelectedSelectionDate}
           />
         </div>
-        <div className="col-span-7">
+        <div className="col-span-4">
+          <DatePicker
+            label="Rebalancing Date"
+            value={selectedRebalancingDate}
+            onChange={setSelectedRebalancingDate}
+          />
+        </div>
+        <div className="col-span-4">
           <label className="block">
             <div className="flex items-center px-4 py-2 bg-white border border-gray-300 rounded cursor-pointer hover:bg-gray-50 transition-colors">
               <Upload className="h-4 w-4 mr-2 text-gray-500" />
@@ -92,11 +106,11 @@ const RebalancingUpload = ({
           <strong>Tip:</strong> CSV format should contain RIC, Weight/Shares columns.
         </p>
         <p className="text-xs text-gray-500 mt-2">
-          Example: RIC,Shares,Weight
+          Example: RIC,Shares,Weight,SelectionDate,RebalancingDate
           <br />
-          AAPL.OQ,1000,25.5
+          AAPL.OQ,1000,25.5,2025-04-04,2025-04-11
           <br />
-          MSFT.OQ,800,20.3
+          MSFT.OQ,800,20.3,2025-04-04,2025-04-11
         </p>
       </div>
     </div>

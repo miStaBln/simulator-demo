@@ -31,6 +31,20 @@ const Dashboards = () => {
   });
   
   useEffect(() => {
+    // Check for new dashboard data from the editor
+    const newDashboardData = localStorage.getItem('newDashboardData');
+    if (newDashboardData) {
+      try {
+        const { name, widgets } = JSON.parse(newDashboardData);
+        createNewDashboard(name, "", widgets);
+        localStorage.removeItem('newDashboardData');
+      } catch (error) {
+        console.error('Error parsing new dashboard data:', error);
+      }
+    }
+  }, []);
+  
+  useEffect(() => {
     localStorage.setItem('dashboards', JSON.stringify(dashboards));
   }, [dashboards]);
   
@@ -64,7 +78,7 @@ const Dashboards = () => {
   };
   
   const viewDashboard = (dashboard: Dashboard) => {
-    // Future implementation: navigate to a dashboard viewer
+    // In a real app, navigate to a dashboard viewer
     toast({
       title: "View dashboard",
       description: "This feature is coming soon."

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Package, BarChart2, Star, LayoutDashboard, Calendar } from 'lucide-react';
+import { Package, BarChart2, Star, LayoutDashboard, Calendar, Bell } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -29,14 +29,15 @@ const SideLayout = ({ children }: SideLayoutProps) => {
       icon: Package,
     },
     {
+      title: 'Starred Indices',
+      path: '/starred',
+      icon: Star,
+      badge: starredIndices.length > 0 ? starredIndices.length : undefined,
+    },
+    {
       title: 'My Dashboards',
       path: '/dashboards',
       icon: LayoutDashboard,
-    },
-    {
-      title: 'Corporate Events',
-      path: '/corporate-events',
-      icon: Calendar,
     },
     {
       title: 'Simulator',
@@ -44,10 +45,14 @@ const SideLayout = ({ children }: SideLayoutProps) => {
       icon: BarChart2,
     },
     {
-      title: 'Starred Indices',
-      path: '/starred',
-      icon: Star,
-      badge: starredIndices.length > 0 ? starredIndices.length : undefined,
+      title: 'Events',
+      path: '/events',
+      icon: Bell,
+    },
+    {
+      title: 'Corporate Events',
+      path: '/corporate-events',
+      icon: Calendar,
     },
   ];
 

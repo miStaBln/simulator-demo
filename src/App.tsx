@@ -9,6 +9,7 @@ import Inventory from "./pages/Inventory";
 import StarredIndices from "./pages/StarredIndices";
 import IndexDetails from "./pages/IndexDetails";
 import Dashboards from "./pages/Dashboards";
+import Events from "./pages/Events";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import SideLayout from "./components/SideLayout";
@@ -66,6 +67,13 @@ const App = () => (
               <ProtectedRoute>
                 <SideLayout>
                   <CorporateEvents />
+                </SideLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/events" element={
+              <ProtectedRoute>
+                <SideLayout>
+                  <Events />
                 </SideLayout>
               </ProtectedRoute>
             } />
