@@ -92,8 +92,8 @@ const SimulationData = ({ onSimulationComplete = () => {} }: SimulationDataProps
   // Price overrides
   const [priceOverrides, setPriceOverrides] = useState<Array<{ric: string, date: string, price: string}>>([]);
   
-  // Rebalancing upload data
-  const [rebalancingUploads, setRebalancingUploads] = useState<Array<{date: string, file: string}>>([]);
+  // Rebalancing upload data - fixing the type to match RebalancingUpload props
+  const [rebalancingUploads, setRebalancingUploads] = useState<Array<{selectionDate: string, rebalancingDate: string, file: string}>>([]);
   
   const addRow = () => {
     setStocks([...stocks, { ric: '', shares: '', weight: '' }]);
@@ -123,11 +123,11 @@ const SimulationData = ({ onSimulationComplete = () => {} }: SimulationDataProps
     setPriceOverrides(priceOverrides.filter((_, i) => i !== index));
   };
 
-  const addRebalancingUpload = (date: string, file: string) => {
-    setRebalancingUploads([...rebalancingUploads, { date, file }]);
+  const addRebalancingUpload = (selectionDate: string, rebalancingDate: string, file: string) => {
+    setRebalancingUploads([...rebalancingUploads, { selectionDate, rebalancingDate, file }]);
     toast({
       title: "Rebalancing uploaded",
-      description: `Rebalancing for ${date} has been added to the simulation`,
+      description: `Rebalancing for ${selectionDate} (rebalancing ${rebalancingDate}) has been added to the simulation`,
     });
   };
 
