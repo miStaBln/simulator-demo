@@ -13,6 +13,7 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { useStarred } from '@/contexts/StarredContext';
+import { UserMenu } from '@/components/UserMenu';
 
 interface SideLayoutProps {
   children: React.ReactNode;
@@ -91,9 +92,12 @@ const SideLayout = ({ children }: SideLayoutProps) => {
         </Sidebar>
         
         <div className="flex-1 overflow-auto">
-          <div className="md:hidden flex items-center p-4">
-            <SidebarTrigger />
-            <span className="ml-2 font-semibold">SOLACTIVE</span>
+          <div className="flex items-center justify-between p-4 border-b">
+            <div className="md:hidden">
+              <SidebarTrigger />
+            </div>
+            <div className="font-semibold">SOLACTIVE</div>
+            <UserMenu />
           </div>
           {children}
         </div>
