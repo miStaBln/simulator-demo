@@ -18,6 +18,8 @@ import { format, subDays, subMonths, subYears } from 'date-fns';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 interface TickHistoryProps {
   indexData: IndexItem;
@@ -38,6 +40,7 @@ const TickHistory: React.FC<TickHistoryProps> = ({ indexData }) => {
   const [selectedTimeframe, setSelectedTimeframe] = useState<TimeframeOption>('1m');
   const [benchmarkIndex, setBenchmarkIndex] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showRelativePerformance, setShowRelativePerformance] = useState(true);
   
   // Generate mock data for the chart
   const generateChartData = (timeframe: TimeframeOption, includeIndex: boolean, includeBenchmark: boolean) => {
@@ -100,17 +103,30 @@ const TickHistory: React.FC<TickHistoryProps> = ({ indexData }) => {
       
       const dataPoint: any = {
         date: format(date, timeframe === '1d' ? 'HH:mm' : 'yyyy-MM-dd'),
+        rawLevel: parseFloat(level.toFixed(2)),
+        rawBenchmark: parseFloat(benchmarkLevel.toFixed(2)),
       };
       
-      if (includeIndex) {
-        dataPoint.level = parseFloat(level.toFixed(2));
-      }
-      
-      if (includeBenchmark) {
-        dataPoint.benchmark = parseFloat(benchmarkLevel.toFixed(2));
-      }
-      
       data.push(dataPoint);
+    }
+    
+    // Normalize data if showing relative performance and there's a benchmark
+    if (showRelativePerformance && includeBenchmark && data.length > 0) {
+      const firstPoint = data[0];
+      const initialLevel = firstPoint.rawLevel;
+      const initialBenchmark = firstPoint.rawBenchmark;
+      
+      // Calculate relative performance (starting at 100)
+      data.forEach(point => {
+        point.level = parseFloat(((point.rawLevel / initialLevel) * 100).toFixed(2));
+        point.benchmark = parseFloat(((point.rawBenchmark / initialBenchmark) * 100).toFixed(2));
+      });
+    } else {
+      // Use absolute values
+      data.forEach(point => {
+        point.level = point.rawLevel;
+        point.benchmark = point.rawBenchmark;
+      });
     }
     
     return data;
@@ -188,14 +204,24 @@ const TickHistory: React.FC<TickHistoryProps> = ({ indexData }) => {
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-medium">Benchmark Comparison</h3>
             {benchmarkIndex && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => setBenchmarkIndex(null)}
-                className="text-red-500 hover:text-red-600 text-xs"
-              >
-                Clear benchmark
-              </Button>
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="relative-performance"
+                    checked={showRelativePerformance}
+                    onCheckedChange={setShowRelativePerformance}
+                  />
+                  <Label htmlFor="relative-performance">Relative Performance</Label>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setBenchmarkIndex(null)}
+                  className="text-red-500 hover:text-red-600 text-xs"
+                >
+                  Clear benchmark
+                </Button>
+              </div>
             )}
           </div>
           <div className="flex items-center gap-2">
@@ -230,6 +256,9 @@ const TickHistory: React.FC<TickHistoryProps> = ({ indexData }) => {
           {selectedBenchmark && (
             <div className="text-xs text-gray-500 mt-1">
               Comparing {indexData.name} with {selectedBenchmark.name} ({selectedBenchmark.ticker})
+              {showRelativePerformance && (
+                <span> - both starting at 100 (relative performance)</span>
+              )}
             </div>
           )}
         </div>
@@ -238,7 +267,10 @@ const TickHistory: React.FC<TickHistoryProps> = ({ indexData }) => {
           <Card>
             <CardContent className="p-4">
               <div className="text-sm text-gray-500">Last Tick</div>
-              <div className="text-xl font-medium">{lastTick.level}</div>
+              <div className="text-xl font-medium">
+                {showRelativePerformance && benchmarkIndex ? lastTick.level : lastTick.rawLevel}
+                {showRelativePerformance && benchmarkIndex && '%'}
+              </div>
               <div className="text-xs text-gray-400">{format(new Date(), 'yyyy-MM-dd HH:mm:ss')}</div>
             </CardContent>
           </Card>
@@ -247,7 +279,11 @@ const TickHistory: React.FC<TickHistoryProps> = ({ indexData }) => {
             <CardContent className="p-4">
               <div className="text-sm text-gray-500">Daily Change</div>
               <div className="text-xl font-medium text-green-600">+0.92%</div>
-              <div className="text-xs text-gray-400">+2.21 points</div>
+              <div className="text-xs text-gray-400">
+                {showRelativePerformance && benchmarkIndex 
+                  ? '+0.92 points' 
+                  : '+2.21 points'}
+              </div>
             </CardContent>
           </Card>
           
@@ -255,15 +291,26 @@ const TickHistory: React.FC<TickHistoryProps> = ({ indexData }) => {
             <CardContent className="p-4">
               <div className="text-sm text-gray-500">YTD Change</div>
               <div className="text-xl font-medium text-green-600">+12.34%</div>
-              <div className="text-xs text-gray-400">+26.75 points</div>
+              <div className="text-xs text-gray-400">
+                {showRelativePerformance && benchmarkIndex 
+                  ? '+12.34 points' 
+                  : '+26.75 points'}
+              </div>
             </CardContent>
           </Card>
           
           <Card>
             <CardContent className="p-4">
-              <div className="text-sm text-gray-500">52-Week Range</div>
-              <div className="text-xl font-medium">218.46 - 258.92</div>
-              <div className="text-xs text-gray-400">Current: {lastTick.level}</div>
+              <div className="text-sm text-gray-500">
+                {showRelativePerformance && benchmarkIndex ? 'Relative Range' : '52-Week Range'}
+              </div>
+              <div className="text-xl font-medium">
+                {showRelativePerformance && benchmarkIndex ? '91.26 - 107.92' : '218.46 - 258.92'}
+                {showRelativePerformance && benchmarkIndex && '%'}
+              </div>
+              <div className="text-xs text-gray-400">
+                Current: {showRelativePerformance && benchmarkIndex ? lastTick.level + '%' : lastTick.rawLevel}
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -281,8 +328,21 @@ const TickHistory: React.FC<TickHistoryProps> = ({ indexData }) => {
             >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="date" />
-              <YAxis domain={['auto', 'auto']} />
-              <Tooltip />
+              <YAxis 
+                domain={showRelativePerformance && benchmarkIndex ? [80, 120] : ['auto', 'auto']} 
+                tickFormatter={(value) => showRelativePerformance && benchmarkIndex ? `${value}%` : `${value}`}
+              />
+              <Tooltip 
+                formatter={(value: any, name: any) => {
+                  if (name === indexData.name || name === selectedBenchmark?.name) {
+                    return [
+                      `${value}${showRelativePerformance && benchmarkIndex ? '%' : ''}`,
+                      name
+                    ];
+                  }
+                  return [value, name];
+                }}
+              />
               <Legend />
               <Line 
                 type="monotone" 
