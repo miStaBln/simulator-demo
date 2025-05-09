@@ -24,9 +24,9 @@ const Login = () => {
         localStorage.setItem('isAuthenticated', 'true');
         toast({
           title: "Login successful",
-          description: "Welcome to Index Insights",
+          description: "Welcome to Solactive Portal",
         });
-        navigate('/inventory');
+        navigate('/portal');
       } else {
         toast({
           title: "Login failed",

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Package, BarChart2, Star, LayoutDashboard, Calendar, Bell } from 'lucide-react';
+import { Package, BarChart2, Star, LayoutDashboard, Calendar, Bell, LayoutGrid } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -25,6 +25,11 @@ const SideLayout = ({ children }: SideLayoutProps) => {
   const { starredIndices } = useStarred();
 
   const menuItems = [
+    {
+      title: 'Portal Home',
+      path: '/portal',
+      icon: LayoutGrid,
+    },
     {
       title: 'Index Inventory',
       path: '/inventory',

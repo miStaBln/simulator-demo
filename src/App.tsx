@@ -11,6 +11,7 @@ import IndexDetails from "./pages/IndexDetails";
 import Dashboards from "./pages/Dashboards";
 import Events from "./pages/Events";
 import Login from "./pages/Login";
+import Portal from "./pages/Portal";
 import NotFound from "./pages/NotFound";
 import SideLayout from "./components/SideLayout";
 import { StarredProvider } from "./contexts/StarredContext";
@@ -48,7 +49,12 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
-            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="/" element={<Navigate to="/portal" replace />} />
+            <Route path="/portal" element={
+              <ProtectedRoute>
+                <Portal />
+              </ProtectedRoute>
+            } />
             <Route path="/simulator" element={
               <ProtectedRoute>
                 <SideLayout>
