@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { X } from 'lucide-react';
+import { X, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 // Mock data for performance attribution
@@ -28,6 +28,10 @@ interface PerformanceAttributionProps {
 }
 
 const PerformanceAttribution: React.FC<PerformanceAttributionProps> = ({ onClose, indexName }) => {
+  // Mock dates - in a real implementation, these would come from props or context
+  const reportDate = '2025-06-06';
+  const previousDate = '2025-06-05';
+
   const getColorIntensity = (performance: number) => {
     // Normalize performance to a 0-1 scale for color intensity
     const maxAbs = Math.max(...mockPerformanceData.map(d => Math.abs(d.performance)));
@@ -50,6 +54,27 @@ const PerformanceAttribution: React.FC<PerformanceAttributionProps> = ({ onClose
     }
   };
 
+  const downloadCSV = () => {
+    const headers = ['Instrument ID', 'Performance (%)'];
+    const csvContent = [
+      headers.join(','),
+      ...mockPerformanceData.map(item => 
+        `${item.instrumentId},${item.performance.toFixed(2)}`
+      ),
+      `Overall Index Performance,${overallPerformance.toFixed(2)}`
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `performance_attribution_${indexName.replace(/\s+/g, '_')}_${reportDate}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl max-h-[90vh] overflow-auto">
@@ -59,15 +84,24 @@ const PerformanceAttribution: React.FC<PerformanceAttributionProps> = ({ onClose
               <h2 className="text-xl font-medium">Performance Attribution</h2>
               <p className="text-sm text-gray-600">{indexName}</p>
               <p className="text-sm text-gray-600">
+                Comparing {previousDate} vs {reportDate}
+              </p>
+              <p className="text-sm text-gray-600">
                 Overall Index Performance: 
                 <span className={`ml-1 font-medium ${overallPerformance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                   {overallPerformance >= 0 ? '+' : ''}{overallPerformance.toFixed(2)}%
                 </span>
               </p>
             </div>
-            <Button variant="ghost" size="sm" onClick={onClose}>
-              <X className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center space-x-2">
+              <Button variant="outline" size="sm" onClick={downloadCSV}>
+                <Download className="h-4 w-4 mr-2" />
+                Download CSV
+              </Button>
+              <Button variant="ghost" size="sm" onClick={onClose}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
           
           <div 
