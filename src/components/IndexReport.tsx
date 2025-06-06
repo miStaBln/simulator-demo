@@ -13,8 +13,9 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { IndexItem } from '@/contexts/StarredContext';
-import { CalendarIcon, Download } from 'lucide-react';
+import { CalendarIcon, Download, TrendingUp } from 'lucide-react';
 import { format } from 'date-fns';
+import PerformanceAttribution from './PerformanceAttribution';
 
 // Mock data for the charts
 const mockCurrencyData = [
@@ -88,6 +89,7 @@ interface IndexReportProps {
 const IndexReport: React.FC<IndexReportProps> = ({ indexData }) => {
   const [date, setDate] = useState<Date>(new Date());
   const [isAnalysisOpen, setIsAnalysisOpen] = useState(false);
+  const [isPerformanceAttributionOpen, setIsPerformanceAttributionOpen] = useState(false);
   
   return (
     <div className="space-y-6">
@@ -151,13 +153,21 @@ const IndexReport: React.FC<IndexReportProps> = ({ indexData }) => {
                 </tbody>
               </table>
               
-              <div className="mt-4">
+              <div className="mt-4 space-y-2">
                 <Button 
                   variant="outline" 
                   onClick={() => setIsAnalysisOpen(true)}
-                  className="text-teal-500 border-teal-500 hover:bg-teal-50"
+                  className="w-full text-teal-500 border-teal-500 hover:bg-teal-50"
                 >
                   Adjustments Explained
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsPerformanceAttributionOpen(true)}
+                  className="w-full text-blue-500 border-blue-500 hover:bg-blue-50"
+                >
+                  <TrendingUp className="mr-2 h-4 w-4" />
+                  Performance Attribution
                 </Button>
               </div>
             </CardContent>
@@ -272,6 +282,13 @@ const IndexReport: React.FC<IndexReportProps> = ({ indexData }) => {
       
       {isAnalysisOpen && (
         <ReportAnalysis onClose={() => setIsAnalysisOpen(false)} indexData={indexData} />
+      )}
+      
+      {isPerformanceAttributionOpen && (
+        <PerformanceAttribution 
+          onClose={() => setIsPerformanceAttributionOpen(false)} 
+          indexName={indexData.name}
+        />
       )}
     </div>
   );
