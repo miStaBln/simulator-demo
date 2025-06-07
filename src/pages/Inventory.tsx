@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Filter, SlidersHorizontal, Maximize, Star, FileText, BarChart2 } from 'lucide-react';
@@ -25,7 +24,7 @@ const Inventory = () => {
   // Add mock index levels
   const indices = [
     { id: '94498', name: 'Solactive Transatlantic Equity Selection EUR PR Index', ticker: 'SOLATSP Index', ric: '.SOLATSP', isin: 'DE000SL0QLK6', family: 'DEFAULT_DEFAULT', currency: 'EUR', owner: 'SOLAC', level: 246.82 },
-    { id: '94497', name: 'Solactive Transatlantic Equity Selection EUR NTR Index', ticker: 'SOLATSN Index', ric: '.SOLATSN', isin: 'DE000SL0QLL4', family: 'DEFAULT_DEFAULT', currency: 'EUR', owner: 'SOLAC', level: 312.45 },
+    { id: '94497', name: 'Solactive European Tech Giants EUR NTR Index', ticker: 'SOLATSN Index', ric: '.SOLATSN', isin: 'DE000SL0QLL4', family: 'DEFAULT_DEFAULT', currency: 'EUR', owner: 'SOLAC', level: 312.45 },
     { id: '94495', name: 'GS BASKET API GSXACHSB PR', ticker: 'GSXACHSB', ric: '.GSXACHSB', isin: 'GSXACHSB', family: 'DEFAULT_LASPEYRE', currency: 'USD', owner: 'GSX', level: 187.19 },
     { id: '94490', name: 'GS BASKET API GSSKMBHE PR', ticker: 'GSSKMBHE', ric: '.GSSKMBHE-PR', isin: 'GSSKMBHE', family: 'DEFAULT_LASPEYRE', currency: 'JPY', owner: 'GSX', level: 2946.78 },
     { id: '94487', name: 'GS BASKET API GSVCCRMD PR', ticker: 'GSVCCRMD', ric: '.GSVCCRMD', isin: 'GSVCCRMD', family: 'DEFAULT_LASPEYRE', currency: 'CNH', owner: 'GSX', level: 156.32 },
