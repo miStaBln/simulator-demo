@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { 
   PieChart, 
@@ -300,28 +301,50 @@ const ReportAnalysis = ({ onClose, indexData }: { onClose: () => void, indexData
     {
       constituent: 'TSND.TO',
       eventType: 'Stock Split',
-      beforeShares: '0.18',
-      afterShares: '0.36',
-      priceBefore: '3.86615058',
-      priceAfter: '1.93307529',
-      adjustmentFactor: '2.0',
-      effectiveDate: '2025-04-15'
+      eventID: 'CA001234',
+      withholdingTax: '0.15',
+      grossValue: '3.86615058',
+      netValue: '3.28622799',
+      fxInstrumentToIndex: '1.3665405',
+      fxDivToInstrument: '1.0000000',
+      priceAdjustmentFactorWithCombinedDividend: '0.5000000',
+      shareAdjustmentFactorWithCombinedDividend: '2.0000000',
+      priceAdjustmentFactorForSingleCa: '0.5000000',
+      shareAdjustmentFactorForSingleCa: '2.0000000'
     },
     {
       constituent: 'SUNS.OQ',
       eventType: 'Dividend',
-      beforeShares: '8.53',
-      afterShares: '8.53',
-      priceBefore: '1.42558348',
-      priceAfter: '1.42558348',
-      adjustmentFactor: '1.0',
-      effectiveDate: '2025-04-15'
+      eventID: 'DV005678',
+      withholdingTax: '0.30',
+      grossValue: '0.25000000',
+      netValue: '0.17500000',
+      fxInstrumentToIndex: '1.0000000',
+      fxDivToInstrument: '1.0000000',
+      priceAdjustmentFactorWithCombinedDividend: '0.9824561',
+      shareAdjustmentFactorWithCombinedDividend: '1.0000000',
+      priceAdjustmentFactorForSingleCa: '0.9824561',
+      shareAdjustmentFactorForSingleCa: '1.0000000'
+    },
+    {
+      constituent: 'HITI.V',
+      eventType: 'Rights Issue',
+      eventID: 'RI009876',
+      withholdingTax: '0.00',
+      grossValue: '2.50000000',
+      netValue: '2.50000000',
+      fxInstrumentToIndex: '1.0000000',
+      fxDivToInstrument: '1.0000000',
+      priceAdjustmentFactorWithCombinedDividend: '0.8571429',
+      shareAdjustmentFactorWithCombinedDividend: '1.1666667',
+      priceAdjustmentFactorForSingleCa: '0.8571429',
+      shareAdjustmentFactorForSingleCa: '1.1666667'
     }
   ];
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl max-h-[90vh] overflow-auto">
+      <div className="bg-white rounded-lg shadow-lg w-full max-w-7xl max-h-[90vh] overflow-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-medium">Adjustments Explained</h2>
@@ -355,34 +378,44 @@ const ReportAnalysis = ({ onClose, indexData }: { onClose: () => void, indexData
             </table>
             
             <h3 className="text-lg font-medium mb-2">Constituent Adjustments</h3>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Constituent</TableHead>
-                  <TableHead>Event Type</TableHead>
-                  <TableHead>Shares Before</TableHead>
-                  <TableHead>Shares After</TableHead>
-                  <TableHead>Price Before</TableHead>
-                  <TableHead>Price After</TableHead>
-                  <TableHead>Adjustment Factor</TableHead>
-                  <TableHead>Effective Date</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {mockAdjustments.map((adj, i) => (
-                  <TableRow key={i}>
-                    <TableCell>{adj.constituent}</TableCell>
-                    <TableCell>{adj.eventType}</TableCell>
-                    <TableCell>{adj.beforeShares}</TableCell>
-                    <TableCell>{adj.afterShares}</TableCell>
-                    <TableCell>{adj.priceBefore}</TableCell>
-                    <TableCell>{adj.priceAfter}</TableCell>
-                    <TableCell>{adj.adjustmentFactor}</TableCell>
-                    <TableCell>{adj.effectiveDate}</TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="whitespace-nowrap">Constituent</TableHead>
+                    <TableHead className="whitespace-nowrap">Event Type</TableHead>
+                    <TableHead className="whitespace-nowrap">Event ID</TableHead>
+                    <TableHead className="whitespace-nowrap">Withholding Tax</TableHead>
+                    <TableHead className="whitespace-nowrap">Gross Value</TableHead>
+                    <TableHead className="whitespace-nowrap">Net Value</TableHead>
+                    <TableHead className="whitespace-nowrap">FX Instrument to Index</TableHead>
+                    <TableHead className="whitespace-nowrap">FX Div To Instrument</TableHead>
+                    <TableHead className="whitespace-nowrap">Price Adj Factor w/ Combined Div</TableHead>
+                    <TableHead className="whitespace-nowrap">Share Adj Factor w/ Combined Div</TableHead>
+                    <TableHead className="whitespace-nowrap">Price Adj Factor for Single CA</TableHead>
+                    <TableHead className="whitespace-nowrap">Share Adj Factor for Single CA</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {mockAdjustments.map((adj, i) => (
+                    <TableRow key={i}>
+                      <TableCell className="whitespace-nowrap font-medium">{adj.constituent}</TableCell>
+                      <TableCell className="whitespace-nowrap">{adj.eventType}</TableCell>
+                      <TableCell className="whitespace-nowrap">{adj.eventID}</TableCell>
+                      <TableCell className="whitespace-nowrap">{adj.withholdingTax}</TableCell>
+                      <TableCell className="whitespace-nowrap">{adj.grossValue}</TableCell>
+                      <TableCell className="whitespace-nowrap">{adj.netValue}</TableCell>
+                      <TableCell className="whitespace-nowrap">{adj.fxInstrumentToIndex}</TableCell>
+                      <TableCell className="whitespace-nowrap">{adj.fxDivToInstrument}</TableCell>
+                      <TableCell className="whitespace-nowrap">{adj.priceAdjustmentFactorWithCombinedDividend}</TableCell>
+                      <TableCell className="whitespace-nowrap">{adj.shareAdjustmentFactorWithCombinedDividend}</TableCell>
+                      <TableCell className="whitespace-nowrap">{adj.priceAdjustmentFactorForSingleCa}</TableCell>
+                      <TableCell className="whitespace-nowrap">{adj.shareAdjustmentFactorForSingleCa}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </div>
         </div>
       </div>
