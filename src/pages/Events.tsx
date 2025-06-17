@@ -171,7 +171,7 @@ const GaugeView = ({ title, value, maxValue = 10, color = 'teal' }: {
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="flex items-center space-x-4">
+        <div className="flex justify-center">
           <div className="relative w-16 h-16">
             <svg className="w-16 h-16 transform -rotate-90" viewBox="0 0 36 36">
               <path
@@ -192,7 +192,6 @@ const GaugeView = ({ title, value, maxValue = 10, color = 'teal' }: {
               <span className="text-xl font-bold">{value}</span>
             </div>
           </div>
-          <div className="text-2xl font-bold">{value}</div>
         </div>
       </CardContent>
     </Card>
