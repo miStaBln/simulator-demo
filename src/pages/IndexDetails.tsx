@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { 
@@ -28,6 +29,7 @@ const IndexDetails = () => {
   const { toast } = useToast();
   const { state } = location;
   const indexData = state?.indexData as IndexItem;
+  const defaultTab = state?.defaultTab || 'index-details';
   
   const handleDownloadGuideline = () => {
     // TODO: Replace with actual PDF download logic when available
@@ -69,15 +71,15 @@ const IndexDetails = () => {
             variant="ghost" 
             size="sm" 
             className="mr-2"
-            onClick={() => navigate('/inventory')}
+            onClick={() => navigate('/events')}
           >
             <ArrowLeft className="h-4 w-4 mr-1" />
-            Back
+            Back to Events
           </Button>
           <h1 className="text-2xl font-semibold">Index Insights <span className="text-sm font-normal text-gray-500">Prototype</span></h1>
         </div>
         
-        <Tabs defaultValue="index-details" className="w-full">
+        <Tabs defaultValue={defaultTab} className="w-full">
           <TabsList className="mb-4">
             <TabsTrigger value="index-details" className="flex items-center">
               <FileText className="mr-2 h-4 w-4" />

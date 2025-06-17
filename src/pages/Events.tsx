@@ -1,12 +1,13 @@
-
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useStarred } from '@/contexts/StarredContext';
-import { Bell, Calendar, ChevronDown, AlertCircle } from 'lucide-react';
+import { Bell, Calendar, ChevronDown, ChevronRight, AlertCircle, Activity, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 
 // Mock indices for demo purposes
@@ -88,6 +89,266 @@ const daysUntil = (dateString: string) => {
   const diffTime = targetDate.getTime() - today.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   return diffDays;
+};
+
+// Mock data for running selections (where today is between selection and rebalancing date)
+const runningSelections = [
+  {
+    indexId: 'idx-1',
+    name: 'Global Tech Leaders',
+    ticker: 'GTECH',
+    selectionDate: '2025-06-15',
+    rebalancingDate: '2025-06-20',
+    weightingType: 'INDEX_MEMBER_FIN',
+    rebalancingType: 'INDEX_MEMBER_LASPE',
+    casBeforeCreation: 0,
+    ecasBeforeCreation: 12,
+    casAfterCreation: 0,
+    ecasAfterCreation: 0,
+    constituents: [
+      { name: 'AAPL', change: '+2.1%', action: 'Weight Increase' },
+      { name: 'MSFT', change: '-1.3%', action: 'Weight Decrease' },
+      { name: 'GOOGL', change: '+0.8%', action: 'Weight Increase' }
+    ]
+  },
+  {
+    indexId: 'idx-3',
+    name: 'Sustainable Energy',
+    ticker: 'SENRG',
+    selectionDate: '2025-06-16',
+    rebalancingDate: '2025-06-18',
+    weightingType: 'INDEX_MEMBER_FIN',
+    rebalancingType: 'INDEX_MEMBER_LASPE',
+    casBeforeCreation: 0,
+    ecasBeforeCreation: 10,
+    casAfterCreation: 0,
+    ecasAfterCreation: 0,
+    constituents: [
+      { name: 'TSLA', change: '+3.2%', action: 'Weight Increase' },
+      { name: 'ENPH', change: '-0.5%', action: 'Weight Decrease' }
+    ]
+  },
+  {
+    indexId: 'idx-5',
+    name: 'Healthcare Innovation',
+    ticker: 'HLTHIN',
+    selectionDate: '2025-06-14',
+    rebalancingDate: '2025-06-18',
+    weightingType: 'INDEX_MEMBER_FIN',
+    rebalancingType: 'INDEX_MEMBER_LASPE',
+    casBeforeCreation: 0,
+    ecasBeforeCreation: 8,
+    casAfterCreation: 0,
+    ecasAfterCreation: 0,
+    constituents: [
+      { name: 'JNJ', change: '+1.5%', action: 'Weight Increase' },
+      { name: 'PFE', change: '-2.1%', action: 'Weight Decrease' },
+      { name: 'MRNA', change: '+4.3%', action: 'New Addition' }
+    ]
+  }
+];
+
+// Calculate metrics for gauge views
+const activeProforma = runningSelections.length;
+const exTomorrow = runningSelections.filter(selection => {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const rebalDate = new Date(selection.rebalancingDate);
+  return rebalDate.toDateString() === tomorrow.toDateString();
+}).length;
+
+const GaugeView = ({ title, value, maxValue = 10, color = 'teal' }: { 
+  title: string; 
+  value: number; 
+  maxValue?: number; 
+  color?: string; 
+}) => {
+  const percentage = Math.min((value / maxValue) * 100, 100);
+  
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-center space-x-4">
+          <div className="relative w-16 h-16">
+            <svg className="w-16 h-16 transform -rotate-90" viewBox="0 0 36 36">
+              <path
+                d="m18,2.0845 a 15.9155,15.9155 0 0,1 0,31.831 a 15.9155,15.9155 0 0,1 0,-31.831"
+                fill="none"
+                stroke="#e5e7eb"
+                strokeWidth="2"
+              />
+              <path
+                d="m18,2.0845 a 15.9155,15.9155 0 0,1 0,31.831 a 15.9155,15.9155 0 0,1 0,-31.831"
+                fill="none"
+                stroke={color === 'teal' ? '#14b8a6' : '#f59e0b'}
+                strokeWidth="2"
+                strokeDasharray={`${percentage}, 100`}
+              />
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-xl font-bold">{value}</span>
+            </div>
+          </div>
+          <div className="text-2xl font-bold">{value}</div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+const RunningSelectionsTable = () => {
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const navigate = useNavigate();
+
+  const toggleRow = (indexId: string) => {
+    const newExpanded = new Set(expandedRows);
+    if (newExpanded.has(indexId)) {
+      newExpanded.delete(indexId);
+    } else {
+      newExpanded.add(indexId);
+    }
+    setExpandedRows(newExpanded);
+  };
+
+  const navigateToIndexTimeline = (indexId: string, indexName: string) => {
+    const indexData = allIndices.find(idx => idx.id === indexId);
+    if (indexData) {
+      navigate('/index-details', { 
+        state: { 
+          indexData: { ...indexData, name: indexName },
+          defaultTab: 'timeline'
+        } 
+      });
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Activity className="h-5 w-5 text-teal-500" />
+          Currently Running Selections
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-12"></TableHead>
+              <TableHead>Index ID</TableHead>
+              <TableHead>Selection Date</TableHead>
+              <TableHead>Rebalancing Date</TableHead>
+              <TableHead>Days Until Rebalancing</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {runningSelections.map((selection) => {
+              const isExpanded = expandedRows.has(selection.indexId);
+              const daysUntilRebalancing = daysUntil(selection.rebalancingDate);
+              
+              return (
+                <React.Fragment key={selection.indexId}>
+                  <TableRow className="cursor-pointer hover:bg-gray-50">
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleRow(selection.indexId)}
+                      >
+                        {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                      </Button>
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="link"
+                        className="p-0 h-auto font-medium text-teal-600 hover:text-teal-800"
+                        onClick={() => navigateToIndexTimeline(selection.indexId, selection.name)}
+                      >
+                        {selection.ticker}
+                      </Button>
+                    </TableCell>
+                    <TableCell>{formatDate(selection.selectionDate)}</TableCell>
+                    <TableCell>{formatDate(selection.rebalancingDate)}</TableCell>
+                    <TableCell>
+                      <span className={cn(
+                        "font-medium",
+                        daysUntilRebalancing <= 1 ? "text-red-600" : 
+                        daysUntilRebalancing <= 3 ? "text-yellow-600" : 
+                        "text-green-600"
+                      )}>
+                        {daysUntilRebalancing === 0 ? "Today" : 
+                         daysUntilRebalancing === 1 ? "Tomorrow" :
+                         `${daysUntilRebalancing} days`}
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                  {isExpanded && (
+                    <TableRow>
+                      <TableCell colSpan={5} className="bg-gray-50 p-6">
+                        <div className="space-y-4">
+                          <h4 className="font-medium text-lg">{selection.name} - Details</h4>
+                          
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                            <div>
+                              <span className="text-gray-600">Weighting Type:</span>
+                              <div className="font-medium">{selection.weightingType}</div>
+                            </div>
+                            <div>
+                              <span className="text-gray-600">Rebalancing Type:</span>
+                              <div className="font-medium">{selection.rebalancingType}</div>
+                            </div>
+                            <div>
+                              <span className="text-gray-600">CAs before Creation:</span>
+                              <div className="font-medium">{selection.casBeforeCreation}</div>
+                            </div>
+                            <div>
+                              <span className="text-gray-600">ECAs before Creation:</span>
+                              <div className="font-medium">{selection.ecasBeforeCreation}</div>
+                            </div>
+                            <div>
+                              <span className="text-gray-600">CAs after Creation:</span>
+                              <div className="font-medium">{selection.casAfterCreation}</div>
+                            </div>
+                            <div>
+                              <span className="text-gray-600">ECAs after Creation:</span>
+                              <div className="font-medium">{selection.ecasAfterCreation}</div>
+                            </div>
+                          </div>
+
+                          <div>
+                            <h5 className="font-medium mb-2">Constituent Changes</h5>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                              {selection.constituents.map((constituent, index) => (
+                                <div key={index} className="flex justify-between items-center bg-white p-2 rounded border">
+                                  <span className="font-medium">{constituent.name}</span>
+                                  <div className="text-right">
+                                    <div className={cn(
+                                      "text-sm font-medium",
+                                      constituent.change.startsWith('+') ? "text-green-600" : "text-red-600"
+                                    )}>
+                                      {constituent.change}
+                                    </div>
+                                    <div className="text-xs text-gray-500">{constituent.action}</div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+  );
 };
 
 const IndexEventsWidget = ({ indices, standalone = false }: { indices: any[], standalone?: boolean }) => {
@@ -201,32 +462,66 @@ const Events = () => {
           <h1 className="text-2xl font-semibold">Index Events</h1>
         </div>
       </div>
-      
-      <div className="mb-6 flex justify-between items-center">
-        <div className="flex items-center gap-4">
-          <Select value={indexFilter} onValueChange={(value: 'starred' | 'administered') => setIndexFilter(value)}>
-            <SelectTrigger className="w-56">
-              <SelectValue placeholder="Filter by type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="starred">Starred Indices</SelectItem>
-              <SelectItem value="administered">Administered Indices</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          <div className="flex items-center gap-2">
-            <Switch id="highlight-urgent" defaultChecked />
-            <label htmlFor="highlight-urgent" className="text-sm">Highlight urgent events</label>
+
+      <Tabs defaultValue="running-selections" className="w-full">
+        <TabsList className="mb-6">
+          <TabsTrigger value="running-selections" className="flex items-center">
+            <Activity className="mr-2 h-4 w-4" />
+            Running Selections
+          </TabsTrigger>
+          <TabsTrigger value="upcoming-events" className="flex items-center">
+            <Clock className="mr-2 h-4 w-4" />
+            Upcoming Events
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="running-selections" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <GaugeView 
+              title="Nr of Active Proforma" 
+              value={activeProforma} 
+              maxValue={10} 
+              color="teal" 
+            />
+            <GaugeView 
+              title="Ex Tomorrow" 
+              value={exTomorrow} 
+              maxValue={5} 
+              color="yellow" 
+            />
           </div>
-        </div>
-        
-        <Button variant="outline">
-          <Calendar className="h-4 w-4 mr-2" />
-          Calendar View
-        </Button>
-      </div>
-      
-      <IndexEventsWidget indices={filteredIndices} standalone={true} />
+          
+          <RunningSelectionsTable />
+        </TabsContent>
+
+        <TabsContent value="upcoming-events" className="space-y-6">
+          <div className="mb-6 flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <Select value={indexFilter} onValueChange={(value: 'starred' | 'administered') => setIndexFilter(value)}>
+                <SelectTrigger className="w-56">
+                  <SelectValue placeholder="Filter by type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="starred">Starred Indices</SelectItem>
+                  <SelectItem value="administered">Administered Indices</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <div className="flex items-center gap-2">
+                <Switch id="highlight-urgent" defaultChecked />
+                <label htmlFor="highlight-urgent" className="text-sm">Highlight urgent events</label>
+              </div>
+            </div>
+            
+            <Button variant="outline">
+              <Calendar className="h-4 w-4 mr-2" />
+              Calendar View
+            </Button>
+          </div>
+          
+          <IndexEventsWidget indices={filteredIndices} standalone={true} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
