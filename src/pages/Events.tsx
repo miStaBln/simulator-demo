@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStarred } from '@/contexts/StarredContext';
@@ -325,7 +326,7 @@ const RunningSelectionsTable = () => {
               <SelectContent>
                 <SelectItem value="all">All Selections</SelectItem>
                 <SelectItem value="urgent">Urgent (≤2 days)</SelectItem>
-                <SelectItem value="normal">Normal (>2 days)</SelectItem>
+                <SelectItem value="normal">Normal ({">"}2 days)</SelectItem>
               </SelectContent>
             </Select>
           </div>
