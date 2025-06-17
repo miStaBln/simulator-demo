@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStarred } from '@/contexts/StarredContext';
-import { Bell, Calendar, ChevronDown, ChevronRight, AlertCircle, Activity, Clock } from 'lucide-react';
+import { Bell, Calendar, ChevronDown, ChevronRight, AlertCircle, Activity, Clock, Search, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
 // Mock indices for demo purposes
@@ -91,7 +92,7 @@ const daysUntil = (dateString: string) => {
   return diffDays;
 };
 
-// Mock data for running selections (where today is between selection and rebalancing date)
+// Enhanced mock data for running selections with more entries
 const runningSelections = [
   {
     indexId: 'idx-1',
@@ -144,6 +145,60 @@ const runningSelections = [
       { name: 'JNJ', change: '+1.5%', action: 'Weight Increase' },
       { name: 'PFE', change: '-2.1%', action: 'Weight Decrease' },
       { name: 'MRNA', change: '+4.3%', action: 'New Addition' }
+    ]
+  },
+  {
+    indexId: 'idx-2',
+    name: 'European Momentum',
+    ticker: 'EUMOM',
+    selectionDate: '2025-06-12',
+    rebalancingDate: '2025-06-19',
+    weightingType: 'INDEX_MEMBER_FIN',
+    rebalancingType: 'INDEX_MEMBER_LASPE',
+    casBeforeCreation: 0,
+    ecasBeforeCreation: 15,
+    casAfterCreation: 0,
+    ecasAfterCreation: 0,
+    constituents: [
+      { name: 'SAP', change: '+1.8%', action: 'Weight Increase' },
+      { name: 'ASML', change: '+2.5%', action: 'Weight Increase' },
+      { name: 'LVMH', change: '-0.7%', action: 'Weight Decrease' }
+    ]
+  },
+  {
+    indexId: 'idx-4',
+    name: 'Financial Services',
+    ticker: 'FINSERV',
+    selectionDate: '2025-06-13',
+    rebalancingDate: '2025-06-17',
+    weightingType: 'INDEX_MEMBER_FIN',
+    rebalancingType: 'INDEX_MEMBER_LASPE',
+    casBeforeCreation: 0,
+    ecasBeforeCreation: 20,
+    casAfterCreation: 0,
+    ecasAfterCreation: 0,
+    constituents: [
+      { name: 'JPM', change: '+1.2%', action: 'Weight Increase' },
+      { name: 'BAC', change: '-1.8%', action: 'Weight Decrease' },
+      { name: 'GS', change: '+0.9%', action: 'Weight Increase' },
+      { name: 'WFC', change: '-0.3%', action: 'Weight Decrease' }
+    ]
+  },
+  {
+    indexId: 'idx-6',
+    name: 'Consumer Staples',
+    ticker: 'CSTAPLE',
+    selectionDate: '2025-06-11',
+    rebalancingDate: '2025-06-17',
+    weightingType: 'INDEX_MEMBER_FIN',
+    rebalancingType: 'INDEX_MEMBER_LASPE',
+    casBeforeCreation: 0,
+    ecasBeforeCreation: 6,
+    casAfterCreation: 0,
+    ecasAfterCreation: 0,
+    constituents: [
+      { name: 'PG', change: '+0.5%', action: 'Weight Increase' },
+      { name: 'KO', change: '+1.1%', action: 'Weight Increase' }
     ]
   }
 ];
@@ -200,6 +255,8 @@ const GaugeView = ({ title, value, maxValue = 10, color = 'teal' }: {
 
 const RunningSelectionsTable = () => {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'urgent' | 'normal'>('all');
   const navigate = useNavigate();
 
   const toggleRow = (indexId: string) => {
@@ -224,6 +281,24 @@ const RunningSelectionsTable = () => {
     }
   };
 
+  // Filter and search logic
+  const filteredSelections = runningSelections.filter(selection => {
+    // Search filter
+    const matchesSearch = searchTerm === '' || 
+      selection.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      selection.ticker.toLowerCase().includes(searchTerm.toLowerCase());
+
+    // Status filter
+    const daysUntilRebalancing = daysUntil(selection.rebalancingDate);
+    const isUrgent = daysUntilRebalancing <= 2;
+    
+    const matchesStatus = statusFilter === 'all' || 
+      (statusFilter === 'urgent' && isUrgent) ||
+      (statusFilter === 'normal' && !isUrgent);
+
+    return matchesSearch && matchesStatus;
+  });
+
   return (
     <Card>
       <CardHeader>
@@ -231,6 +306,30 @@ const RunningSelectionsTable = () => {
           <Activity className="h-5 w-5 text-teal-500" />
           Currently Running Selections
         </CardTitle>
+        <div className="flex gap-4 items-center pt-4">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              placeholder="Search by name or ticker..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-gray-500" />
+            <Select value={statusFilter} onValueChange={(value: 'all' | 'urgent' | 'normal') => setStatusFilter(value)}>
+              <SelectTrigger className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Selections</SelectItem>
+                <SelectItem value="urgent">Urgent (≤2 days)</SelectItem>
+                <SelectItem value="normal">Normal (>2 days)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
         <Table>
@@ -244,7 +343,7 @@ const RunningSelectionsTable = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {runningSelections.map((selection) => {
+            {filteredSelections.map((selection) => {
               const isExpanded = expandedRows.has(selection.indexId);
               const daysUntilRebalancing = daysUntil(selection.rebalancingDate);
               
@@ -343,6 +442,13 @@ const RunningSelectionsTable = () => {
                 </React.Fragment>
               );
             })}
+            {filteredSelections.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                  No running selections found matching your criteria.
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </CardContent>
