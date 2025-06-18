@@ -1,5 +1,3 @@
-
-
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { 
@@ -35,7 +33,6 @@ const IndexDetails = () => {
   const { state } = location;
   const indexData = state?.indexData as IndexItem;
   const defaultTab = state?.defaultTab || 'index-details';
-  const [showKeyFigures, setShowKeyFigures] = useState(false);
   
   const handleDownloadGuideline = () => {
     // TODO: Replace with actual PDF download logic when available
@@ -85,15 +82,6 @@ const IndexDetails = () => {
             </Button>
             <h1 className="text-2xl font-semibold">Index Insights <span className="text-sm font-normal text-gray-500">Prototype</span></h1>
           </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="flex items-center"
-            onClick={() => setShowKeyFigures(true)}
-          >
-            <TrendingUp className="mr-2 h-4 w-4" />
-            INDEX KEY FIGURES
-          </Button>
         </div>
         
         <Tabs defaultValue={defaultTab} className="w-full">
@@ -101,6 +89,10 @@ const IndexDetails = () => {
             <TabsTrigger value="index-details" className="flex items-center">
               <FileText className="mr-2 h-4 w-4" />
               INDEX DETAILS
+            </TabsTrigger>
+            <TabsTrigger value="key-figures" className="flex items-center">
+              <TrendingUp className="mr-2 h-4 w-4" />
+              INDEX KEY FIGURES
             </TabsTrigger>
             <TabsTrigger value="timeline" className="flex items-center">
               <Clock className="mr-2 h-4 w-4" />
@@ -225,6 +217,10 @@ const IndexDetails = () => {
             </Card>
           </TabsContent>
 
+          <TabsContent value="key-figures">
+            <IndexKeyFigures indexData={extendedData} />
+          </TabsContent>
+
           <TabsContent value="timeline">
             <IndexTimeline indexData={extendedData} />
           </TabsContent>
@@ -249,16 +245,9 @@ const IndexDetails = () => {
             <IndexHistory indexData={extendedData} />
           </TabsContent>
         </Tabs>
-
-        <IndexKeyFigures 
-          indexData={extendedData} 
-          open={showKeyFigures} 
-          onOpenChange={setShowKeyFigures}
-        />
       </div>
     </div>
   );
 };
 
 export default IndexDetails;
-

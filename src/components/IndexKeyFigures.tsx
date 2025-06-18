@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { IndexItem } from '@/contexts/StarredContext';
 import { TrendingUp, TrendingDown, Calendar, Percent, DollarSign, BarChart3 } from 'lucide-react';
@@ -13,11 +12,9 @@ interface IndexKeyFiguresProps {
     indexType: string;
     region: string;
   };
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
 }
 
-const IndexKeyFigures: React.FC<IndexKeyFiguresProps> = ({ indexData, open, onOpenChange }) => {
+const IndexKeyFigures: React.FC<IndexKeyFiguresProps> = ({ indexData }) => {
   // Sample KPI data
   const kpis = {
     ytdPerformance: 12.45,
@@ -44,16 +41,16 @@ const IndexKeyFigures: React.FC<IndexKeyFiguresProps> = ({ indexData, open, onOp
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center">
+    <Card>
+      <CardContent className="pt-6">
+        <div className="mb-6">
+          <h2 className="text-xl font-medium flex items-center">
             <BarChart3 className="mr-2 h-5 w-5" />
             Index Key Figures - {indexData.name}
-          </DialogTitle>
-        </DialogHeader>
+          </h2>
+        </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
           {/* Performance Metrics */}
           <Card>
             <CardHeader className="pb-2">
@@ -229,7 +226,7 @@ const IndexKeyFigures: React.FC<IndexKeyFiguresProps> = ({ indexData, open, onOp
           </Card>
         </div>
 
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+        <div className="p-4 bg-gray-50 rounded-lg">
           <h3 className="text-sm font-medium text-gray-700 mb-2">Index Information</h3>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
@@ -250,8 +247,8 @@ const IndexKeyFigures: React.FC<IndexKeyFiguresProps> = ({ indexData, open, onOp
             </div>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </CardContent>
+    </Card>
   );
 };
 
