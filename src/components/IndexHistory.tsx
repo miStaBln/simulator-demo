@@ -12,7 +12,7 @@ interface HistoryEvent {
   id: string;
   date: Date;
   eventType: 'CORPORATE_ACTION' | 'REBALANCE';
-  newBasketVersion: number;
+  newIndexVersion: number;
   oldDivisor: string;
   newDivisor: string;
   deltaDivisor: string;
@@ -42,7 +42,7 @@ const IndexHistory: React.FC<IndexHistoryProps> = ({ indexData }) => {
       id: '1',
       date: new Date('2025-03-03T00:15:56'),
       eventType: 'CORPORATE_ACTION',
-      newBasketVersion: 469,
+      newIndexVersion: 469,
       oldDivisor: '179720583542.73737',
       newDivisor: '179717612678.62357',
       deltaDivisor: '-2970864.1138',
@@ -59,7 +59,7 @@ const IndexHistory: React.FC<IndexHistoryProps> = ({ indexData }) => {
       id: '2',
       date: new Date('2025-03-28T00:10:25'),
       eventType: 'CORPORATE_ACTION',
-      newBasketVersion: 470,
+      newIndexVersion: 470,
       oldDivisor: '179717612678.62357',
       newDivisor: '179710663407.1153',
       deltaDivisor: '-6949271.50827'
@@ -68,7 +68,7 @@ const IndexHistory: React.FC<IndexHistoryProps> = ({ indexData }) => {
       id: '3',
       date: new Date('2025-04-01T00:10:38'),
       eventType: 'CORPORATE_ACTION',
-      newBasketVersion: 471,
+      newIndexVersion: 471,
       oldDivisor: '179710663407.1153',
       newDivisor: '179694506860.11285',
       deltaDivisor: '-16156547.002441'
@@ -77,7 +77,7 @@ const IndexHistory: React.FC<IndexHistoryProps> = ({ indexData }) => {
       id: '4',
       date: new Date('2025-04-16T05:47:30'),
       eventType: 'REBALANCE',
-      newBasketVersion: 473,
+      newIndexVersion: 473,
       oldDivisor: '',
       newDivisor: '',
       deltaDivisor: '0',
@@ -97,7 +97,7 @@ const IndexHistory: React.FC<IndexHistoryProps> = ({ indexData }) => {
       id: '5',
       date: new Date('2025-04-18T00:10:35'),
       eventType: 'CORPORATE_ACTION',
-      newBasketVersion: 474,
+      newIndexVersion: 474,
       oldDivisor: '179668504290.41718',
       newDivisor: '179609546755.5131',
       deltaDivisor: '-58957534.904083'
@@ -107,7 +107,7 @@ const IndexHistory: React.FC<IndexHistoryProps> = ({ indexData }) => {
   const filteredEvents = historyEvents.filter(event => {
     const matchesSearch = searchTerm === '' || 
       event.eventType.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      event.newBasketVersion.toString().includes(searchTerm);
+      event.newIndexVersion.toString().includes(searchTerm);
     
     const eventDate = event.date;
     const start = new Date(startDate);
@@ -169,7 +169,7 @@ const IndexHistory: React.FC<IndexHistoryProps> = ({ indexData }) => {
             <TableRow className="bg-gray-50">
               <TableHead>Date</TableHead>
               <TableHead>Event Type</TableHead>
-              <TableHead>New Basket Version</TableHead>
+              <TableHead>New Index Version</TableHead>
               <TableHead>Old Divisor</TableHead>
               <TableHead>New Divisor</TableHead>
               <TableHead>Delta Divisor</TableHead>
@@ -185,7 +185,7 @@ const IndexHistory: React.FC<IndexHistoryProps> = ({ indexData }) => {
               >
                 <TableCell>{format(event.date, 'yyyy-MM-dd HH:mm:ss')}</TableCell>
                 <TableCell>{event.eventType}</TableCell>
-                <TableCell>{event.newBasketVersion}</TableCell>
+                <TableCell>{event.newIndexVersion}</TableCell>
                 <TableCell>{event.oldDivisor}</TableCell>
                 <TableCell>{event.newDivisor}</TableCell>
                 <TableCell className={event.deltaDivisor.includes('-') ? 'text-red-600' : 'text-black'}>
@@ -199,12 +199,12 @@ const IndexHistory: React.FC<IndexHistoryProps> = ({ indexData }) => {
 
         <Dialog open={!!selectedEvent} onOpenChange={() => setSelectedEvent(null)}>
           {selectedEvent && (
-            <DialogContent className="max-w-4xl">
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
               <DialogHeader>
-                <DialogTitle>
+                <DialogTitle className="text-lg font-medium">
                   {selectedEvent.eventType === 'CORPORATE_ACTION' ? 'Corporate Action' : 'Rebalance'}
                 </DialogTitle>
-                <div className="text-sm text-gray-600">Basket Change</div>
+                <div className="text-sm text-gray-600">Index Change</div>
               </DialogHeader>
               
               <div className="space-y-6">
@@ -213,7 +213,7 @@ const IndexHistory: React.FC<IndexHistoryProps> = ({ indexData }) => {
                     <TableRow className="bg-gray-100">
                       <TableHead>Date</TableHead>
                       <TableHead>Event Type</TableHead>
-                      <TableHead>New Basket Version</TableHead>
+                      <TableHead>New Index Version</TableHead>
                       <TableHead>Old Divisor</TableHead>
                       <TableHead>New Divisor</TableHead>
                       <TableHead>Delta Divisor</TableHead>
@@ -224,7 +224,7 @@ const IndexHistory: React.FC<IndexHistoryProps> = ({ indexData }) => {
                     <TableRow>
                       <TableCell>{format(selectedEvent.date, 'yyyy-MM-dd HH:mm:ss')}</TableCell>
                       <TableCell>{selectedEvent.eventType}</TableCell>
-                      <TableCell>{selectedEvent.newBasketVersion}</TableCell>
+                      <TableCell>{selectedEvent.newIndexVersion}</TableCell>
                       <TableCell>{selectedEvent.oldDivisor}</TableCell>
                       <TableCell>{selectedEvent.newDivisor}</TableCell>
                       <TableCell className="text-red-600">{selectedEvent.deltaDivisor}</TableCell>
