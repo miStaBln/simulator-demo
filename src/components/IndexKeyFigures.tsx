@@ -1,7 +1,9 @@
 
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { IndexItem } from '@/contexts/StarredContext';
@@ -118,14 +120,13 @@ const IndexKeyFigures: React.FC<IndexKeyFiguresProps> = ({ indexData }) => {
               </Popover>
             </div>
 
-            <Button 
-              onClick={toggleAverageData}
-              variant={useAverageData ? "default" : "outline"}
-              className="flex items-center gap-2"
-            >
-              <CalendarIcon className="h-4 w-4" />
-              Use 30-Day Average
-            </Button>
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-gray-700">Use 30-Day Average:</span>
+              <Switch
+                checked={useAverageData}
+                onCheckedChange={setUseAverageData}
+              />
+            </div>
 
             <div className="text-sm text-gray-600">
               {useAverageData ? (
@@ -350,3 +351,4 @@ const IndexKeyFigures: React.FC<IndexKeyFiguresProps> = ({ indexData }) => {
 };
 
 export default IndexKeyFigures;
+
