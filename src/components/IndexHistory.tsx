@@ -121,131 +121,6 @@ const IndexHistory: React.FC<IndexHistoryProps> = ({ indexData }) => {
     setSelectedEvent(event);
   };
 
-  const renderCorporateActionDialog = () => (
-    <DialogContent className="max-w-4xl">
-      <DialogHeader>
-        <DialogTitle>Corporate Action</DialogTitle>
-        <div className="text-sm text-gray-600">Basket Change</div>
-      </DialogHeader>
-      
-      <div className="space-y-6">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-gray-100">
-              <TableHead>Date</TableHead>
-              <TableHead>Event Type</TableHead>
-              <TableHead>New Basket Version</TableHead>
-              <TableHead>Old Divisor</TableHead>
-              <TableHead>New Divisor</TableHead>
-              <TableHead>Delta Divisor</TableHead>
-              <TableHead>Agg Late Div Points</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <TableRow>
-              <TableCell>{format(selectedEvent!.date, 'yyyy-MM-dd HH:mm:ss')}</TableCell>
-              <TableCell>{selectedEvent!.eventType}</TableCell>
-              <TableCell>{selectedEvent!.newBasketVersion}</TableCell>
-              <TableCell>{selectedEvent!.oldDivisor}</TableCell>
-              <TableCell>{selectedEvent!.newDivisor}</TableCell>
-              <TableCell className="text-red-600">{selectedEvent!.deltaDivisor}</TableCell>
-              <TableCell>{selectedEvent!.aggLateDivPoints || ''}</TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-
-        <div>
-          <h3 className="text-lg font-medium mb-3">Event Details</h3>
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-gray-100">
-                <TableHead>Sec ID (RIC)</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Close Price</TableHead>
-                <TableHead>Adjusted Close</TableHead>
-                <TableHead>FX</TableHead>
-                <TableHead>WHT Rate</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow>
-                <TableCell>{selectedEvent!.details?.secId || '600177.SS'}</TableCell>
-                <TableCell>{selectedEvent!.details?.type || 'CASH_DIVIDEND'}</TableCell>
-                <TableCell>{selectedEvent!.details?.closePrice || '8.24'}</TableCell>
-                <TableCell>{selectedEvent!.details?.adjustedClose || '8.15'}</TableCell>
-                <TableCell>{selectedEvent!.details?.fx || '1'}</TableCell>
-                <TableCell>{selectedEvent!.details?.whtRate || '10'}</TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </div>
-      </div>
-    </DialogContent>
-  );
-
-  const renderRebalanceDialog = () => (
-    <DialogContent className="max-w-4xl">
-      <DialogHeader>
-        <DialogTitle>Rebalance</DialogTitle>
-        <div className="text-sm text-gray-600">Basket Change</div>
-      </DialogHeader>
-      
-      <div className="space-y-6">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-gray-100">
-              <TableHead>Date</TableHead>
-              <TableHead>Event Type</TableHead>
-              <TableHead>New Basket Version</TableHead>
-              <TableHead>Old Divisor</TableHead>
-              <TableHead>New Divisor</TableHead>
-              <TableHead>Delta Divisor</TableHead>
-              <TableHead>Agg Late Div Points</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <TableRow>
-              <TableCell>{format(selectedEvent!.date, 'yyyy-MM-dd HH:mm:ss')}</TableCell>
-              <TableCell>{selectedEvent!.eventType}</TableCell>
-              <TableCell>{selectedEvent!.newBasketVersion}</TableCell>
-              <TableCell>{selectedEvent!.oldDivisor}</TableCell>
-              <TableCell>{selectedEvent!.newDivisor}</TableCell>
-              <TableCell>{selectedEvent!.deltaDivisor}</TableCell>
-              <TableCell>{selectedEvent!.aggLateDivPoints || ''}</TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-
-        <div>
-          <h3 className="text-lg font-medium mb-3">Membership Changes</h3>
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-gray-100">
-                <TableHead>Sec ID (RIC)</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>NOSH Old</TableHead>
-                <TableHead>NOSH New</TableHead>
-                <TableHead>NOSH Diff</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow>
-                <TableCell>600705.SS</TableCell>
-                <TableCell>UPDATE</TableCell>
-                <TableCell>5351984777.44</TableCell>
-                <TableCell>0</TableCell>
-                <TableCell className="text-red-600">-5351984777.44</TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-          <div className="text-right text-sm text-gray-500 mt-2">
-            Rows per page: 10 ▼ 1-1 of 1
-          </div>
-        </div>
-      </div>
-    </DialogContent>
-  );
-
   return (
     <Card>
       <CardContent className="pt-6">
@@ -323,10 +198,100 @@ const IndexHistory: React.FC<IndexHistoryProps> = ({ indexData }) => {
         </Table>
 
         <Dialog open={!!selectedEvent} onOpenChange={() => setSelectedEvent(null)}>
-          {selectedEvent?.eventType === 'CORPORATE_ACTION' 
-            ? renderCorporateActionDialog() 
-            : renderRebalanceDialog()
-          }
+          {selectedEvent && (
+            <DialogContent className="max-w-4xl">
+              <DialogHeader>
+                <DialogTitle>
+                  {selectedEvent.eventType === 'CORPORATE_ACTION' ? 'Corporate Action' : 'Rebalance'}
+                </DialogTitle>
+                <div className="text-sm text-gray-600">Basket Change</div>
+              </DialogHeader>
+              
+              <div className="space-y-6">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-gray-100">
+                      <TableHead>Date</TableHead>
+                      <TableHead>Event Type</TableHead>
+                      <TableHead>New Basket Version</TableHead>
+                      <TableHead>Old Divisor</TableHead>
+                      <TableHead>New Divisor</TableHead>
+                      <TableHead>Delta Divisor</TableHead>
+                      <TableHead>Agg Late Div Points</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell>{format(selectedEvent.date, 'yyyy-MM-dd HH:mm:ss')}</TableCell>
+                      <TableCell>{selectedEvent.eventType}</TableCell>
+                      <TableCell>{selectedEvent.newBasketVersion}</TableCell>
+                      <TableCell>{selectedEvent.oldDivisor}</TableCell>
+                      <TableCell>{selectedEvent.newDivisor}</TableCell>
+                      <TableCell className="text-red-600">{selectedEvent.deltaDivisor}</TableCell>
+                      <TableCell>{selectedEvent.aggLateDivPoints || ''}</TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+
+                {selectedEvent.eventType === 'CORPORATE_ACTION' && (
+                  <div>
+                    <h3 className="text-lg font-medium mb-3">Event Details</h3>
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-gray-100">
+                          <TableHead>Sec ID (RIC)</TableHead>
+                          <TableHead>Type</TableHead>
+                          <TableHead>Close Price</TableHead>
+                          <TableHead>Adjusted Close</TableHead>
+                          <TableHead>FX</TableHead>
+                          <TableHead>WHT Rate</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        <TableRow>
+                          <TableCell>{selectedEvent.details?.secId || '600177.SS'}</TableCell>
+                          <TableCell>{selectedEvent.details?.type || 'CASH_DIVIDEND'}</TableCell>
+                          <TableCell>{selectedEvent.details?.closePrice || '8.24'}</TableCell>
+                          <TableCell>{selectedEvent.details?.adjustedClose || '8.15'}</TableCell>
+                          <TableCell>{selectedEvent.details?.fx || '1'}</TableCell>
+                          <TableCell>{selectedEvent.details?.whtRate || '10'}</TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+
+                {selectedEvent.eventType === 'REBALANCE' && (
+                  <div>
+                    <h3 className="text-lg font-medium mb-3">Membership Changes</h3>
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-gray-100">
+                          <TableHead>Sec ID (RIC)</TableHead>
+                          <TableHead>Type</TableHead>
+                          <TableHead>NOSH Old</TableHead>
+                          <TableHead>NOSH New</TableHead>
+                          <TableHead>NOSH Diff</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        <TableRow>
+                          <TableCell>600705.SS</TableCell>
+                          <TableCell>UPDATE</TableCell>
+                          <TableCell>5351984777.44</TableCell>
+                          <TableCell>0</TableCell>
+                          <TableCell className="text-red-600">-5351984777.44</TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                    <div className="text-right text-sm text-gray-500 mt-2">
+                      Rows per page: 10 ▼ 1-1 of 1
+                    </div>
+                  </div>
+                )}
+              </div>
+            </DialogContent>
+          )}
         </Dialog>
       </CardContent>
     </Card>
