@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,7 @@ interface IndexKeyFiguresProps {
 const IndexKeyFigures: React.FC<IndexKeyFiguresProps> = ({ indexData }) => {
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
+  const [useAverageData, setUseAverageData] = useState(false);
 
   // Sample KPI data
   const kpis = {
@@ -47,13 +49,8 @@ const IndexKeyFigures: React.FC<IndexKeyFiguresProps> = ({ indexData }) => {
     return `$${value.toFixed(1)}T`;
   };
 
-  const handleLast30Days = () => {
-    const today = new Date();
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(today.getDate() - 30);
-    
-    setStartDate(thirtyDaysAgo);
-    setEndDate(today);
+  const toggleAverageData = () => {
+    setUseAverageData(!useAverageData);
   };
 
   return (
@@ -122,25 +119,29 @@ const IndexKeyFigures: React.FC<IndexKeyFiguresProps> = ({ indexData }) => {
             </div>
 
             <Button 
-              onClick={handleLast30Days}
-              variant="outline"
+              onClick={toggleAverageData}
+              variant={useAverageData ? "default" : "outline"}
               className="flex items-center gap-2"
             >
               <CalendarIcon className="h-4 w-4" />
-              Last 30 Days
+              Use 30-Day Average
             </Button>
 
-            {(startDate || endDate) && (
-              <div className="text-sm text-gray-600">
-                {startDate && endDate ? (
+            <div className="text-sm text-gray-600">
+              {useAverageData ? (
+                <>Calculations based on 30-day average index data</>
+              ) : (startDate || endDate) ? (
+                startDate && endDate ? (
                   <>Showing data from {format(startDate, "MMM dd, yyyy")} to {format(endDate, "MMM dd, yyyy")}</>
                 ) : startDate ? (
                   <>From {format(startDate, "MMM dd, yyyy")}</>
                 ) : (
                   <>Until {format(endDate!, "MMM dd, yyyy")}</>
-                )}
-              </div>
-            )}
+                )
+              ) : (
+                <>Select date range or use 30-day average</>
+              )}
+            </div>
           </div>
         </div>
         
