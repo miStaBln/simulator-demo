@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { 
@@ -10,7 +11,9 @@ import {
   Download,
   Clock,
   LineChart,
-  Activity
+  Activity,
+  History,
+  TrendingUp
 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -22,6 +25,8 @@ import IndexReport from '@/components/IndexReport';
 import CorporateActions from '@/components/CorporateActions';
 import Constituents from '@/components/Constituents';
 import TickHistory from '@/components/TickHistory';
+import IndexHistory from '@/components/IndexHistory';
+import IndexKeyFigures from '@/components/IndexKeyFigures';
 
 const IndexDetails = () => {
   const location = useLocation();
@@ -30,6 +35,7 @@ const IndexDetails = () => {
   const { state } = location;
   const indexData = state?.indexData as IndexItem;
   const defaultTab = state?.defaultTab || 'index-details';
+  const [showKeyFigures, setShowKeyFigures] = useState(false);
   
   const handleDownloadGuideline = () => {
     // TODO: Replace with actual PDF download logic when available
@@ -66,17 +72,28 @@ const IndexDetails = () => {
   return (
     <div className="p-4">
       <div className="flex flex-col">
-        <div className="flex items-center mb-4">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="mr-2"
+              onClick={() => navigate('/events')}
+            >
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              Back to Events
+            </Button>
+            <h1 className="text-2xl font-semibold">Index Insights <span className="text-sm font-normal text-gray-500">Prototype</span></h1>
+          </div>
           <Button 
-            variant="ghost" 
+            variant="outline" 
             size="sm" 
-            className="mr-2"
-            onClick={() => navigate('/events')}
+            className="flex items-center"
+            onClick={() => setShowKeyFigures(true)}
           >
-            <ArrowLeft className="h-4 w-4 mr-1" />
-            Back to Events
+            <TrendingUp className="mr-2 h-4 w-4" />
+            INDEX KEY FIGURES
           </Button>
-          <h1 className="text-2xl font-semibold">Index Insights <span className="text-sm font-normal text-gray-500">Prototype</span></h1>
         </div>
         
         <Tabs defaultValue={defaultTab} className="w-full">
@@ -104,6 +121,10 @@ const IndexDetails = () => {
             <TabsTrigger value="tick-history" className="flex items-center">
               <Activity className="mr-2 h-4 w-4" />
               TICK HISTORY
+            </TabsTrigger>
+            <TabsTrigger value="history" className="flex items-center">
+              <History className="mr-2 h-4 w-4" />
+              HISTORY
             </TabsTrigger>
           </TabsList>
 
@@ -223,10 +244,21 @@ const IndexDetails = () => {
           <TabsContent value="tick-history">
             <TickHistory indexData={extendedData} />
           </TabsContent>
+
+          <TabsContent value="history">
+            <IndexHistory indexData={extendedData} />
+          </TabsContent>
         </Tabs>
+
+        <IndexKeyFigures 
+          indexData={extendedData} 
+          open={showKeyFigures} 
+          onOpenChange={setShowKeyFigures}
+        />
       </div>
     </div>
   );
 };
 
 export default IndexDetails;
+
