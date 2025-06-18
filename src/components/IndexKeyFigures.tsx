@@ -1,8 +1,12 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { IndexItem } from '@/contexts/StarredContext';
-import { TrendingUp, TrendingDown, Calendar, Percent, DollarSign, BarChart3 } from 'lucide-react';
+import { TrendingUp, TrendingDown, Calendar as CalendarIcon, Percent, DollarSign, BarChart3 } from 'lucide-react';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 interface IndexKeyFiguresProps {
   indexData: IndexItem & {
@@ -15,6 +19,9 @@ interface IndexKeyFiguresProps {
 }
 
 const IndexKeyFigures: React.FC<IndexKeyFiguresProps> = ({ indexData }) => {
+  const [startDate, setStartDate] = useState<Date>();
+  const [endDate, setEndDate] = useState<Date>();
+
   // Sample KPI data
   const kpis = {
     ytdPerformance: 12.45,
@@ -40,15 +47,103 @@ const IndexKeyFigures: React.FC<IndexKeyFiguresProps> = ({ indexData }) => {
     return `$${value.toFixed(1)}T`;
   };
 
+  const handleLast30Days = () => {
+    const today = new Date();
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(today.getDate() - 30);
+    
+    setStartDate(thirtyDaysAgo);
+    setEndDate(today);
+  };
+
   return (
     <Card>
       <CardContent className="pt-6">
         <div className="mb-6">
-          <h2 className="text-xl font-medium flex items-center">
+          <h2 className="text-xl font-medium flex items-center mb-4">
             <BarChart3 className="mr-2 h-5 w-5" />
             Index Key Figures - {indexData.name}
           </h2>
+          
+          {/* Date Selection Controls */}
+          <div className="flex flex-wrap items-center gap-4 p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-700">Start Date:</span>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-[140px] justify-start text-left font-normal",
+                      !startDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {startDate ? format(startDate, "MMM dd, yyyy") : "Select date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={startDate}
+                    onSelect={setStartDate}
+                    initialFocus
+                    className="p-3 pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-700">End Date:</span>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-[140px] justify-start text-left font-normal",
+                      !endDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {endDate ? format(endDate, "MMM dd, yyyy") : "Select date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={endDate}
+                    onSelect={setEndDate}
+                    initialFocus
+                    className="p-3 pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <Button 
+              onClick={handleLast30Days}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <CalendarIcon className="h-4 w-4" />
+              Last 30 Days
+            </Button>
+
+            {(startDate || endDate) && (
+              <div className="text-sm text-gray-600">
+                {startDate && endDate ? (
+                  <>Showing data from {format(startDate, "MMM dd, yyyy")} to {format(endDate, "MMM dd, yyyy")}</>
+                ) : startDate ? (
+                  <>From {format(startDate, "MMM dd, yyyy")}</>
+                ) : (
+                  <>Until {format(endDate!, "MMM dd, yyyy")}</>
+                )}
+              </div>
+            )}
+          </div>
         </div>
+        
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
           {/* Performance Metrics */}
@@ -226,6 +321,7 @@ const IndexKeyFigures: React.FC<IndexKeyFiguresProps> = ({ indexData }) => {
           </Card>
         </div>
 
+        
         <div className="p-4 bg-gray-50 rounded-lg">
           <h3 className="text-sm font-medium text-gray-700 mb-2">Index Information</h3>
           <div className="grid grid-cols-2 gap-4 text-sm">
