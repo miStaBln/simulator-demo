@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { 
@@ -75,10 +76,10 @@ const IndexDetails = () => {
               variant="ghost" 
               size="sm" 
               className="mr-2"
-              onClick={() => navigate('/events')}
+              onClick={() => navigate('/inventory')}
             >
               <ArrowLeft className="h-4 w-4 mr-1" />
-              Back to Events
+              Back to Inventory
             </Button>
             <h1 className="text-2xl font-semibold">Index Insights <span className="text-sm font-normal text-gray-500">Prototype</span></h1>
           </div>
