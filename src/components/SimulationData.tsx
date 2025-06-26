@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import SimulationPeriod from './simulator/SimulationPeriod';
 import SimulationParameters from './simulator/SimulationParameters';
-import AdvancedParameters from './simulator/AdvancedParameters';
 import Composition from './simulator/Composition';
 import RebalancingSection from './simulator/RebalancingSection';
 import PriceOverrides from './simulator/PriceOverrides';
@@ -277,6 +276,26 @@ const SimulationData = ({ onSimulationComplete = () => {} }: SimulationDataProps
           setDivisor={setDivisor}
           initialLevel={initialLevel}
           setInitialLevel={setInitialLevel}
+          showAdvancedParameters={showAdvancedParameters}
+          setShowAdvancedParameters={setShowAdvancedParameters}
+          lateDividendHandling={lateDividendHandling}
+          setLateDividendHandling={setLateDividendHandling}
+          cashDividendTaxHandling={cashDividendTaxHandling}
+          setCashDividendTaxHandling={setCashDividendTaxHandling}
+          specialDividendTaxHandling={specialDividendTaxHandling}
+          setSpecialDividendTaxHandling={setSpecialDividendTaxHandling}
+          considerStockDividend={considerStockDividend}
+          setConsiderStockDividend={setConsiderStockDividend}
+          considerStockSplit={considerStockSplit}
+          setConsiderStockSplit={setConsiderStockSplit}
+          considerRightsIssue={considerRightsIssue}
+          setConsiderRightsIssue={setConsiderRightsIssue}
+          considerDividendFee={considerDividendFee}
+          setConsiderDividendFee={setConsiderDividendFee}
+          drDividendTreatment={drDividendTreatment}
+          setDrDividendTreatment={setDrDividendTreatment}
+          globalDrTaxRate={globalDrTaxRate}
+          setGlobalDrTaxRate={setGlobalDrTaxRate}
         />
       </div>
       
@@ -289,30 +308,6 @@ const SimulationData = ({ onSimulationComplete = () => {} }: SimulationDataProps
           viewResults={viewResults}
         />
       </div>
-      
-      {/* Advanced Parameters Panel */}
-      <AdvancedParameters
-        isExpanded={showAdvancedParameters}
-        onToggle={() => setShowAdvancedParameters(!showAdvancedParameters)}
-        lateDividendHandling={lateDividendHandling}
-        setLateDividendHandling={setLateDividendHandling}
-        cashDividendTaxHandling={cashDividendTaxHandling}
-        setCashDividendTaxHandling={setCashDividendTaxHandling}
-        specialDividendTaxHandling={specialDividendTaxHandling}
-        setSpecialDividendTaxHandling={setSpecialDividendTaxHandling}
-        considerStockDividend={considerStockDividend}
-        setConsiderStockDividend={setConsiderStockDividend}
-        considerStockSplit={considerStockSplit}
-        setConsiderStockSplit={setConsiderStockSplit}
-        considerRightsIssue={considerRightsIssue}
-        setConsiderRightsIssue={setConsiderRightsIssue}
-        considerDividendFee={considerDividendFee}
-        setConsiderDividendFee={setConsiderDividendFee}
-        drDividendTreatment={drDividendTreatment}
-        setDrDividendTreatment={setDrDividendTreatment}
-        globalDrTaxRate={globalDrTaxRate}
-        setGlobalDrTaxRate={setGlobalDrTaxRate}
-      />
       
       {/* Composition Panel */}
       <Composition
