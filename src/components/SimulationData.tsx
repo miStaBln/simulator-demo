@@ -280,6 +280,16 @@ const SimulationData = ({ onSimulationComplete = () => {} }: SimulationDataProps
         />
       </div>
       
+      {/* Action Buttons */}
+      <div className="my-8">
+        <BottomActions
+          simulationComplete={simulationComplete}
+          loading={loading}
+          handleSimulate={handleSimulate}
+          viewResults={viewResults}
+        />
+      </div>
+      
       {/* Advanced Parameters Panel */}
       <AdvancedParameters
         isExpanded={showAdvancedParameters}
@@ -303,16 +313,6 @@ const SimulationData = ({ onSimulationComplete = () => {} }: SimulationDataProps
         globalDrTaxRate={globalDrTaxRate}
         setGlobalDrTaxRate={setGlobalDrTaxRate}
       />
-      
-      {/* Left-aligned Action Buttons */}
-      <div className="my-8">
-        <BottomActions
-          simulationComplete={simulationComplete}
-          loading={loading}
-          handleSimulate={handleSimulate}
-          viewResults={viewResults}
-        />
-      </div>
       
       {/* Composition Panel */}
       <Composition
