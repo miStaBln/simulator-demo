@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Eye, Play, RefreshCw } from 'lucide-react';
+import { Eye, Play, RefreshCw, RotateCcw } from 'lucide-react';
 
 interface BottomActionsProps {
   simulationComplete: boolean;
@@ -11,36 +11,42 @@ interface BottomActionsProps {
 
 const BottomActions = ({ simulationComplete, loading, handleSimulate, viewResults }: BottomActionsProps) => {
   return (
-    <div className="bg-white border-t border-gray-200 p-4 z-40 md:static md:border-0 md:bg-transparent md:p-0 md:mt-6">
-      <div className="flex justify-end space-x-4">
-        {simulationComplete && (
-          <button 
-            onClick={viewResults}
-            className="flex items-center px-4 py-2 border border-teal-500 text-teal-500 rounded-md hover:bg-teal-50"
-          >
-            <Eye className="h-4 w-4 mr-2" />
-            VIEW RESULTS
-          </button>
+    <div className="flex items-center space-x-4">
+      <button 
+        onClick={() => window.location.reload()}
+        className="flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+      >
+        <RotateCcw className="h-4 w-4 mr-2" />
+        RESET
+      </button>
+      
+      <button 
+        onClick={handleSimulate}
+        disabled={loading}
+        className="flex items-center px-6 py-2 bg-teal-500 text-white rounded-md hover:bg-teal-600 disabled:bg-teal-300 transition-colors"
+      >
+        {loading ? (
+          <>
+            <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+            SIMULATING...
+          </>
+        ) : (
+          <>
+            <Play className="h-4 w-4 mr-2" />
+            SIMULATE
+          </>
         )}
-        
+      </button>
+      
+      {simulationComplete && (
         <button 
-          onClick={handleSimulate}
-          disabled={loading}
-          className="flex items-center px-4 py-2 bg-teal-500 text-white rounded-md hover:bg-teal-600 disabled:bg-teal-300"
+          onClick={viewResults}
+          className="flex items-center px-4 py-2 border border-teal-500 text-teal-500 rounded-md hover:bg-teal-50 transition-colors"
         >
-          {loading ? (
-            <>
-              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-              SIMULATING...
-            </>
-          ) : (
-            <>
-              <Play className="h-4 w-4 mr-2" />
-              SIMULATE
-            </>
-          )}
+          <Eye className="h-4 w-4 mr-2" />
+          VIEW RESULTS
         </button>
-      </div>
+      )}
     </div>
   );
 };

@@ -1,12 +1,17 @@
 
-import React from 'react';
-import { Trash2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { Trash2, ChevronDown } from 'lucide-react';
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import ManualComposition from './ManualComposition';
 import IndexComposition from './IndexComposition';
 
@@ -60,43 +65,52 @@ const Composition = ({
   fetchIndexData,
   mockIndices
 }: CompositionProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
-    <div className="bg-white rounded-md shadow-sm p-6 mt-6">
-      <h2 className="text-lg font-medium mb-4">Composition</h2>
-      
-      <Tabs defaultValue={inputMethod} onValueChange={setInputMethod}>
-        <TabsList className="mb-4">
-          <TabsTrigger value="manual">Manual Entry</TabsTrigger>
-          <TabsTrigger value="index">From Existing Index</TabsTrigger>
-        </TabsList>
+    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <div className="bg-gray-50 rounded-md shadow-sm p-6 mt-6 border border-gray-100">
+        <CollapsibleTrigger className="flex items-center justify-between w-full text-left">
+          <h2 className="text-lg font-medium">Composition</h2>
+          <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        </CollapsibleTrigger>
         
-        <TabsContent value="manual">
-          <ManualComposition
-            stocks={stocks}
-            shareOrWeight={shareOrWeight}
-            setShareOrWeight={setShareOrWeight}
-            updateStock={updateStock}
-            removeStock={removeStock}
-            addRow={addRow}
-          />
-        </TabsContent>
-        
-        <TabsContent value="index">
-          <IndexComposition
-            selectedIndex={selectedIndex}
-            setSelectedIndex={setSelectedIndex}
-            indexDate={indexDate}
-            setIndexDate={setIndexDate}
-            priceType={priceType}
-            setPriceType={setPriceType}
-            shareOrWeight={shareOrWeight}
-            stocks={stocks}
-            fetchIndexData={fetchIndexData}
-            mockIndices={mockIndices}
-          />
-        </TabsContent>
-      </Tabs>
-    </div>
+        <CollapsibleContent className="mt-4">
+          <Tabs defaultValue={inputMethod} onValueChange={setInputMethod}>
+            <TabsList className="mb-4">
+              <TabsTrigger value="manual">Manual Entry</TabsTrigger>
+              <TabsTrigger value="index">From Existing Index</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="manual">
+              <ManualComposition
+                stocks={stocks}
+                shareOrWeight={shareOrWeight}
+                setShareOrWeight={setShareOrWeight}
+                updateStock={updateStock}
+                removeStock={removeStock}
+                addRow={addRow}
+              />
+            </TabsContent>
+            
+            <TabsContent value="index">
+              <IndexComposition
+                selectedIndex={selectedIndex}
+                setSelectedIndex={setSelectedIndex}
+                indexDate={indexDate}
+                setIndexDate={setIndexDate}
+                priceType={priceType}
+                setPriceType={setPriceType}
+                shareOrWeight={shareOrWeight}
+                stocks={stocks}
+                fetchIndexData={fetchIndexData}
+                mockIndices={mockIndices}
+              />
+            </TabsContent>
+          </Tabs>
+        </CollapsibleContent>
+      </div>
+    </Collapsible>
   );
 };
 

@@ -5,10 +5,9 @@ import SimulationPeriod from './simulator/SimulationPeriod';
 import SimulationParameters from './simulator/SimulationParameters';
 import AdvancedParameters from './simulator/AdvancedParameters';
 import Composition from './simulator/Composition';
-import Rebalancings from './simulator/Rebalancings';
+import RebalancingSection from './simulator/RebalancingSection';
 import PriceOverrides from './simulator/PriceOverrides';
 import BottomActions from './simulator/BottomActions';
-import RebalancingUpload from './simulator/RebalancingUpload';
 
 // Mock index data with parameters
 const mockIndices = [
@@ -90,16 +89,11 @@ const SimulationData = ({ onSimulationComplete = () => {} }: SimulationDataProps
   const [rebalancings, setRebalancings] = useState<any[]>([]);
   const [shareOrWeight, setShareOrWeight] = useState('shares');
   
-  // Stock data
+  // Stock data - reduced to 3 elements
   const [stocks, setStocks] = useState([
-    { ric: 'VIV.N', shares: '141799.5338', weight: '8.5' },
-    { ric: 'TSLA.OQ', shares: '4822.004677', weight: '15.3' },
-    { ric: 'BLUE.OQ', shares: '236240.7767', weight: '7.2' },
-    { ric: 'GM.N', shares: '27885.39995', weight: '12.1' },
-    { ric: 'SHOT.OQ', shares: '2663397.548', weight: '18.6' },
-    { ric: 'FRGE.N', shares: '1963906.376', weight: '14.0' },
-    { ric: 'ML.N', shares: '14244.70203', weight: '12.3' },
-    { ric: 'F.N', shares: '130400.8574', weight: '12.0' },
+    { ric: 'AAPL.OQ', shares: '10000', weight: '25.0' },
+    { ric: 'MSFT.OQ', shares: '8000', weight: '35.0' },
+    { ric: 'GOOGL.OQ', shares: '5000', weight: '40.0' },
   ]);
 
   // Price overrides
@@ -262,7 +256,7 @@ const SimulationData = ({ onSimulationComplete = () => {} }: SimulationDataProps
   };
 
   return (
-    <div className="p-6 pb-24 md:pb-6">
+    <div className="p-6 pb-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Left Panel - Simulation Period */}
         <SimulationPeriod
@@ -307,6 +301,16 @@ const SimulationData = ({ onSimulationComplete = () => {} }: SimulationDataProps
         setGlobalDrTaxRate={setGlobalDrTaxRate}
       />
       
+      {/* Centered Action Buttons */}
+      <div className="flex justify-center space-x-4 my-8">
+        <BottomActions
+          simulationComplete={simulationComplete}
+          loading={loading}
+          handleSimulate={handleSimulate}
+          viewResults={viewResults}
+        />
+      </div>
+      
       {/* Composition Panel */}
       <Composition
         inputMethod={inputMethod}
@@ -327,8 +331,8 @@ const SimulationData = ({ onSimulationComplete = () => {} }: SimulationDataProps
         mockIndices={mockIndices}
       />
       
-      {/* Rebalancings Panel */}
-      <Rebalancings
+      {/* Combined Rebalancing Section */}
+      <RebalancingSection
         rebalancings={rebalancings}
         shareOrWeight={shareOrWeight}
         addRebalancing={addRebalancing}
@@ -337,10 +341,6 @@ const SimulationData = ({ onSimulationComplete = () => {} }: SimulationDataProps
         addRebalancingComponent={addRebalancingComponent}
         updateRebalancingComponent={updateRebalancingComponent}
         removeRebalancingComponent={removeRebalancingComponent}
-      />
-      
-      {/* Rebalancing Upload Panel */}
-      <RebalancingUpload
         rebalancingUploads={rebalancingUploads}
         addRebalancingUpload={addRebalancingUpload}
         removeRebalancingUpload={removeRebalancingUpload}
@@ -353,16 +353,6 @@ const SimulationData = ({ onSimulationComplete = () => {} }: SimulationDataProps
         updatePriceOverride={updatePriceOverride}
         removePriceOverride={removePriceOverride}
       />
-      
-      {/* Bottom Actions - Fixed at bottom on mobile, normal positioning on desktop */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-40 md:static md:border-0 md:bg-transparent md:p-0 md:mt-6">
-        <BottomActions
-          simulationComplete={simulationComplete}
-          loading={loading}
-          handleSimulate={handleSimulate}
-          viewResults={viewResults}
-        />
-      </div>
     </div>
   );
 };
