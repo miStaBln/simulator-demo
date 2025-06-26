@@ -11,7 +11,7 @@ interface BottomActionsProps {
 
 const BottomActions = ({ simulationComplete, loading, handleSimulate, viewResults }: BottomActionsProps) => {
   return (
-    <div className="flex items-center space-x-4">
+    <div className="flex items-center justify-start space-x-4">
       <button 
         onClick={() => window.location.reload()}
         className="flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"

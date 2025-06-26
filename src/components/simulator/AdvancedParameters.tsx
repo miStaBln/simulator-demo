@@ -57,7 +57,7 @@ const AdvancedParameters = ({
   setGlobalDrTaxRate,
 }: AdvancedParametersProps) => {
   return (
-    <div className="bg-white rounded-md shadow-sm p-6 mt-6">
+    <div className="bg-gray-100 rounded-md shadow-sm p-6 mt-6 border border-gray-200">
       <button
         onClick={onToggle}
         className="flex items-center justify-between w-full text-left"

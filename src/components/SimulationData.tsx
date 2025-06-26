@@ -66,6 +66,7 @@ const SimulationData = ({ onSimulationComplete = () => {} }: SimulationDataProps
   const [currency, setCurrency] = useState('USD');
   const [returnType, setReturnType] = useState('NTR');
   const [divisor, setDivisor] = useState('100000');
+  const [initialLevel, setInitialLevel] = useState('1000.00');
   const [inputMethod, setInputMethod] = useState('manual');
   const [selectedIndex, setSelectedIndex] = useState('');
   const [indexDate, setIndexDate] = useState('11.04.2025');
@@ -274,6 +275,8 @@ const SimulationData = ({ onSimulationComplete = () => {} }: SimulationDataProps
           setReturnType={setReturnType}
           divisor={divisor}
           setDivisor={setDivisor}
+          initialLevel={initialLevel}
+          setInitialLevel={setInitialLevel}
         />
       </div>
       
@@ -301,8 +304,8 @@ const SimulationData = ({ onSimulationComplete = () => {} }: SimulationDataProps
         setGlobalDrTaxRate={setGlobalDrTaxRate}
       />
       
-      {/* Centered Action Buttons */}
-      <div className="flex justify-center space-x-4 my-8">
+      {/* Left-aligned Action Buttons */}
+      <div className="my-8">
         <BottomActions
           simulationComplete={simulationComplete}
           loading={loading}

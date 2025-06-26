@@ -65,11 +65,11 @@ const Composition = ({
   fetchIndexData,
   mockIndices
 }: CompositionProps) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <div className="bg-gray-50 rounded-md shadow-sm p-6 mt-6 border border-gray-100">
+      <div className="bg-gray-100 rounded-md shadow-sm p-6 mt-6 border border-gray-200">
         <CollapsibleTrigger className="flex items-center justify-between w-full text-left">
           <h2 className="text-lg font-medium">Composition</h2>
           <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />

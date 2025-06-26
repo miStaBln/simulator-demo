@@ -16,6 +16,8 @@ interface SimulationParametersProps {
   setReturnType: (returnType: string) => void;
   divisor: string;
   setDivisor: (divisor: string) => void;
+  initialLevel: string;
+  setInitialLevel: (initialLevel: string) => void;
 }
 
 const SimulationParameters = ({ 
@@ -24,7 +26,9 @@ const SimulationParameters = ({
   returnType, 
   setReturnType, 
   divisor, 
-  setDivisor 
+  setDivisor,
+  initialLevel,
+  setInitialLevel
 }: SimulationParametersProps) => {
   return (
     <div className="bg-white rounded-md shadow-sm p-6">
@@ -64,6 +68,18 @@ const SimulationParameters = ({
           type="text" 
           value={divisor} 
           onChange={(e) => setDivisor(e.target.value)}
+          className="w-full h-9"
+        />
+      </div>
+      
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-900 mb-1">Initial Level</label>
+        <Input 
+          type="number" 
+          step="0.01"
+          value={initialLevel} 
+          onChange={(e) => setInitialLevel(e.target.value)}
+          placeholder="Enter initial level"
           className="w-full h-9"
         />
       </div>
