@@ -52,6 +52,7 @@ const Index = () => {
 
   const handleRefresh = () => {
     setSimulationState(initialSimulationState);
+    SimulationService.clearResults();
     toast({
       title: "Simulation Reset",
       description: "All simulation data has been reset",

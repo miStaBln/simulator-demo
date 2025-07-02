@@ -97,10 +97,39 @@ interface SimulationPayload {
   }>;
 }
 
+interface SimulationResult {
+  [date: string]: {
+    simulationDate: string;
+    closingIndexState: {
+      composition: {
+        additionalNumbers: {
+          divisor: number;
+        };
+      };
+      indexStateEvaluationDto: {
+        indexLevel: number;
+        clusters: Array<{
+          prices: Array<{
+            instrumentKey: {
+              id: string;
+            };
+            price: number;
+          }>;
+        }>;
+      };
+    };
+  };
+}
+
+interface TimeSeriesData {
+  date: string;
+  indexLevel: number;
+  divisor: number;
+}
+
 export class SimulationService {
   private static readonly API_URL = "http://test-32.gde.nbg.solactive.com:8274/index-simulator-equity/proxy/v3/simulateIndexSimple";
-  
-
+  private static simulationResult: SimulationResult | null = null;
 
   static async runSimulation(
     startDate: string,
@@ -138,7 +167,7 @@ export class SimulationService {
         assetIdentifier: {
           assetClass: "SHARE",
           identifierType: "RIC",
-          id: (stock.ric).toString() // Mock IDs for now
+          id: (stock.ric).toString()
         },
         quantity: {
           type: "UNITS",
@@ -210,7 +239,7 @@ export class SimulationService {
         rules: []
       },
       resultIdentifierType: "RIC",
-
+      selectionResults: []
     };
 
     console.log('Simulation payload:', JSON.stringify(payload, null, 2));
@@ -223,7 +252,7 @@ export class SimulationService {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        mode: 'cors', // Explicitly set CORS mode
+        mode: 'cors',
         body: JSON.stringify(payload)
       });
 
@@ -235,11 +264,14 @@ export class SimulationService {
 
       const result = await response.json();
       console.log('Simulation result:', result);
+      
+      // Store the result for use in other components
+      this.simulationResult = result;
+      
       return result;
     } catch (error) {
       console.error('Simulation API error:', error);
       
-      // Provide more specific error messages based on the error type
       if (error instanceof TypeError && error.message === 'Failed to fetch') {
         throw new Error(`
           CORS Error: Cannot connect to the simulation API directly from the browser.
@@ -260,5 +292,31 @@ export class SimulationService {
       
       throw error;
     }
+  }
+
+  static getTimeSeriesData(): TimeSeriesData[] {
+    if (!this.simulationResult) {
+      return [];
+    }
+
+    return Object.entries(this.simulationResult).map(([date, data]) => ({
+      date: this.formatDateForDisplay(date),
+      indexLevel: data.closingIndexState.indexStateEvaluationDto.indexLevel,
+      divisor: data.closingIndexState.composition.additionalNumbers.divisor
+    })).sort((a, b) => new Date(a.date.split('/').reverse().join('-')).getTime() - new Date(b.date.split('/').reverse().join('-')).getTime());
+  }
+
+  static getSimulationResult(): SimulationResult | null {
+    return this.simulationResult;
+  }
+
+  private static formatDateForDisplay(dateStr: string): string {
+    // Convert from YYYY-MM-DD to DD/MM/YYYY
+    const [year, month, day] = dateStr.split('-');
+    return `${day}/${month}/${year}`;
+  }
+
+  static clearResults(): void {
+    this.simulationResult = null;
   }
 }

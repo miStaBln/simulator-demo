@@ -14,6 +14,7 @@ import { Search, ChevronLeft, ChevronRight, Download, Filter, Columns, Maximize2
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
+import { SimulationService } from '@/services/simulationService';
 
 interface TimeSeriesDataProps {
   simulationComplete?: boolean;
@@ -25,27 +26,16 @@ const TimeSeriesData = ({ simulationComplete = false, selectedIndex = '' }: Time
   const [rowsPerPage, setRowsPerPage] = useState(50);
   const [reportType, setReportType] = useState('Closing');
   const [comparisonExpanded, setComparisonExpanded] = useState(true);
+  const [timeSeriesData, setTimeSeriesData] = useState<Array<{ date: string; indexLevel: number; divisor: number }>>([]);
   
-  // Sample data for the table
-  const originalData = [
-    { date: '15/04/2025', originalLevel: 202.14, simulatedLevel: 204.31 },
-    { date: '16/04/2025', originalLevel: 194.27, simulatedLevel: 196.82 },
-  ];
+  useEffect(() => {
+    if (simulationComplete) {
+      const data = SimulationService.getTimeSeriesData();
+      setTimeSeriesData(data);
+    }
+  }, [simulationComplete]);
   
-  // Generate more sample data points for the chart
-  const chartData = [
-    { date: '11/04/2025', originalLevel: 202.45, simulatedLevel: 203.76 },
-    { date: '12/04/2025', originalLevel: 201.89, simulatedLevel: 203.15 },
-    { date: '13/04/2025', originalLevel: 200.32, simulatedLevel: 202.12 },
-    { date: '14/04/2025', originalLevel: 198.76, simulatedLevel: 200.93 },
-    { date: '15/04/2025', originalLevel: 202.14, simulatedLevel: 204.31 },
-    { date: '16/04/2025', originalLevel: 194.27, simulatedLevel: 196.82 },
-    { date: '17/04/2025', originalLevel: 190.11, simulatedLevel: 192.38 },
-    { date: '18/04/2025', originalLevel: 186.34, simulatedLevel: 188.56 },
-    { date: '19/04/2025', originalLevel: 184.14, simulatedLevel: 186.42 },
-  ];
-
-  // Comparison data
+  // Sample comparison data - this would need to be calculated from actual vs simulated data
   const comparisonData = {
     levelDelta: '+2.17',
     divisorDelta: '0',
@@ -54,8 +44,6 @@ const TimeSeriesData = ({ simulationComplete = false, selectedIndex = '' }: Time
       { ric: 'AAPL.OQ', originalWeight: '25.00%', simulatedWeight: '25.00%', delta: '0.00%' },
       { ric: 'MSFT.OQ', originalWeight: '20.00%', simulatedWeight: '22.50%', delta: '+2.50%' },
       { ric: 'GOOGL.OQ', originalWeight: '18.00%', simulatedWeight: '17.00%', delta: '-1.00%' },
-      { ric: 'AMZN.OQ', originalWeight: '22.00%', simulatedWeight: '20.50%', delta: '-1.50%' },
-      { ric: 'META.OQ', originalWeight: '15.00%', simulatedWeight: '15.00%', delta: '0.00%' },
     ]
   };
 
@@ -189,30 +177,26 @@ const TimeSeriesData = ({ simulationComplete = false, selectedIndex = '' }: Time
                         <ArrowUpDown className="h-3 w-3 ml-1" />
                       </button>
                     </th>
-                    {selectedIndex && (
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        <button className="flex items-center" onClick={sortTable}>
-                          Original Index
-                          <ArrowUpDown className="h-3 w-3 ml-1" />
-                        </button>
-                      </th>
-                    )}
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       <button className="flex items-center" onClick={sortTable}>
-                        Simulated Index
+                        Index Level
+                        <ArrowUpDown className="h-3 w-3 ml-1" />
+                      </button>
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <button className="flex items-center" onClick={sortTable}>
+                        Divisor
                         <ArrowUpDown className="h-3 w-3 ml-1" />
                       </button>
                     </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {originalData.map((row, index) => (
+                  {timeSeriesData.map((row, index) => (
                     <tr key={index} className="hover:bg-gray-50">
                       <td className="px-4 py-3 text-sm">{row.date}</td>
-                      {selectedIndex && (
-                        <td className="px-4 py-3 text-sm">{row.originalLevel.toFixed(2)}</td>
-                      )}
-                      <td className="px-4 py-3 text-sm">{row.simulatedLevel.toFixed(2)}</td>
+                      <td className="px-4 py-3 text-sm">{row.indexLevel.toFixed(6)}</td>
+                      <td className="px-4 py-3 text-sm">{row.divisor.toLocaleString()}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -235,7 +219,7 @@ const TimeSeriesData = ({ simulationComplete = false, selectedIndex = '' }: Time
               </div>
               
               <div className="flex items-center space-x-2 text-xs">
-                <span>1-2 of 2</span>
+                <span>1-{timeSeriesData.length} of {timeSeriesData.length}</span>
                 <div className="flex">
                   <button className="p-1 border rounded-l hover:bg-gray-100">
                     <ChevronLeft className="h-3 w-3" />
@@ -252,7 +236,7 @@ const TimeSeriesData = ({ simulationComplete = false, selectedIndex = '' }: Time
           <div className="bg-white h-80">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
-                data={chartData}
+                data={timeSeriesData}
                 margin={{
                   top: 20,
                   right: 30,
@@ -269,13 +253,17 @@ const TimeSeriesData = ({ simulationComplete = false, selectedIndex = '' }: Time
                   dy={10}
                 />
                 <YAxis 
-                  domain={['dataMin - 5', 'dataMax + 5']} 
+                  domain={['dataMin - 1', 'dataMax + 1']} 
                   axisLine={false}
                   tickLine={false}
                   dx={-10}
                 />
                 <Tooltip 
-                  formatter={(value) => [`${value}`, 'Index Level']}
+                  formatter={(value, name) => {
+                    if (name === 'indexLevel') return [Number(value).toFixed(6), 'Index Level'];
+                    if (name === 'divisor') return [Number(value).toLocaleString(), 'Divisor'];
+                    return [value, name];
+                  }}
                   labelFormatter={(value) => `Date: ${value}`}
                 />
                 <Legend 
@@ -286,24 +274,23 @@ const TimeSeriesData = ({ simulationComplete = false, selectedIndex = '' }: Time
                 />
                 <Line 
                   type="monotone" 
-                  dataKey="simulatedLevel" 
-                  name="Simulated Index" 
+                  dataKey="indexLevel" 
+                  name="Index Level" 
                   stroke="#10b981" 
                   strokeWidth={2} 
                   dot={{ stroke: '#10b981', strokeWidth: 2, r: 4 }}
                   activeDot={{ r: 6 }}
                 />
-                {selectedIndex && (
-                  <Line 
-                    type="monotone" 
-                    dataKey="originalLevel" 
-                    name="Original Index" 
-                    stroke="#3b82f6" 
-                    strokeWidth={2} 
-                    dot={{ stroke: '#3b82f6', strokeWidth: 2, r: 4 }}
-                    activeDot={{ r: 6 }}
-                  />
-                )}
+                <Line 
+                  type="monotone" 
+                  dataKey="divisor" 
+                  name="Divisor" 
+                  stroke="#3b82f6" 
+                  strokeWidth={2} 
+                  dot={{ stroke: '#3b82f6', strokeWidth: 2, r: 4 }}
+                  activeDot={{ r: 6 }}
+                  yAxisId="right"
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>
