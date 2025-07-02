@@ -789,7 +789,8 @@ export class SimulationService {
       considerStockSplit: boolean;
       considerRightsIssue: boolean;
       considerDividendFee: boolean;
-    }
+    },
+    priceOverrides: Array<{ric: string, date: string, price: string}> = []
   ) {
     // Convert date format from DD.MM.YYYY to YYYY-MM-DD
     const formatDate = (dateStr: string) => {
@@ -823,6 +824,19 @@ export class SimulationService {
         }
       }));
 
+    // Map price overrides to API format
+    const instrumentPrices = priceOverrides
+      .filter(override => override.ric && override.date && override.price)
+      .map(override => ({
+        instrumentKey: {
+          assetClass: "SHARE",
+          identifierType: "RIC",
+          id: override.ric
+        },
+        closingDate: formatDate(override.date),
+        price: parseFloat(override.price)
+      }));
+
     // Build CA handling configuration based on return type
     const caHandlingConfig = this.buildCAHandlingDefault(returnType);
 
@@ -841,7 +855,7 @@ export class SimulationService {
       simulationStart: formatDate(startDate),
       simulationEnd: formatDate(endDate),
       priceHistory: {
-        instrumentPrices: []
+        instrumentPrices: instrumentPrices
       },
       indexProperties: {
         coreIndexData: {
