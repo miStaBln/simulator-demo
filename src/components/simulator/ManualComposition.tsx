@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import StockRow from './StockRow';
+import { toast } from '@/hooks/use-toast';
 
 interface Stock {
   ric: string;
@@ -29,8 +30,68 @@ const ManualComposition = ({
   removeStock, 
   addRow 
 }: ManualCompositionProps) => {
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const pastedData = e.clipboardData.getData('text');
+    
+    // Check if the pasted data contains tabs or multiple lines (typical Excel paste)
+    if (pastedData.includes('\t') || pastedData.includes('\n')) {
+      e.preventDefault();
+      
+      const lines = pastedData.trim().split('\n');
+      const newStocks: Stock[] = [];
+      
+      lines.forEach(line => {
+        const columns = line.split('\t');
+        if (columns.length >= 2) {
+          const ric = columns[0]?.trim() || '';
+          const value = columns[1]?.trim() || '';
+          
+          if (ric && value) {
+            newStocks.push({
+              ric,
+              shares: shareOrWeight === 'shares' ? value : '',
+              weight: shareOrWeight === 'weight' ? value : ''
+            });
+          }
+        }
+      });
+      
+      if (newStocks.length > 0) {
+        // Find the first empty row or add new rows
+        let startIndex = stocks.findIndex(stock => !stock.ric);
+        if (startIndex === -1) {
+          startIndex = stocks.length;
+        }
+        
+        // Update existing stocks or add new ones
+        newStocks.forEach((newStock, index) => {
+          const targetIndex = startIndex + index;
+          if (targetIndex < stocks.length) {
+            updateStock(targetIndex, 'ric', newStock.ric);
+            updateStock(targetIndex, shareOrWeight === 'shares' ? 'shares' : 'weight', 
+              shareOrWeight === 'shares' ? newStock.shares : newStock.weight);
+          } else {
+            // Add new row
+            addRow();
+            // The new row will be added asynchronously, so we need to update it in the next tick
+            setTimeout(() => {
+              updateStock(targetIndex, 'ric', newStock.ric);
+              updateStock(targetIndex, shareOrWeight === 'shares' ? 'shares' : 'weight',
+                shareOrWeight === 'shares' ? newStock.shares : newStock.weight);
+            }, 0);
+          }
+        });
+        
+        toast({
+          title: "Data pasted",
+          description: `${newStocks.length} rows pasted from clipboard`,
+        });
+      }
+    }
+  };
+
   return (
-    <div>
+    <div onPaste={handlePaste}>
       <div className="mb-4">
         <RadioGroup 
           value={shareOrWeight} 
@@ -46,6 +107,10 @@ const ManualComposition = ({
             <Label htmlFor="r2">Weight</Label>
           </div>
         </RadioGroup>
+      </div>
+      
+      <div className="mb-2 p-3 bg-blue-50 rounded-md text-sm text-blue-700">
+        💡 <strong>Tip:</strong> You can copy data from Excel and paste it here. Make sure the first column contains RIC codes and the second column contains {shareOrWeight === 'shares' ? 'shares' : 'weights'}.
       </div>
       
       <div className="grid grid-cols-12 gap-4 mb-2 font-medium text-sm">
