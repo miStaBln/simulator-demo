@@ -1,3 +1,4 @@
+
 interface SimulationPayload {
   simulationStart: string;
   simulationEnd: string;
@@ -101,6 +102,24 @@ interface SimulationResult {
     simulationDate: string;
     closingIndexState: {
       composition: {
+        clusters: Array<{
+          name: string;
+          constituents: Array<{
+            assetIdentifier: {
+              assetClass: string;
+              identifierType: string;
+              id: string;
+            };
+            quantity: {
+              type: string;
+              value: number;
+            };
+            additionalNumbers: {
+              freeFloatFactor: number;
+              weightingCapFactor: number;
+            };
+          }>;
+        }>;
         additionalNumbers: {
           divisor: number;
         };
@@ -108,8 +127,50 @@ interface SimulationResult {
       indexStateEvaluationDto: {
         indexLevel: number;
         clusters: Array<{
+          name: string;
           prices: Array<{
             instrumentKey: {
+              assetClass: string;
+              identifierType: string;
+              id: string;
+            };
+            price: number;
+          }>;
+        }>;
+      };
+    };
+    openingIndexState: {
+      composition: {
+        clusters: Array<{
+          name: string;
+          constituents: Array<{
+            assetIdentifier: {
+              assetClass: string;
+              identifierType: string;
+              id: string;
+            };
+            quantity: {
+              type: string;
+              value: number;
+            };
+            additionalNumbers: {
+              freeFloatFactor: number;
+              weightingCapFactor: number;
+            };
+          }>;
+        }>;
+        additionalNumbers: {
+          divisor: number;
+        };
+      };
+      indexStateEvaluationDto: {
+        indexLevel: number;
+        clusters: Array<{
+          name: string;
+          prices: Array<{
+            instrumentKey: {
+              assetClass: string;
+              identifierType: string;
               id: string;
             };
             price: number;
@@ -126,16 +187,77 @@ interface TimeSeriesData {
   divisor: number;
 }
 
+interface ResultsData {
+  ric: string;
+  cas: string;
+  quantity: string;
+  price: string;
+  currency: string;
+  fx: string;
+}
+
 export class SimulationService {
   private static readonly API_URL = "http://test-32.gde.nbg.solactive.com:8274/index-simulator-equity/proxy/v3/simulateIndexSimple";
   private static simulationResult: SimulationResult | null = null;
 
-  // Dummy data for CORS fallback
+  // Updated dummy data to match the new structure
   private static readonly DUMMY_SIMULATION_RESULT: SimulationResult = {
     "2025-04-11": {
       "simulationDate": "2025-04-11",
       "closingIndexState": {
         "composition": {
+          "clusters": [
+            {
+              "name": "1a91c2f7-deca-4d33-9383-87bec8049b8d",
+              "constituents": [
+                {
+                  "assetIdentifier": {
+                    "assetClass": "SHARE",
+                    "identifierType": "RIC",
+                    "id": "MSFT.OQ"
+                  },
+                  "quantity": {
+                    "type": "UNITS",
+                    "value": 8000
+                  },
+                  "additionalNumbers": {
+                    "freeFloatFactor": 1,
+                    "weightingCapFactor": 1
+                  }
+                },
+                {
+                  "assetIdentifier": {
+                    "assetClass": "SHARE",
+                    "identifierType": "RIC",
+                    "id": "GOOGL.OQ"
+                  },
+                  "quantity": {
+                    "type": "UNITS",
+                    "value": 5000
+                  },
+                  "additionalNumbers": {
+                    "freeFloatFactor": 1,
+                    "weightingCapFactor": 1
+                  }
+                },
+                {
+                  "assetIdentifier": {
+                    "assetClass": "SHARE",
+                    "identifierType": "RIC",
+                    "id": "AAPL.OQ"
+                  },
+                  "quantity": {
+                    "type": "UNITS",
+                    "value": 10000
+                  },
+                  "additionalNumbers": {
+                    "freeFloatFactor": 1,
+                    "weightingCapFactor": 1
+                  }
+                }
+              ]
+            }
+          ],
           "additionalNumbers": {
             "divisor": 100000
           }
@@ -144,21 +266,121 @@ export class SimulationService {
           "indexLevel": 58.748000000000005,
           "clusters": [
             {
+              "name": "NONE",
               "prices": [
                 {
                   "instrumentKey": {
+                    "assetClass": "SHARE",
+                    "identifierType": "RIC",
                     "id": "MSFT.OQ"
                   },
                   "price": 388.45
                 },
                 {
                   "instrumentKey": {
+                    "assetClass": "SHARE",
+                    "identifierType": "RIC",
                     "id": "AAPL.OQ"
                   },
                   "price": 198.15
                 },
                 {
                   "instrumentKey": {
+                    "assetClass": "SHARE",
+                    "identifierType": "RIC",
+                    "id": "GOOGL.OQ"
+                  },
+                  "price": 157.14
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "openingIndexState": {
+        "composition": {
+          "clusters": [
+            {
+              "name": "1a91c2f7-deca-4d33-9383-87bec8049b8d",
+              "constituents": [
+                {
+                  "assetIdentifier": {
+                    "assetClass": "SHARE",
+                    "identifierType": "RIC",
+                    "id": "MSFT.OQ"
+                  },
+                  "quantity": {
+                    "type": "UNITS",
+                    "value": 8000
+                  },
+                  "additionalNumbers": {
+                    "freeFloatFactor": 1,
+                    "weightingCapFactor": 1
+                  }
+                },
+                {
+                  "assetIdentifier": {
+                    "assetClass": "SHARE",
+                    "identifierType": "RIC",
+                    "id": "GOOGL.OQ"
+                  },
+                  "quantity": {
+                    "type": "UNITS",
+                    "value": 5000
+                  },
+                  "additionalNumbers": {
+                    "freeFloatFactor": 1,
+                    "weightingCapFactor": 1
+                  }
+                },
+                {
+                  "assetIdentifier": {
+                    "assetClass": "SHARE",
+                    "identifierType": "RIC",
+                    "id": "AAPL.OQ"
+                  },
+                  "quantity": {
+                    "type": "UNITS",
+                    "value": 10000
+                  },
+                  "additionalNumbers": {
+                    "freeFloatFactor": 1,
+                    "weightingCapFactor": 1
+                  }
+                }
+              ]
+            }
+          ],
+          "additionalNumbers": {
+            "divisor": 100000
+          }
+        },
+        "indexStateEvaluationDto": {
+          "indexLevel": 58.748000000000005,
+          "clusters": [
+            {
+              "name": "NONE",
+              "prices": [
+                {
+                  "instrumentKey": {
+                    "assetClass": "SHARE",
+                    "identifierType": "RIC",
+                    "id": "AAPL.OQ"
+                  },
+                  "price": 198.15
+                },
+                {
+                  "instrumentKey": {
+                    "assetClass": "SHARE",
+                    "identifierType": "RIC",
+                    "id": "MSFT.OQ"
+                  },
+                  "price": 388.45
+                },
+                {
+                  "instrumentKey": {
+                    "assetClass": "SHARE",
+                    "identifierType": "RIC",
                     "id": "GOOGL.OQ"
                   },
                   "price": 157.14
@@ -173,6 +395,58 @@ export class SimulationService {
       "simulationDate": "2025-04-14",
       "closingIndexState": {
         "composition": {
+          "clusters": [
+            {
+              "name": "1a91c2f7-deca-4d33-9383-87bec8049b8d",
+              "constituents": [
+                {
+                  "assetIdentifier": {
+                    "assetClass": "SHARE",
+                    "identifierType": "RIC",
+                    "id": "MSFT.OQ"
+                  },
+                  "quantity": {
+                    "type": "UNITS",
+                    "value": 8000
+                  },
+                  "additionalNumbers": {
+                    "freeFloatFactor": 1,
+                    "weightingCapFactor": 1
+                  }
+                },
+                {
+                  "assetIdentifier": {
+                    "assetClass": "SHARE",
+                    "identifierType": "RIC",
+                    "id": "GOOGL.OQ"
+                  },
+                  "quantity": {
+                    "type": "UNITS",
+                    "value": 5000
+                  },
+                  "additionalNumbers": {
+                    "freeFloatFactor": 1,
+                    "weightingCapFactor": 1
+                  }
+                },
+                {
+                  "assetIdentifier": {
+                    "assetClass": "SHARE",
+                    "identifierType": "RIC",
+                    "id": "AAPL.OQ"
+                  },
+                  "quantity": {
+                    "type": "UNITS",
+                    "value": 10000
+                  },
+                  "additionalNumbers": {
+                    "freeFloatFactor": 1,
+                    "weightingCapFactor": 1
+                  }
+                }
+              ]
+            }
+          ],
           "additionalNumbers": {
             "divisor": 100000
           }
@@ -181,24 +455,108 @@ export class SimulationService {
           "indexLevel": 59.23030000000001,
           "clusters": [
             {
+              "name": "NONE",
               "prices": [
                 {
                   "instrumentKey": {
+                    "assetClass": "SHARE",
+                    "identifierType": "RIC",
                     "id": "GOOGL.OQ"
                   },
                   "price": 159.07
                 },
                 {
                   "instrumentKey": {
+                    "assetClass": "SHARE",
+                    "identifierType": "RIC",
                     "id": "MSFT.OQ"
                   },
                   "price": 387.81
                 },
                 {
                   "instrumentKey": {
+                    "assetClass": "SHARE",
+                    "identifierType": "RIC",
                     "id": "AAPL.OQ"
                   },
                   "price": 202.52
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "openingIndexState": {
+        "composition": {
+          "clusters": [
+            {
+              "name": "1a91c2f7-deca-4d33-9383-87bec8049b8d",
+              "constituents": [
+                {
+                  "assetIdentifier": {
+                    "assetClass": "SHARE",
+                    "identifierType": "RIC",
+                    "id": "MSFT.OQ"
+                  },
+                  "quantity": {
+                    "type": "UNITS",
+                    "value": 8000
+                  },
+                  "additionalNumbers": {
+                    "freeFloatFactor": 1,
+                    "weightingCapFactor": 1
+                  }
+                },
+                {
+                  "assetIdentifier": {
+                    "assetClass": "SHARE",
+                    "identifierType": "RIC",
+                    "id": "GOOGL.OQ"
+                  },
+                  "quantity": {
+                    "type": "UNITS",
+                    "value": 5000
+                  },
+                  "additionalNumbers": {
+                    "freeFloatFactor": 1,
+                    "weightingCapFactor": 1
+                  }
+                },
+                {
+                  "assetIdentifier": {
+                    "assetClass": "SHARE",
+                    "identifierType": "RIC",
+                    "id": "AAPL.OQ"
+                  },
+                  "quantity": {
+                    "type": "UNITS",
+                    "value": 10000
+                  },
+                  "additionalNumbers": {
+                    "freeFloatFactor": 1,
+                    "weightingCapFactor": 1
+                  }
+                }
+              ]
+            }
+          ],
+          "additionalNumbers": {
+            "divisor": 100000
+          }
+        },
+        "indexStateEvaluationDto": {
+          "indexLevel": 59.23030000000001,
+          "clusters": [
+            {
+              "name": "NONE",
+              "prices": [
+                {
+                  "instrumentKey": {
+                    "assetClass": "SHARE",
+                    "identifierType": "RIC",
+                    "id": "GOOGL.OQ"
+                  },
+                  "price": 159.07
                 }
               ]
             }
@@ -210,6 +568,58 @@ export class SimulationService {
       "simulationDate": "2025-04-15",
       "closingIndexState": {
         "composition": {
+          "clusters": [
+            {
+              "name": "1a91c2f7-deca-4d33-9383-87bec8049b8d",
+              "constituents": [
+                {
+                  "assetIdentifier": {
+                    "assetClass": "SHARE",
+                    "identifierType": "RIC",
+                    "id": "MSFT.OQ"
+                  },
+                  "quantity": {
+                    "type": "UNITS",
+                    "value": 8000
+                  },
+                  "additionalNumbers": {
+                    "freeFloatFactor": 1,
+                    "weightingCapFactor": 1
+                  }
+                },
+                {
+                  "assetIdentifier": {
+                    "assetClass": "SHARE",
+                    "identifierType": "RIC",
+                    "id": "GOOGL.OQ"
+                  },
+                  "quantity": {
+                    "type": "UNITS",
+                    "value": 5000
+                  },
+                  "additionalNumbers": {
+                    "freeFloatFactor": 1,
+                    "weightingCapFactor": 1
+                  }
+                },
+                {
+                  "assetIdentifier": {
+                    "assetClass": "SHARE",
+                    "identifierType": "RIC",
+                    "id": "AAPL.OQ"
+                  },
+                  "quantity": {
+                    "type": "UNITS",
+                    "value": 10000
+                  },
+                  "additionalNumbers": {
+                    "freeFloatFactor": 1,
+                    "weightingCapFactor": 1
+                  }
+                }
+              ]
+            }
+          ],
           "additionalNumbers": {
             "divisor": 100000
           }
@@ -218,21 +628,105 @@ export class SimulationService {
           "indexLevel": 58.8879,
           "clusters": [
             {
+              "name": "NONE",
               "prices": [
                 {
                   "instrumentKey": {
+                    "assetClass": "SHARE",
+                    "identifierType": "RIC",
                     "id": "AAPL.OQ"
                   },
                   "price": 202.14
                 },
                 {
                   "instrumentKey": {
+                    "assetClass": "SHARE",
+                    "identifierType": "RIC",
                     "id": "GOOGL.OQ"
                   },
                   "price": 156.31
                 },
                 {
                   "instrumentKey": {
+                    "assetClass": "SHARE",
+                    "identifierType": "RIC",
+                    "id": "MSFT.OQ"
+                  },
+                  "price": 385.73
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "openingIndexState": {
+        "composition": {
+          "clusters": [
+            {
+              "name": "1a91c2f7-deca-4d33-9383-87bec8049b8d",
+              "constituents": [
+                {
+                  "assetIdentifier": {
+                    "assetClass": "SHARE",
+                    "identifierType": "RIC",
+                    "id": "MSFT.OQ"
+                  },
+                  "quantity": {
+                    "type": "UNITS",
+                    "value": 8000
+                  },
+                  "additionalNumbers": {
+                    "freeFloatFactor": 1,
+                    "weightingCapFactor": 1
+                  }
+                },
+                {
+                  "assetIdentifier": {
+                    "assetClass": "SHARE",
+                    "identifierType": "RIC",
+                    "id": "GOOGL.OQ"
+                  },
+                  "quantity": {
+                    "type": "UNITS",
+                    "value": 5000
+                  },
+                  "additionalNumbers": {
+                    "freeFloatFactor": 1,
+                    "weightingCapFactor": 1
+                  }
+                },
+                {
+                  "assetIdentifier": {
+                    "assetClass": "SHARE",
+                    "identifierType": "RIC",
+                    "id": "AAPL.OQ"
+                  },
+                  "quantity": {
+                    "type": "UNITS",
+                    "value": 10000
+                  },
+                  "additionalNumbers": {
+                    "freeFloatFactor": 1,
+                    "weightingCapFactor": 1
+                  }
+                }
+              ]
+            }
+          ],
+          "additionalNumbers": {
+            "divisor": 100000
+          }
+        },
+        "indexStateEvaluationDto": {
+          "indexLevel": 58.8879,
+          "clusters": [
+            {
+              "name": "NONE",
+              "prices": [
+                {
+                  "instrumentKey": {
+                    "assetClass": "SHARE",
+                    "identifierType": "RIC",
                     "id": "MSFT.OQ"
                   },
                   "price": 385.73
@@ -412,6 +906,37 @@ export class SimulationService {
       indexLevel: data.closingIndexState.indexStateEvaluationDto.indexLevel,
       divisor: data.closingIndexState.composition.additionalNumbers.divisor
     })).sort((a, b) => new Date(a.date.split('/').reverse().join('-')).getTime() - new Date(b.date.split('/').reverse().join('-')).getTime());
+  }
+
+  static getResultsData(date: string, stateType: 'closing' | 'opening' = 'closing'): ResultsData[] {
+    if (!this.simulationResult || !this.simulationResult[date]) {
+      return [];
+    }
+
+    const dayData = this.simulationResult[date];
+    const state = stateType === 'closing' ? dayData.closingIndexState : dayData.openingIndexState;
+    
+    // Get constituents from composition
+    const constituents = state.composition.clusters.flatMap(cluster => cluster.constituents);
+    
+    // Get prices from evaluation data
+    const prices = state.indexStateEvaluationDto.clusters.flatMap(cluster => cluster.prices);
+    
+    // Combine quantity and price data
+    return constituents.map(constituent => {
+      const priceData = prices.find(price => 
+        price.instrumentKey.id === constituent.assetIdentifier.id
+      );
+      
+      return {
+        ric: constituent.assetIdentifier.id,
+        cas: '',
+        quantity: constituent.quantity.value.toString(),
+        price: priceData ? priceData.price.toString() : '0',
+        currency: '',
+        fx: ''
+      };
+    });
   }
 
   static getSimulationResult(): SimulationResult | null {

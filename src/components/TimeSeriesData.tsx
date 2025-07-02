@@ -31,6 +31,7 @@ const TimeSeriesData = ({ simulationComplete = false, selectedIndex = '' }: Time
   useEffect(() => {
     if (simulationComplete) {
       const data = SimulationService.getTimeSeriesData();
+      console.log('Time series data loaded:', data);
       setTimeSeriesData(data);
     }
   }, [simulationComplete]);
@@ -253,10 +254,18 @@ const TimeSeriesData = ({ simulationComplete = false, selectedIndex = '' }: Time
                   dy={10}
                 />
                 <YAxis 
+                  yAxisId="left"
                   domain={['dataMin - 1', 'dataMax + 1']} 
                   axisLine={false}
                   tickLine={false}
                   dx={-10}
+                />
+                <YAxis 
+                  yAxisId="right"
+                  orientation="right"
+                  axisLine={false}
+                  tickLine={false}
+                  dx={10}
                 />
                 <Tooltip 
                   formatter={(value, name) => {
@@ -280,6 +289,7 @@ const TimeSeriesData = ({ simulationComplete = false, selectedIndex = '' }: Time
                   strokeWidth={2} 
                   dot={{ stroke: '#10b981', strokeWidth: 2, r: 4 }}
                   activeDot={{ r: 6 }}
+                  yAxisId="left"
                 />
                 <Line 
                   type="monotone" 
