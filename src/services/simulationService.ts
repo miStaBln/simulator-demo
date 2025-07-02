@@ -934,11 +934,29 @@ export class SimulationService {
     // Handle both old dummy format and new API format
     const simulationData = this.simulationResult.simulations || this.simulationResult;
     
-    return Object.entries(simulationData).map(([date, data]) => ({
-      date: this.formatDateForDisplay(date),
-      indexLevel: data.closingIndexState?.indexStateEvaluationDto?.indexLevel || 0,
-      divisor: data.closingIndexState?.composition?.additionalNumbers?.divisor || 0
-    })).sort((a, b) => new Date(a.date.split('/').reverse().join('-')).getTime() - new Date(b.date.split('/').reverse().join('-')).getTime());
+    return Object.entries(simulationData)
+      .map(([date, data]) => {
+        // Skip entries where closingIndexState is null or undefined
+        if (!data.closingIndexState || !data.closingIndexState.indexStateEvaluationDto) {
+          return null;
+        }
+        
+        const indexLevel = data.closingIndexState.indexStateEvaluationDto.indexLevel;
+        const divisor = data.closingIndexState.composition?.additionalNumbers?.divisor;
+        
+        // Skip if essential data is missing or zero
+        if (!indexLevel || !divisor) {
+          return null;
+        }
+        
+        return {
+          date: this.formatDateForDisplay(date),
+          indexLevel,
+          divisor
+        };
+      })
+      .filter((item): item is TimeSeriesData => item !== null)
+      .sort((a, b) => new Date(a.date.split('/').reverse().join('-')).getTime() - new Date(b.date.split('/').reverse().join('-')).getTime());
   }
 
   static getResultsData(date: string, stateType: 'closing' | 'opening' = 'closing'): ResultsData[] {
@@ -956,15 +974,16 @@ export class SimulationService {
     const dayData = simulationData[date];
     const state = stateType === 'closing' ? dayData.closingIndexState : dayData.openingIndexState;
     
+    // Return empty array if state is null or missing required data
     if (!state || !state.composition || !state.indexStateEvaluationDto) {
       return [];
     }
     
     // Get constituents from composition
-    const constituents = state.composition.clusters.flatMap(cluster => cluster.constituents);
+    const constituents = state.composition.clusters?.flatMap(cluster => cluster.constituents) || [];
     
     // Get prices from evaluation data
-    const prices = state.indexStateEvaluationDto.clusters.flatMap(cluster => cluster.prices);
+    const prices = state.indexStateEvaluationDto.clusters?.flatMap(cluster => cluster.prices) || [];
     
     // Combine quantity and price data
     return constituents.map(constituent => {
