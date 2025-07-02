@@ -37,7 +37,7 @@ const ManualComposition = ({
     if (pastedData.includes('\t') || pastedData.includes('\n')) {
       e.preventDefault();
       
-      const lines = pastedData.trim().split('\n');
+      const lines = pastedData.trim().split('\n').filter(line => line.trim());
       const newStocks: Stock[] = [];
       
       lines.forEach(line => {
@@ -57,30 +57,30 @@ const ManualComposition = ({
       });
       
       if (newStocks.length > 0) {
-        // Find the first empty row or add new rows
+        // Find the first empty row
         let startIndex = stocks.findIndex(stock => !stock.ric);
         if (startIndex === -1) {
           startIndex = stocks.length;
         }
         
-        // Update existing stocks or add new ones
-        newStocks.forEach((newStock, index) => {
-          const targetIndex = startIndex + index;
-          if (targetIndex < stocks.length) {
+        // Add enough rows to accommodate all new data
+        const rowsNeeded = Math.max(0, (startIndex + newStocks.length) - stocks.length);
+        for (let i = 0; i < rowsNeeded; i++) {
+          addRow();
+        }
+        
+        // Update all the data at once using a slight delay to ensure rows are added
+        setTimeout(() => {
+          newStocks.forEach((newStock, index) => {
+            const targetIndex = startIndex + index;
             updateStock(targetIndex, 'ric', newStock.ric);
-            updateStock(targetIndex, shareOrWeight === 'shares' ? 'shares' : 'weight', 
-              shareOrWeight === 'shares' ? newStock.shares : newStock.weight);
-          } else {
-            // Add new row
-            addRow();
-            // The new row will be added asynchronously, so we need to update it in the next tick
-            setTimeout(() => {
-              updateStock(targetIndex, 'ric', newStock.ric);
-              updateStock(targetIndex, shareOrWeight === 'shares' ? 'shares' : 'weight',
-                shareOrWeight === 'shares' ? newStock.shares : newStock.weight);
-            }, 0);
-          }
-        });
+            if (shareOrWeight === 'shares') {
+              updateStock(targetIndex, 'shares', newStock.shares);
+            } else {
+              updateStock(targetIndex, 'weight', newStock.weight);
+            }
+          });
+        }, 10);
         
         toast({
           title: "Data pasted",
