@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
+import { SimulationService } from '@/services/simulationService';
 import SimulationPeriod from './simulator/SimulationPeriod';
 import SimulationParameters from './simulator/SimulationParameters';
 import Composition from './simulator/Composition';
@@ -226,15 +227,31 @@ const SimulationData = ({ onSimulationComplete = () => {} }: SimulationDataProps
     setRebalancings(newRebalancings);
   };
 
-  const handleSimulate = () => {
+  const handleSimulate = async () => {
     setLoading(true);
     toast({
       title: "Simulation started",
-      description: "Please wait while we process your simulation data",
+      description: "Calling real simulation API...",
     });
     
-    // Simulate processing time
-    setTimeout(() => {
+    try {
+      const result = await SimulationService.runSimulation(
+        startDate,
+        endDate,
+        currency,
+        returnType,
+        divisor,
+        stocks,
+        {
+          cashDividendTaxHandling,
+          specialDividendTaxHandling,
+          considerStockDividend,
+          considerStockSplit,
+          considerRightsIssue,
+          considerDividendFee
+        }
+      );
+      
       setLoading(false);
       setSimulationComplete(true);
       
@@ -245,9 +262,19 @@ const SimulationData = ({ onSimulationComplete = () => {} }: SimulationDataProps
       
       toast({
         title: "Simulation complete",
-        description: "Your index simulation is ready to view",
+        description: "Real simulation API returned successfully",
       });
-    }, 2000);
+      
+      console.log('Simulation completed with result:', result);
+    } catch (error) {
+      setLoading(false);
+      console.error('Simulation failed:', error);
+      toast({
+        title: "Simulation failed",
+        description: error instanceof Error ? error.message : "An error occurred during simulation",
+        variant: "destructive",
+      });
+    }
   };
 
   const viewResults = () => {
