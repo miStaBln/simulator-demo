@@ -196,7 +196,7 @@ interface ResultsData {
 }
 
 export class SimulationService {
-  private static readonly API_URL = "http://test-32.gde.nbg.solactive.com:8274/index-simulator-equity/proxy/v3/simulateIndexSimple";
+  private static readonly API_URL = "http://test-32.gde.nbg.solactive.com:8274/index-simulator-equity/proxy/v3/simulateEquityIndexSimple";
   private static simulationResult: SimulationResult | null = null;
 
   // Updated dummy data to match the new structure
@@ -861,12 +861,12 @@ export class SimulationService {
       },
       indexProperties: {
         coreIndexData: {
-          name: "Test Index",
+          name: "Simulation Index",
           identifiers: [
             {
               assetClass: "INDEX",
-              identifierType: "GIGANT_ID",
-              id: "12346"
+              identifierType: "RIC",
+              id: ".SIMULATE"
             }
           ],
           family: "DEFAULT_LASPEYRE",

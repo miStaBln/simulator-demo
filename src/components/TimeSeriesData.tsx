@@ -107,7 +107,7 @@ const TimeSeriesData = () => {
                     stroke="#3b82f6" 
                     strokeWidth={2}
                     name="Index Level"
-                    dot={{ r: 3 }}
+                    dot={false}
                   />
                   <Line 
                     yAxisId="divisor"
@@ -116,7 +116,7 @@ const TimeSeriesData = () => {
                     stroke="#ef4444" 
                     strokeWidth={2}
                     name="Divisor"
-                    dot={{ r: 3 }}
+                    dot={false}
                   />
                 </LineChart>
               </ResponsiveContainer>
