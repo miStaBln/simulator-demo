@@ -8,7 +8,9 @@ import {
   CartesianGrid, 
   Tooltip, 
   ResponsiveContainer,
-  Legend
+  Legend,
+  BarChart,
+  Bar
 } from 'recharts';
 import { Search, ChevronLeft, ChevronRight, Download, Filter, Columns, Maximize2, ArrowUpDown, ChevronDown, ChevronUp } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -23,16 +25,55 @@ interface TimeSeriesDataProps {
 
 const TimeSeriesData = ({ simulationComplete = false, selectedIndex = '' }: TimeSeriesDataProps) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [rowsPerPage, setRowsPerPage] = useState(50);
+  const [rowsPerPage, setRowsPerPage] = useState(10); // Changed from 50 to 10
   const [reportType, setReportType] = useState('Closing');
   const [comparisonExpanded, setComparisonExpanded] = useState(true);
   const [timeSeriesData, setTimeSeriesData] = useState<Array<{ date: string; indexLevel: number; divisor: number }>>([]);
+  const [dailyReturns, setDailyReturns] = useState<Array<{ date: string; dailyReturn: number }>>([]);
+  const [keyFigures, setKeyFigures] = useState<{
+    totalReturn: number;
+    startLevel: number;
+    endLevel: number;
+    startDate: string;
+    endDate: string;
+  } | null>(null);
   
   useEffect(() => {
     if (simulationComplete) {
       const data = SimulationService.getTimeSeriesData();
       console.log('Time series data loaded:', data);
       setTimeSeriesData(data);
+      
+      // Calculate daily returns and key figures
+      if (data.length > 1) {
+        const returns: Array<{ date: string; dailyReturn: number }> = [];
+        
+        for (let i = 1; i < data.length; i++) {
+          const currentLevel = data[i].indexLevel;
+          const previousLevel = data[i - 1].indexLevel;
+          const dailyReturn = (currentLevel / previousLevel - 1) * 100; // Convert to percentage
+          
+          returns.push({
+            date: data[i].date,
+            dailyReturn: dailyReturn
+          });
+        }
+        
+        setDailyReturns(returns);
+        
+        // Calculate total return
+        const startLevel = data[0].indexLevel;
+        const endLevel = data[data.length - 1].indexLevel;
+        const totalReturn = ((endLevel / startLevel - 1) * 100);
+        
+        setKeyFigures({
+          totalReturn,
+          startLevel,
+          endLevel,
+          startDate: data[0].date,
+          endDate: data[data.length - 1].date
+        });
+      }
     }
   }, [simulationComplete]);
   
@@ -75,6 +116,41 @@ const TimeSeriesData = ({ simulationComplete = false, selectedIndex = '' }: Time
             </Select>
           </div>
         </div>
+
+        {/* Key Figures */}
+        {keyFigures && (
+          <Card className="p-4 mb-6">
+            <h3 className="text-base font-medium mb-4">Key Figures</h3>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="bg-gray-50 p-3 rounded">
+                <div className="text-xs text-gray-500">Total Return</div>
+                <div className={`text-lg font-medium ${keyFigures.totalReturn >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {keyFigures.totalReturn.toFixed(2)}%
+                </div>
+              </div>
+              <div className="bg-gray-50 p-3 rounded">
+                <div className="text-xs text-gray-500">Start Level</div>
+                <div className="text-lg font-medium">
+                  {keyFigures.startLevel.toFixed(6)}
+                </div>
+                <div className="text-xs text-gray-400">{keyFigures.startDate}</div>
+              </div>
+              <div className="bg-gray-50 p-3 rounded">
+                <div className="text-xs text-gray-500">End Level</div>
+                <div className="text-lg font-medium">
+                  {keyFigures.endLevel.toFixed(6)}
+                </div>
+                <div className="text-xs text-gray-400">{keyFigures.endDate}</div>
+              </div>
+              <div className="bg-gray-50 p-3 rounded">
+                <div className="text-xs text-gray-500">Number of Days</div>
+                <div className="text-lg font-medium">
+                  {timeSeriesData.length}
+                </div>
+              </div>
+            </div>
+          </Card>
+        )}
         
         {simulationComplete && selectedIndex && (
           <Card className="p-4 mb-6">
@@ -137,6 +213,42 @@ const TimeSeriesData = ({ simulationComplete = false, selectedIndex = '' }: Time
             )}
           </Card>
         )}
+
+        {/* Daily Returns Chart */}
+        {dailyReturns.length > 0 && (
+          <Card className="p-4 mb-6">
+            <h3 className="text-base font-medium mb-4">Daily Returns (%)</h3>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={dailyReturns}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis 
+                    dataKey="date" 
+                    tick={{ fontSize: 12 }} 
+                    axisLine={false}
+                    tickLine={false}
+                    dy={10}
+                  />
+                  <YAxis 
+                    axisLine={false}
+                    tickLine={false}
+                    dx={-10}
+                    tickFormatter={(value) => `${value.toFixed(2)}%`}
+                  />
+                  <Tooltip 
+                    formatter={(value: number) => [`${value.toFixed(4)}%`, 'Daily Return']}
+                    labelFormatter={(value) => `Date: ${value}`}
+                  />
+                  <Bar 
+                    dataKey="dailyReturn" 
+                    fill={(entry: any) => entry?.dailyReturn >= 0 ? '#10b981' : '#ef4444'}
+                    name="Daily Return (%)"
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+        )}
         
         <h3 className="text-sm font-medium mb-4">Time Series Data</h3>
         
@@ -193,7 +305,7 @@ const TimeSeriesData = ({ simulationComplete = false, selectedIndex = '' }: Time
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {timeSeriesData.map((row, index) => (
+                  {timeSeriesData.slice(0, rowsPerPage).map((row, index) => (
                     <tr key={index} className="hover:bg-gray-50">
                       <td className="px-4 py-3 text-sm">{row.date}</td>
                       <td className="px-4 py-3 text-sm">{row.indexLevel.toFixed(6)}</td>
@@ -220,7 +332,7 @@ const TimeSeriesData = ({ simulationComplete = false, selectedIndex = '' }: Time
               </div>
               
               <div className="flex items-center space-x-2 text-xs">
-                <span>1-{timeSeriesData.length} of {timeSeriesData.length}</span>
+                <span>1-{Math.min(rowsPerPage, timeSeriesData.length)} of {timeSeriesData.length}</span>
                 <div className="flex">
                   <button className="p-1 border rounded-l hover:bg-gray-100">
                     <ChevronLeft className="h-3 w-3" />
