@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { SimulationService } from '@/services/simulationService';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LineChart, Line, Legend } from 'recharts';
@@ -74,85 +73,88 @@ const TimeSeriesData = () => {
         </div>
       )}
 
-      {/* Index Level and Divisor Line Chart */}
-      {timeSeriesData.length > 0 && (
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">Index Level and Divisor Over Time</h2>
-          <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-            <ResponsiveContainer width="100%" height={400}>
-              <LineChart data={timeSeriesData} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="date" 
-                  tick={{ fontSize: 12 }}
-                  angle={-45}
-                  textAnchor="end"
-                  height={80}
-                />
-                <YAxis yAxisId="level" orientation="left" tick={{ fontSize: 12 }} />
-                <YAxis yAxisId="divisor" orientation="right" tick={{ fontSize: 12 }} />
-                <Tooltip 
-                  formatter={(value: number, name: string) => [
-                    name === 'indexLevel' ? value.toFixed(6) : value.toLocaleString(),
-                    name === 'indexLevel' ? 'Index Level' : 'Divisor'
-                  ]}
-                  labelStyle={{ color: '#374151' }}
-                />
-                <Legend />
-                <Line 
-                  yAxisId="level"
-                  type="monotone" 
-                  dataKey="indexLevel" 
-                  stroke="#3b82f6" 
-                  strokeWidth={2}
-                  name="Index Level"
-                  dot={{ r: 3 }}
-                />
-                <Line 
-                  yAxisId="divisor"
-                  type="monotone" 
-                  dataKey="divisor" 
-                  stroke="#ef4444" 
-                  strokeWidth={2}
-                  name="Divisor"
-                  dot={{ r: 3 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+      {/* Charts Section - Side by Side */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Index Level and Divisor Line Chart */}
+        {timeSeriesData.length > 0 && (
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Index Level and Divisor Over Time</h2>
+            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+              <ResponsiveContainer width="100%" height={400}>
+                <LineChart data={timeSeriesData} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="date" 
+                    tick={{ fontSize: 12 }}
+                    angle={-45}
+                    textAnchor="end"
+                    height={80}
+                  />
+                  <YAxis yAxisId="level" orientation="left" tick={{ fontSize: 12 }} />
+                  <YAxis yAxisId="divisor" orientation="right" tick={{ fontSize: 12 }} />
+                  <Tooltip 
+                    formatter={(value: number, name: string) => [
+                      name === 'indexLevel' ? value.toFixed(6) : value.toLocaleString(),
+                      name === 'indexLevel' ? 'Index Level' : 'Divisor'
+                    ]}
+                    labelStyle={{ color: '#374151' }}
+                  />
+                  <Legend />
+                  <Line 
+                    yAxisId="level"
+                    type="monotone" 
+                    dataKey="indexLevel" 
+                    stroke="#3b82f6" 
+                    strokeWidth={2}
+                    name="Index Level"
+                    dot={{ r: 3 }}
+                  />
+                  <Line 
+                    yAxisId="divisor"
+                    type="monotone" 
+                    dataKey="divisor" 
+                    stroke="#ef4444" 
+                    strokeWidth={2}
+                    name="Divisor"
+                    dot={{ r: 3 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Daily Returns Chart */}
-      {dailyReturnsData.length > 0 && (
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">Daily Returns (%)</h2>
-          <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={dailyReturnsData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="date" 
-                  tick={{ fontSize: 12 }}
-                  angle={-45}
-                  textAnchor="end"
-                  height={80}
-                />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip 
-                  formatter={(value: number) => [`${value.toFixed(2)}%`, 'Daily Return']}
-                  labelStyle={{ color: '#374151' }}
-                />
-                <Bar dataKey="dailyReturn">
-                  {dailyReturnsData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.isPositive ? "#10b981" : "#ef4444"} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+        {/* Daily Returns Chart */}
+        {dailyReturnsData.length > 0 && (
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Daily Returns (%)</h2>
+            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+              <ResponsiveContainer width="100%" height={400}>
+                <BarChart data={dailyReturnsData} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="date" 
+                    tick={{ fontSize: 12 }}
+                    angle={-45}
+                    textAnchor="end"
+                    height={80}
+                  />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip 
+                    formatter={(value: number) => [`${value.toFixed(2)}%`, 'Daily Return']}
+                    labelStyle={{ color: '#374151' }}
+                  />
+                  <Bar dataKey="dailyReturn">
+                    {dailyReturnsData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.isPositive ? "#10b981" : "#ef4444"} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
       
       {/* Time Series Table */}
       <div className="mb-4">
