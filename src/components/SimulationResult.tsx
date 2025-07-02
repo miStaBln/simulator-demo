@@ -131,11 +131,11 @@ const SimulationResult = () => {
         <div>
           <div className="mb-4">
             <div className="bg-gray-50 p-3 rounded mb-2">
-              <div className="text-xs text-gray-500">Closing Index Level</div>
-              <div className="text-lg font-medium">{closingLevel.toFixed(6)}</div>
+              <div className="text-xs text-gray-500">Level</div>
+              <div className="text-lg font-medium">{closingLevel}</div>
             </div>
             <div className="bg-gray-50 p-3 rounded">
-              <div className="text-xs text-gray-500">Closing Divisor</div>
+              <div className="text-xs text-gray-500">Divisor</div>
               <div className="text-lg font-medium">{closingDivisor.toLocaleString()}</div>
             </div>
           </div>
@@ -148,11 +148,11 @@ const SimulationResult = () => {
         <div>
           <div className="mb-4">
             <div className="bg-gray-50 p-3 rounded mb-2">
-              <div className="text-xs text-gray-500">Opening Index Level</div>
-              <div className="text-lg font-medium">{openingLevel.toFixed(6)}</div>
+              <div className="text-xs text-gray-500">Level</div>
+              <div className="text-lg font-medium">{openingLevel}</div>
             </div>
             <div className="bg-gray-50 p-3 rounded">
-              <div className="text-xs text-gray-500">Opening Divisor</div>
+              <div className="text-xs text-gray-500">Divisor</div>
               <div className="text-lg font-medium">{openingDivisor.toLocaleString()}</div>
             </div>
           </div>
