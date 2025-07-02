@@ -1,4 +1,3 @@
-
 interface SimulationPayload {
   simulationStart: string;
   simulationEnd: string;
@@ -739,6 +738,43 @@ export class SimulationService {
     }
   };
 
+  private static buildCAHandlingDefault(returnType: string) {
+    let taxTypeCashDiv = 'USE_WITH_TAX';
+    let taxTypeSpecialDiv = 'USE_WITH_TAX';
+
+    if (returnType === "GTR") {
+      taxTypeCashDiv = 'USE_WITHOUT_TAX';
+      taxTypeSpecialDiv = 'USE_WITHOUT_TAX';
+    }
+
+    if (returnType === "PR") {
+      taxTypeCashDiv = 'NONE';
+    }
+
+    return {
+      enableCaHandling: true,
+      cashDividendTaxHandling: taxTypeCashDiv,
+      specialDividendTaxHandling: taxTypeSpecialDiv,
+      considerStockDividend: true,
+      considerStockSplit: true,
+      considerRightsIssue: true,
+      dividendReinvestmentInstrument: 'None',
+      considerRightsIssueToCashComponent: false,
+      considerCapitalDecrease: true,
+      corporateActionHandling: 'START_OF_DAY',
+      useWeightNeutralRightsIssue: false,
+      cashDividendTax: 0,
+      specialDividendTax: 0,
+      franking: "NO_ADJUSTMENT",
+      pid: "NO_ADJUSTMENT",
+      reit: "NO_ADJUSTMENT",
+      returnOfCapital: "NO_ADJUSTMENT",
+      interestOnCapital: "NO_ADJUSTMENT",
+      nzInvestorType: "LOCAL_NO_IMPUTATION",
+      auInvestorType: "LOCAL_NO_IMPUTATION"
+    };
+  }
+
   static async runSimulation(
     startDate: string,
     endDate: string,
@@ -787,6 +823,20 @@ export class SimulationService {
         }
       }));
 
+    // Build CA handling configuration based on return type
+    const caHandlingConfig = this.buildCAHandlingDefault(returnType);
+
+    // Override with advanced parameters if they are not default values
+    if (advancedParams.cashDividendTaxHandling !== 'None') {
+      caHandlingConfig.cashDividendTaxHandling = advancedParams.cashDividendTaxHandling;
+    }
+    if (advancedParams.specialDividendTaxHandling !== 'None') {
+      caHandlingConfig.specialDividendTaxHandling = advancedParams.specialDividendTaxHandling;
+    }
+    caHandlingConfig.considerStockDividend = advancedParams.considerStockDividend;
+    caHandlingConfig.considerStockSplit = advancedParams.considerStockSplit;
+    caHandlingConfig.considerRightsIssue = advancedParams.considerRightsIssue;
+
     const payload: SimulationPayload = {
       simulationStart: formatDate(startDate),
       simulationEnd: formatDate(endDate),
@@ -808,28 +858,7 @@ export class SimulationService {
           currency: currency,
           ignoreFx: false
         },
-        caHandlingConfiguration: {
-          enableCaHandling: true,
-          cashDividendTaxHandling: advancedParams.cashDividendTaxHandling === 'None' ? 'USE_WITH_TAX' : advancedParams.cashDividendTaxHandling,
-          specialDividendTaxHandling: advancedParams.specialDividendTaxHandling === 'None' ? 'USE_WITH_TAX' : advancedParams.specialDividendTaxHandling,
-          considerStockDividend: advancedParams.considerStockDividend,
-          considerStockSplit: advancedParams.considerStockSplit,
-          considerRightsIssue: advancedParams.considerRightsIssue,
-          considerRightsIssueToCashComponent: true,
-          considerCapitalDecrease: true,
-          cashDividendTax: 0,
-          specialDividendTax: 0,
-          corporateActionHandling: "NONE",
-          useWeightNeutralRightsIssue: true,
-          useWeightNeutralCapitalDecrease: true,
-          franking: "NO_ADJUSTMENT",
-          pid: "NO_ADJUSTMENT",
-          reit: "NO_ADJUSTMENT",
-          returnOfCapital: "NO_ADJUSTMENT",
-          interestOnCapital: "NO_ADJUSTMENT",
-          nzInvestorType: "LOCAL_NO_IMPUTATION",
-          auInvestorType: "LOCAL_NO_IMPUTATION"
-        }
+        caHandlingConfiguration: caHandlingConfig
       },
       composition: {
         clusters: [
