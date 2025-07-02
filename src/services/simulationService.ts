@@ -760,6 +760,8 @@ export class SimulationService {
       considerRightsIssue: true,
       considerRightsIssueToCashComponent: false,
       considerCapitalDecrease: true,
+      cashDividendTax: 0,
+      specialDividendTax: 0,
       corporateActionHandling: 'START_OF_DAY',
       useWeightNeutralRightsIssue: false,
       useWeightNeutralCapitalDecrease: false,
@@ -901,7 +903,7 @@ export class SimulationService {
       console.log('Simulation result:', result);
       
       // Store the result for use in other components
-      this.simulationResult = result;
+      SimulationService.simulationResult = result;
       
       return result;
     } catch (error) {
@@ -911,12 +913,12 @@ export class SimulationService {
         console.log('CORS error detected, using dummy data for demonstration');
         
         // Use dummy data as fallback
-        this.simulationResult = this.DUMMY_SIMULATION_RESULT;
+        SimulationService.simulationResult = SimulationService.DUMMY_SIMULATION_RESULT;
         
         // Show a toast to inform the user
         console.log('Using dummy simulation data due to CORS restrictions');
         
-        return this.DUMMY_SIMULATION_RESULT;
+        return SimulationService.DUMMY_SIMULATION_RESULT;
       }
       
       throw error;
@@ -924,12 +926,12 @@ export class SimulationService {
   }
 
   static getTimeSeriesData(): TimeSeriesData[] {
-    if (!this.simulationResult) {
+    if (!SimulationService.simulationResult) {
       return [];
     }
 
     // Handle both old dummy format and new API format
-    const simulationData = this.simulationResult.simulations || this.simulationResult;
+    const simulationData = SimulationService.simulationResult.simulations || SimulationService.simulationResult;
     
     return Object.entries(simulationData)
       .map(([date, data]) => {
@@ -947,7 +949,7 @@ export class SimulationService {
         }
         
         return {
-          date: this.formatDateForDisplay(date),
+          date: SimulationService.formatDateForDisplay(date),
           indexLevel,
           divisor
         };
@@ -957,12 +959,12 @@ export class SimulationService {
   }
 
   static getResultsData(date: string, stateType: 'closing' | 'opening' = 'closing'): ResultsData[] {
-    if (!this.simulationResult) {
+    if (!SimulationService.simulationResult) {
       return [];
     }
 
     // Handle both old dummy format and new API format
-    const simulationData = this.simulationResult.simulations || this.simulationResult;
+    const simulationData = SimulationService.simulationResult.simulations || SimulationService.simulationResult;
     
     if (!simulationData[date]) {
       return [];
@@ -1000,7 +1002,7 @@ export class SimulationService {
   }
 
   static getSimulationResult(): SimulationResult | null {
-    return this.simulationResult;
+    return SimulationService.simulationResult;
   }
 
   private static formatDateForDisplay(dateStr: string): string {
@@ -1010,6 +1012,6 @@ export class SimulationService {
   }
 
   static clearResults(): void {
-    this.simulationResult = null;
+    SimulationService.simulationResult = null;
   }
 }
