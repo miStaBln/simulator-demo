@@ -137,11 +137,11 @@ const SimulationResult = () => {
       <div className="grid grid-cols-2 gap-8">
         <div>
           <div className="mb-4">
-            <div className="bg-gray-50 p-3 rounded mb-2">
+            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
               <div className="text-xs text-gray-500">Level</div>
               <div className="text-lg font-medium">{closingLevel.toFixed(6)}</div>
             </div>
-            <div className="bg-gray-50 p-3 rounded">
+            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
               <div className="text-xs text-gray-500">Divisor</div>
               <div className="text-lg font-medium">{closingDivisor.toLocaleString()}</div>
             </div>
@@ -154,11 +154,11 @@ const SimulationResult = () => {
         
         <div>
           <div className="mb-4">
-            <div className="bg-gray-50 p-3 rounded mb-2">
+            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
               <div className="text-xs text-gray-500">Level</div>
               <div className="text-lg font-medium">{openingLevel.toFixed(6)}</div>
             </div>
-            <div className="bg-gray-50 p-3 rounded">
+            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
               <div className="text-xs text-gray-500">Divisor</div>
               <div className="text-lg font-medium">{openingDivisor.toLocaleString()}</div>
             </div>

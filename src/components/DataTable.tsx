@@ -27,16 +27,7 @@ const DataTable = ({ title, data }: DataTableProps) => {
       <div className="p-4">
         <h2 className="text-lg font-medium mb-4">{title}</h2>
         
-        <div className="grid grid-cols-2 gap-8 mb-4">
-          <div>
-            <label className="block text-sm text-gray-500 mb-1">Level</label>
-            <div className="text-sm">97.33119999664407</div>
-          </div>
-          <div>
-            <label className="block text-sm text-gray-500 mb-1">Divisor</label>
-            <div className="text-sm">{title.includes('Opening') ? '99967.724359' : '100000'}</div>
-          </div>
-        </div>
+
         
         <div className="flex items-center justify-between mb-4">
           <button className="flex items-center px-3 py-1.5 text-green-500 text-sm border border-green-500 rounded hover:bg-green-50">
