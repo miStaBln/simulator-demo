@@ -82,12 +82,7 @@ const Index = () => {
           />
         )}
         {activeTab === 'results' && simulationState.complete && <SimulationResult />}
-        {activeTab === 'time-series' && simulationState.complete && (
-          <TimeSeriesData 
-            simulationComplete={simulationState.complete} 
-            selectedIndex={simulationState.selectedIndex} 
-          />
-        )}
+        {activeTab === 'time-series' && simulationState.complete && <TimeSeriesData />}
         {activeTab === 'proximity' && simulationState.complete && (
           <ProximityIndexData 
             simulationComplete={simulationState.complete} 
