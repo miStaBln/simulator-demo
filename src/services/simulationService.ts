@@ -99,6 +99,9 @@ interface SimulationPayload {
 
 export class SimulationService {
   private static readonly API_URL = "http://test-32.gde.nbg.solactive.com:8274/index-simulator-equity/proxy/v3/simulateIndexSimple";
+  
+  // Alternative CORS proxy URL (you can try this if the direct call fails)
+  private static readonly CORS_PROXY_URL = "https://cors-anywhere.herokuapp.com/";
 
   static async runSimulation(
     startDate: string,
@@ -232,16 +235,21 @@ export class SimulationService {
     console.log('Simulation payload:', JSON.stringify(payload, null, 2));
 
     try {
+      // First, try the direct API call
       const response = await fetch(this.API_URL, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
+        mode: 'cors', // Explicitly set CORS mode
         body: JSON.stringify(payload)
       });
 
       if (!response.ok) {
-        throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('API response error:', response.status, response.statusText, errorText);
+        throw new Error(`API request failed: ${response.status} ${response.statusText}. Response: ${errorText}`);
       }
 
       const result = await response.json();
@@ -249,6 +257,26 @@ export class SimulationService {
       return result;
     } catch (error) {
       console.error('Simulation API error:', error);
+      
+      // Provide more specific error messages based on the error type
+      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        throw new Error(`
+          CORS Error: Cannot connect to the simulation API directly from the browser.
+          
+          This is likely due to:
+          1. CORS policy blocking the request
+          2. Network restrictions
+          3. The API server being unavailable
+          
+          Possible solutions:
+          1. Set up a backend proxy server
+          2. Use a CORS proxy service
+          3. Contact the API provider to whitelist your domain
+          
+          Original error: ${error.message}
+        `);
+      }
+      
       throw error;
     }
   }
