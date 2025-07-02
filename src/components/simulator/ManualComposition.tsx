@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Plus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -72,35 +73,48 @@ const ManualComposition = ({
         console.log('Start index:', startIndex);
         console.log('Current stocks length:', stocks.length);
         
-        // Add enough rows to accommodate all new data
+        // Calculate how many rows we need to add
         const rowsNeeded = Math.max(0, (startIndex + newStocks.length) - stocks.length);
         console.log('Rows needed:', rowsNeeded);
         
-        // Add all needed rows first
+        // Add all needed rows first - do this synchronously in a loop
         for (let i = 0; i < rowsNeeded; i++) {
           addRow();
         }
         
-        // Use a longer timeout to ensure all rows are added before updating
+        // Use multiple timeouts to ensure state updates have time to propagate
         setTimeout(() => {
-          console.log('Starting to update stocks...');
-          newStocks.forEach((newStock, index) => {
-            const targetIndex = startIndex + index;
-            console.log(`Updating stock at index ${targetIndex}:`, newStock);
-            
-            updateStock(targetIndex, 'ric', newStock.ric);
-            if (shareOrWeight === 'shares') {
-              updateStock(targetIndex, 'shares', newStock.shares);
-            } else {
-              updateStock(targetIndex, 'weight', newStock.weight);
-            }
-          });
+          console.log('Starting to update stocks after first timeout...');
+          console.log('Current stocks length after adding rows:', stocks.length);
           
-          toast({
-            title: "Data pasted",
-            description: `${newStocks.length} rows pasted from clipboard`,
-          });
-        }, 100); // Increased timeout to ensure rows are added
+          // Try updating after a longer delay to ensure all state updates are complete
+          setTimeout(() => {
+            console.log('Starting final stock updates...');
+            
+            newStocks.forEach((newStock, index) => {
+              const targetIndex = startIndex + index;
+              console.log(`Attempting to update stock at index ${targetIndex}:`, newStock);
+              console.log(`Current stocks array length: ${stocks.length}`);
+              
+              // Only update if the target index exists in the array
+              if (targetIndex < stocks.length || targetIndex === stocks.length - 1) {
+                updateStock(targetIndex, 'ric', newStock.ric);
+                if (shareOrWeight === 'shares') {
+                  updateStock(targetIndex, 'shares', newStock.shares);
+                } else {
+                  updateStock(targetIndex, 'weight', newStock.weight);
+                }
+              } else {
+                console.warn(`Target index ${targetIndex} is out of bounds for stocks array of length ${stocks.length}`);
+              }
+            });
+            
+            toast({
+              title: "Data pasted",
+              description: `${newStocks.length} rows pasted from clipboard`,
+            });
+          }, 200); // Second timeout to ensure all rows are properly added
+        }, 100); // First timeout to let initial state updates propagate
       }
     }
   };
