@@ -763,6 +763,7 @@ export class SimulationService {
       considerCapitalDecrease: true,
       corporateActionHandling: 'START_OF_DAY',
       useWeightNeutralRightsIssue: false,
+      useWeightNeutralCapitalDecrease: false,
       cashDividendTax: 0,
       specialDividendTax: 0,
       franking: "NO_ADJUSTMENT",
