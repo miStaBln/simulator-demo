@@ -871,6 +871,15 @@ export class SimulationService {
         instrumentPrices: instrumentPrices
       },
       indexProperties: {
+         metadata: {
+                      DEFAULT_DELETION_TREATMENT: "INDIVIDUAL",
+                      ACQUISITION_TREATMENT_ONLY_TARGET_STOCKS: "STOCK",
+                      ACQUISITION_TREATMENT_ONLY_TARGET_CASH: "CASH_PROPORTIONAL",
+                      ACQUISITION_TREATMENT_ONLY_TARGET_CASHNSTOCKS: "CASH_AND_STOCK_PROPORTIONAL",
+                      ACQUISITION_TREATMENT_TARGET_AND_ACQUIRER_STOCKS: "STOCK",
+                      ACQUISITION_TREATMENT_TARGET_AND_ACQUIRER_CASH: "CASH_PROPORTIONAL",
+                      ACQUISITION_TREATMENT_TARGET_AND_ACQUIRER_CASHNSTOCKS: "CASH_AND_STOCK_PROPORTIONAL"
+                  },
         coreIndexData: {
           name: "Simulation Index",
           identifiers: [
