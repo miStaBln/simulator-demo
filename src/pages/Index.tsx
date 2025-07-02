@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import TabNavigation from '@/components/TabNavigation';
@@ -7,6 +6,7 @@ import SimulationResult from '@/components/SimulationResult';
 import TimeSeriesData from '@/components/TimeSeriesData';
 import ProximityIndexData from '@/components/ProximityIndexData';
 import { toast } from '@/hooks/use-toast';
+import { SimulationService } from '@/services/simulationService';
 
 const initialSimulationState = {
   stocks: [],
