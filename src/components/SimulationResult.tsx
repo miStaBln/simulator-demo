@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import DatePicker from './DatePicker';
@@ -19,7 +20,9 @@ const SimulationResult = () => {
     // Get available simulation dates
     const simulationResult = SimulationService.getSimulationResult();
     if (simulationResult) {
-      const dates = Object.keys(simulationResult).sort();
+      // Handle both old dummy format and new API format
+      const simulationData = simulationResult.simulations || simulationResult;
+      const dates = Object.keys(simulationData).sort();
       const formattedDates = dates.map(date => {
         const [year, month, day] = date.split('-');
         return `${day}.${month}.${year}`;
@@ -44,32 +47,37 @@ const SimulationResult = () => {
     const apiDate = formatDateForAPI(selectedDate);
     const simulationResult = SimulationService.getSimulationResult();
     
-    if (simulationResult && simulationResult[apiDate]) {
-      const dayData = simulationResult[apiDate];
+    if (simulationResult) {
+      // Handle both old dummy format and new API format
+      const simulationData = simulationResult.simulations || simulationResult;
       
-      // Extract closing state data
-      const closingResults = SimulationService.getResultsData(apiDate, 'closing');
-      const closingIndexLevel = dayData.closingIndexState.indexStateEvaluationDto.indexLevel;
-      const closingDivisorValue = dayData.closingIndexState.composition.additionalNumbers.divisor;
-      
-      // Extract opening state data
-      const openingResults = SimulationService.getResultsData(apiDate, 'opening');
-      const openingIndexLevel = dayData.openingIndexState.indexStateEvaluationDto.indexLevel;
-      const openingDivisorValue = dayData.openingIndexState.composition.additionalNumbers.divisor;
-      
-      setClosingData(closingResults);
-      setOpeningData(openingResults);
-      setClosingLevel(closingIndexLevel);
-      setOpeningLevel(openingIndexLevel);
-      setClosingDivisor(closingDivisorValue);
-      setOpeningDivisor(openingDivisorValue);
-    } else {
-      setClosingData([]);
-      setOpeningData([]);
-      setClosingLevel(0);
-      setOpeningLevel(0);
-      setClosingDivisor(0);
-      setOpeningDivisor(0);
+      if (simulationData[apiDate]) {
+        const dayData = simulationData[apiDate];
+        
+        // Extract closing state data
+        const closingResults = SimulationService.getResultsData(apiDate, 'closing');
+        const closingIndexLevel = dayData.closingIndexState?.indexStateEvaluationDto?.indexLevel || 0;
+        const closingDivisorValue = dayData.closingIndexState?.composition?.additionalNumbers?.divisor || 0;
+        
+        // Extract opening state data
+        const openingResults = SimulationService.getResultsData(apiDate, 'opening');
+        const openingIndexLevel = dayData.openingIndexState?.indexStateEvaluationDto?.indexLevel || 0;
+        const openingDivisorValue = dayData.openingIndexState?.composition?.additionalNumbers?.divisor || 0;
+        
+        setClosingData(closingResults);
+        setOpeningData(openingResults);
+        setClosingLevel(closingIndexLevel);
+        setOpeningLevel(openingIndexLevel);
+        setClosingDivisor(closingDivisorValue);
+        setOpeningDivisor(openingDivisorValue);
+      } else {
+        setClosingData([]);
+        setOpeningData([]);
+        setClosingLevel(0);
+        setOpeningLevel(0);
+        setClosingDivisor(0);
+        setOpeningDivisor(0);
+      }
     }
   }, [selectedDate]);
 

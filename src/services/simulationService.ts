@@ -901,20 +901,34 @@ export class SimulationService {
       return [];
     }
 
-    return Object.entries(this.simulationResult).map(([date, data]) => ({
+    // Handle both old dummy format and new API format
+    const simulationData = this.simulationResult.simulations || this.simulationResult;
+    
+    return Object.entries(simulationData).map(([date, data]) => ({
       date: this.formatDateForDisplay(date),
-      indexLevel: data.closingIndexState.indexStateEvaluationDto.indexLevel,
-      divisor: data.closingIndexState.composition.additionalNumbers.divisor
+      indexLevel: data.closingIndexState?.indexStateEvaluationDto?.indexLevel || 0,
+      divisor: data.closingIndexState?.composition?.additionalNumbers?.divisor || 0
     })).sort((a, b) => new Date(a.date.split('/').reverse().join('-')).getTime() - new Date(b.date.split('/').reverse().join('-')).getTime());
   }
 
   static getResultsData(date: string, stateType: 'closing' | 'opening' = 'closing'): ResultsData[] {
-    if (!this.simulationResult || !this.simulationResult[date]) {
+    if (!this.simulationResult) {
       return [];
     }
 
-    const dayData = this.simulationResult[date];
+    // Handle both old dummy format and new API format
+    const simulationData = this.simulationResult.simulations || this.simulationResult;
+    
+    if (!simulationData[date]) {
+      return [];
+    }
+
+    const dayData = simulationData[date];
     const state = stateType === 'closing' ? dayData.closingIndexState : dayData.openingIndexState;
+    
+    if (!state || !state.composition || !state.indexStateEvaluationDto) {
+      return [];
+    }
     
     // Get constituents from composition
     const constituents = state.composition.clusters.flatMap(cluster => cluster.constituents);
