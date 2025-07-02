@@ -476,7 +476,8 @@ const SimulationData = ({
           considerStockSplit,
           considerRightsIssue,
           considerDividendFee
-        }
+        },
+        priceOverrides
       );
       
       setLoading(false);
