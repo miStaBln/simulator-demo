@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { SimulationService } from '@/services/simulationService';
@@ -57,51 +58,277 @@ const mockIndices = [
 
 interface SimulationDataProps {
   onSimulationComplete?: (isComplete: boolean, stocks: any[], selectedIndex?: string) => void;
+  shouldReset?: boolean;
+  onResetComplete?: () => void;
 }
 
-const SimulationData = ({ onSimulationComplete = () => {} }: SimulationDataProps) => {
+const SimulationData = ({ 
+  onSimulationComplete = () => {}, 
+  shouldReset = false,
+  onResetComplete = () => {}
+}: SimulationDataProps) => {
   const navigate = useNavigate();
-  const [startDate, setStartDate] = useState('11.04.2025');
-  const [endDate, setEndDate] = useState('15.04.2025');
-  const [currency, setCurrency] = useState('USD');
-  const [returnType, setReturnType] = useState('NTR');
-  const [divisor, setDivisor] = useState('100000');
-  const [initialLevel, setInitialLevel] = useState('1000.00');
-  const [inputMethod, setInputMethod] = useState('manual');
-  const [selectedIndex, setSelectedIndex] = useState('');
-  const [indexDate, setIndexDate] = useState('11.04.2025');
-  const [priceType, setPriceType] = useState('close');
+  
+  // Initialize with stored values or defaults
+  const [startDate, setStartDate] = useState(() => 
+    localStorage.getItem('sim_startDate') || '11.04.2025'
+  );
+  const [endDate, setEndDate] = useState(() => 
+    localStorage.getItem('sim_endDate') || '15.04.2025'
+  );
+  const [currency, setCurrency] = useState(() => 
+    localStorage.getItem('sim_currency') || 'USD'
+  );
+  const [returnType, setReturnType] = useState(() => 
+    localStorage.getItem('sim_returnType') || 'NTR'
+  );
+  const [divisor, setDivisor] = useState(() => 
+    localStorage.getItem('sim_divisor') || '100000'
+  );
+  const [initialLevel, setInitialLevel] = useState(() => 
+    localStorage.getItem('sim_initialLevel') || '1000.00'
+  );
+  const [inputMethod, setInputMethod] = useState(() => 
+    localStorage.getItem('sim_inputMethod') || 'manual'
+  );
+  const [selectedIndex, setSelectedIndex] = useState(() => 
+    localStorage.getItem('sim_selectedIndex') || ''
+  );
+  const [indexDate, setIndexDate] = useState(() => 
+    localStorage.getItem('sim_indexDate') || '11.04.2025'
+  );
+  const [priceType, setPriceType] = useState(() => 
+    localStorage.getItem('sim_priceType') || 'close'
+  );
   const [loading, setLoading] = useState(false);
-  const [simulationComplete, setSimulationComplete] = useState(false);
+  const [simulationComplete, setSimulationComplete] = useState(() => 
+    localStorage.getItem('sim_complete') === 'true'
+  );
   
   // Advanced parameters state
-  const [showAdvancedParameters, setShowAdvancedParameters] = useState(false);
-  const [lateDividendHandling, setLateDividendHandling] = useState('NONE');
-  const [cashDividendTaxHandling, setCashDividendTaxHandling] = useState('None');
-  const [specialDividendTaxHandling, setSpecialDividendTaxHandling] = useState('None');
-  const [considerStockDividend, setConsiderStockDividend] = useState(true);
-  const [considerStockSplit, setConsiderStockSplit] = useState(true);
-  const [considerRightsIssue, setConsiderRightsIssue] = useState(true);
-  const [considerDividendFee, setConsiderDividendFee] = useState(false);
-  const [drDividendTreatment, setDrDividendTreatment] = useState('DEFAULT');
-  const [globalDrTaxRate, setGlobalDrTaxRate] = useState('');
+  const [showAdvancedParameters, setShowAdvancedParameters] = useState(() => 
+    localStorage.getItem('sim_showAdvanced') === 'true'
+  );
+  const [lateDividendHandling, setLateDividendHandling] = useState(() => 
+    localStorage.getItem('sim_lateDividendHandling') || 'NONE'
+  );
+  const [cashDividendTaxHandling, setCashDividendTaxHandling] = useState(() => 
+    localStorage.getItem('sim_cashDividendTaxHandling') || 'None'
+  );
+  const [specialDividendTaxHandling, setSpecialDividendTaxHandling] = useState(() => 
+    localStorage.getItem('sim_specialDividendTaxHandling') || 'None'
+  );
+  const [considerStockDividend, setConsiderStockDividend] = useState(() => 
+    localStorage.getItem('sim_considerStockDividend') !== 'false'
+  );
+  const [considerStockSplit, setConsiderStockSplit] = useState(() => 
+    localStorage.getItem('sim_considerStockSplit') !== 'false'
+  );
+  const [considerRightsIssue, setConsiderRightsIssue] = useState(() => 
+    localStorage.getItem('sim_considerRightsIssue') !== 'false'
+  );
+  const [considerDividendFee, setConsiderDividendFee] = useState(() => 
+    localStorage.getItem('sim_considerDividendFee') === 'true'
+  );
+  const [drDividendTreatment, setDrDividendTreatment] = useState(() => 
+    localStorage.getItem('sim_drDividendTreatment') || 'DEFAULT'
+  );
+  const [globalDrTaxRate, setGlobalDrTaxRate] = useState(() => 
+    localStorage.getItem('sim_globalDrTaxRate') || ''
+  );
   
   // Rebalancing data
-  const [rebalancings, setRebalancings] = useState<any[]>([]);
-  const [shareOrWeight, setShareOrWeight] = useState('shares');
+  const [rebalancings, setRebalancings] = useState<any[]>(() => {
+    const stored = localStorage.getItem('sim_rebalancings');
+    return stored ? JSON.parse(stored) : [];
+  });
+  const [shareOrWeight, setShareOrWeight] = useState(() => 
+    localStorage.getItem('sim_shareOrWeight') || 'shares'
+  );
   
-  // Stock data - reduced to 3 elements
-  const [stocks, setStocks] = useState([
-    { ric: 'AAPL.OQ', shares: '10000', weight: '25.0' },
-    { ric: 'MSFT.OQ', shares: '8000', weight: '35.0' },
-    { ric: 'GOOGL.OQ', shares: '5000', weight: '40.0' },
-  ]);
+  // Stock data
+  const [stocks, setStocks] = useState(() => {
+    const stored = localStorage.getItem('sim_stocks');
+    return stored ? JSON.parse(stored) : [
+      { ric: 'AAPL.OQ', shares: '10000', weight: '25.0' },
+      { ric: 'MSFT.OQ', shares: '8000', weight: '35.0' },
+      { ric: 'GOOGL.OQ', shares: '5000', weight: '40.0' },
+    ];
+  });
 
   // Price overrides
-  const [priceOverrides, setPriceOverrides] = useState<Array<{ric: string, date: string, price: string}>>([]);
+  const [priceOverrides, setPriceOverrides] = useState<Array<{ric: string, date: string, price: string}>>(() => {
+    const stored = localStorage.getItem('sim_priceOverrides');
+    return stored ? JSON.parse(stored) : [];
+  });
   
-  // Rebalancing upload data - fixing the type to match RebalancingUpload props
-  const [rebalancingUploads, setRebalancingUploads] = useState<Array<{selectionDate: string, rebalancingDate: string, file: string}>>([]);
+  // Rebalancing upload data
+  const [rebalancingUploads, setRebalancingUploads] = useState<Array<{selectionDate: string, rebalancingDate: string, file: string}>>(() => {
+    const stored = localStorage.getItem('sim_rebalancingUploads');
+    return stored ? JSON.parse(stored) : [];
+  });
+
+  // Save state to localStorage whenever values change
+  useEffect(() => {
+    localStorage.setItem('sim_startDate', startDate);
+  }, [startDate]);
+
+  useEffect(() => {
+    localStorage.setItem('sim_endDate', endDate);
+  }, [endDate]);
+
+  useEffect(() => {
+    localStorage.setItem('sim_currency', currency);
+  }, [currency]);
+
+  useEffect(() => {
+    localStorage.setItem('sim_returnType', returnType);
+  }, [returnType]);
+
+  useEffect(() => {
+    localStorage.setItem('sim_divisor', divisor);
+  }, [divisor]);
+
+  useEffect(() => {
+    localStorage.setItem('sim_initialLevel', initialLevel);
+  }, [initialLevel]);
+
+  useEffect(() => {
+    localStorage.setItem('sim_inputMethod', inputMethod);
+  }, [inputMethod]);
+
+  useEffect(() => {
+    localStorage.setItem('sim_selectedIndex', selectedIndex);
+  }, [selectedIndex]);
+
+  useEffect(() => {
+    localStorage.setItem('sim_indexDate', indexDate);
+  }, [indexDate]);
+
+  useEffect(() => {
+    localStorage.setItem('sim_priceType', priceType);
+  }, [priceType]);
+
+  useEffect(() => {
+    localStorage.setItem('sim_complete', simulationComplete.toString());
+  }, [simulationComplete]);
+
+  useEffect(() => {
+    localStorage.setItem('sim_showAdvanced', showAdvancedParameters.toString());
+  }, [showAdvancedParameters]);
+
+  useEffect(() => {
+    localStorage.setItem('sim_lateDividendHandling', lateDividendHandling);
+  }, [lateDividendHandling]);
+
+  useEffect(() => {
+    localStorage.setItem('sim_cashDividendTaxHandling', cashDividendTaxHandling);
+  }, [cashDividendTaxHandling]);
+
+  useEffect(() => {
+    localStorage.setItem('sim_specialDividendTaxHandling', specialDividendTaxHandling);
+  }, [specialDividendTaxHandling]);
+
+  useEffect(() => {
+    localStorage.setItem('sim_considerStockDividend', considerStockDividend.toString());
+  }, [considerStockDividend]);
+
+  useEffect(() => {
+    localStorage.setItem('sim_considerStockSplit', considerStockSplit.toString());
+  }, [considerStockSplit]);
+
+  useEffect(() => {
+    localStorage.setItem('sim_considerRightsIssue', considerRightsIssue.toString());
+  }, [considerRightsIssue]);
+
+  useEffect(() => {
+    localStorage.setItem('sim_considerDividendFee', considerDividendFee.toString());
+  }, [considerDividendFee]);
+
+  useEffect(() => {
+    localStorage.setItem('sim_drDividendTreatment', drDividendTreatment);
+  }, [drDividendTreatment]);
+
+  useEffect(() => {
+    localStorage.setItem('sim_globalDrTaxRate', globalDrTaxRate);
+  }, [globalDrTaxRate]);
+
+  useEffect(() => {
+    localStorage.setItem('sim_shareOrWeight', shareOrWeight);
+  }, [shareOrWeight]);
+
+  useEffect(() => {
+    localStorage.setItem('sim_stocks', JSON.stringify(stocks));
+  }, [stocks]);
+
+  useEffect(() => {
+    localStorage.setItem('sim_rebalancings', JSON.stringify(rebalancings));
+  }, [rebalancings]);
+
+  useEffect(() => {
+    localStorage.setItem('sim_priceOverrides', JSON.stringify(priceOverrides));
+  }, [priceOverrides]);
+
+  useEffect(() => {
+    localStorage.setItem('sim_rebalancingUploads', JSON.stringify(rebalancingUploads));
+  }, [rebalancingUploads]);
+
+  // Handle reset from parent component
+  useEffect(() => {
+    if (shouldReset) {
+      handleReset();
+      onResetComplete();
+    }
+  }, [shouldReset]);
+
+  const handleReset = () => {
+    // Clear all localStorage items
+    const keysToRemove = [
+      'sim_startDate', 'sim_endDate', 'sim_currency', 'sim_returnType', 'sim_divisor',
+      'sim_initialLevel', 'sim_inputMethod', 'sim_selectedIndex', 'sim_indexDate',
+      'sim_priceType', 'sim_complete', 'sim_showAdvanced', 'sim_lateDividendHandling',
+      'sim_cashDividendTaxHandling', 'sim_specialDividendTaxHandling', 'sim_considerStockDividend',
+      'sim_considerStockSplit', 'sim_considerRightsIssue', 'sim_considerDividendFee',
+      'sim_drDividendTreatment', 'sim_globalDrTaxRate', 'sim_shareOrWeight', 'sim_stocks',
+      'sim_rebalancings', 'sim_priceOverrides', 'sim_rebalancingUploads'
+    ];
+    
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+
+    // Reset all state to defaults
+    setStartDate('11.04.2025');
+    setEndDate('15.04.2025');
+    setCurrency('USD');
+    setReturnType('NTR');
+    setDivisor('100000');
+    setInitialLevel('1000.00');
+    setInputMethod('manual');
+    setSelectedIndex('');
+    setIndexDate('11.04.2025');
+    setPriceType('close');
+    setSimulationComplete(false);
+    setShowAdvancedParameters(false);
+    setLateDividendHandling('NONE');
+    setCashDividendTaxHandling('None');
+    setSpecialDividendTaxHandling('None');
+    setConsiderStockDividend(true);
+    setConsiderStockSplit(true);
+    setConsiderRightsIssue(true);
+    setConsiderDividendFee(false);
+    setDrDividendTreatment('DEFAULT');
+    setGlobalDrTaxRate('');
+    setRebalancings([]);
+    setShareOrWeight('shares');
+    setStocks([
+      { ric: 'AAPL.OQ', shares: '10000', weight: '25.0' },
+      { ric: 'MSFT.OQ', shares: '8000', weight: '35.0' },
+      { ric: 'GOOGL.OQ', shares: '5000', weight: '40.0' },
+    ]);
+    setPriceOverrides([]);
+    setRebalancingUploads([]);
+    
+    SimulationService.clearResults();
+  };
   
   const addRow = () => {
     setStocks([...stocks, { ric: '', shares: '', weight: '' }]);

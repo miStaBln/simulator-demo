@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import TabNavigation from '@/components/TabNavigation';
@@ -19,6 +20,7 @@ const Index = () => {
   const tabFromUrl = searchParams.get('tab');
   const [activeTab, setActiveTab] = useState(tabFromUrl || 'simulation-data');
   const [simulationState, setSimulationState] = useState(initialSimulationState);
+  const [shouldResetSimulation, setShouldResetSimulation] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -52,11 +54,15 @@ const Index = () => {
 
   const handleRefresh = () => {
     setSimulationState(initialSimulationState);
-    SimulationService.clearResults();
+    setShouldResetSimulation(true);
     toast({
       title: "Simulation Reset",
       description: "All simulation data has been reset",
     });
+  };
+
+  const handleResetComplete = () => {
+    setShouldResetSimulation(false);
   };
 
   return (
@@ -69,7 +75,11 @@ const Index = () => {
       />
       <div className="flex-1 overflow-auto">
         {activeTab === 'simulation-data' && (
-          <SimulationData onSimulationComplete={handleSimulationComplete} />
+          <SimulationData 
+            onSimulationComplete={handleSimulationComplete}
+            shouldReset={shouldResetSimulation}
+            onResetComplete={handleResetComplete}
+          />
         )}
         {activeTab === 'results' && simulationState.complete && <SimulationResult />}
         {activeTab === 'time-series' && simulationState.complete && (
