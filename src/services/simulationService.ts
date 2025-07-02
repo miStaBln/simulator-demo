@@ -38,6 +38,9 @@ interface SimulationPayload {
       interestOnCapital: string;
       nzInvestorType: string;
       auInvestorType: string;
+      considerDividendFee: boolean;
+      drDividendTreatment: string;
+      globalDrTaxRate: number;
     };
   };
   composition: {
@@ -771,7 +774,10 @@ export class SimulationService {
       returnOfCapital: "NO_ADJUSTMENT",
       interestOnCapital: "NO_ADJUSTMENT",
       nzInvestorType: "LOCAL_NO_IMPUTATION",
-      auInvestorType: "LOCAL_NO_IMPUTATION"
+      auInvestorType: "LOCAL_NO_IMPUTATION",
+      considerDividendFee: true,
+      drDividendTreatment: 'DEFAULT',
+      globalDrTaxRate: 0
     };
   }
 
@@ -789,6 +795,8 @@ export class SimulationService {
       considerStockSplit: boolean;
       considerRightsIssue: boolean;
       considerDividendFee: boolean;
+      drDividendTreatment: string;
+      globalDrTaxRate: string;
     },
     priceOverrides: Array<{ric: string, date: string, price: string}> = []
   ) {
@@ -852,6 +860,9 @@ export class SimulationService {
     caHandlingConfig.considerStockDividend = advancedParams.considerStockDividend;
     caHandlingConfig.considerStockSplit = advancedParams.considerStockSplit;
     caHandlingConfig.considerRightsIssue = advancedParams.considerRightsIssue;
+    caHandlingConfig.considerDividendFee = advancedParams.considerDividendFee;
+    caHandlingConfig.drDividendTreatment = advancedParams.drDividendTreatment;
+    caHandlingConfig.globalDrTaxRate = parseFloat(advancedParams.globalDrTaxRate) || 0;
 
     const payload: SimulationPayload = {
       simulationStart: formatDate(startDate),

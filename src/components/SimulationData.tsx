@@ -475,7 +475,9 @@ const SimulationData = ({
           considerStockDividend,
           considerStockSplit,
           considerRightsIssue,
-          considerDividendFee
+          considerDividendFee,
+          drDividendTreatment,
+          globalDrTaxRate
         },
         priceOverrides
       );
