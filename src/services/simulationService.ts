@@ -100,8 +100,7 @@ interface SimulationPayload {
 export class SimulationService {
   private static readonly API_URL = "http://test-32.gde.nbg.solactive.com:8274/index-simulator-equity/proxy/v3/simulateIndexSimple";
   
-  // Alternative CORS proxy URL (you can try this if the direct call fails)
-  private static readonly CORS_PROXY_URL = "https://cors-anywhere.herokuapp.com/";
+
 
   static async runSimulation(
     startDate: string,
@@ -128,9 +127,6 @@ export class SimulationService {
     // Map return type to API format
     const getIndexType = (returnType: string) => {
       switch (returnType) {
-        case 'NTR': return 'NET_TOTAL_RETURN';
-        case 'GTR': return 'GROSS_TOTAL_RETURN';
-        case 'PR': return 'PERFORMANCE';
         default: return 'PERFORMANCE';
       }
     };
@@ -141,8 +137,8 @@ export class SimulationService {
       .map((stock, index) => ({
         assetIdentifier: {
           assetClass: "SHARE",
-          identifierType: "GIGANT_ID",
-          id: (422 + index).toString() // Mock IDs for now
+          identifierType: "RIC",
+          id: (stock.ric).toString() // Mock IDs for now
         },
         quantity: {
           type: "UNITS",
@@ -213,23 +209,8 @@ export class SimulationService {
         caModificationInitialization: "FULL",
         rules: []
       },
-      resultIdentifierType: "GIGANT_ID",
-      selectionResults: [
-        {
-          fixingDate: formatDate(startDate),
-          effectiveOpenDates: [formatDate(endDate)],
-          adaptionType: "DEFAULT_UNITS",
-          clusters: [
-            {
-              name: "string",
-              constituents: constituents
-            }
-          ],
-          additionalParameters: {
-            weightingType: "INDEX_MEMBER_TARGET_SHARES"
-          }
-        }
-      ]
+      resultIdentifierType: "RIC",
+
     };
 
     console.log('Simulation payload:', JSON.stringify(payload, null, 2));
