@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Plus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -32,16 +31,21 @@ const ManualComposition = ({
 }: ManualCompositionProps) => {
   const handlePaste = (e: React.ClipboardEvent) => {
     const pastedData = e.clipboardData.getData('text');
+    console.log('Pasted data:', pastedData);
     
     // Check if the pasted data contains tabs or multiple lines (typical Excel paste)
     if (pastedData.includes('\t') || pastedData.includes('\n')) {
       e.preventDefault();
       
       const lines = pastedData.trim().split('\n').filter(line => line.trim());
+      console.log('Lines found:', lines);
+      
       const newStocks: Stock[] = [];
       
-      lines.forEach(line => {
+      lines.forEach((line, lineIndex) => {
         const columns = line.split('\t');
+        console.log(`Line ${lineIndex}:`, columns);
+        
         if (columns.length >= 2) {
           const ric = columns[0]?.trim() || '';
           const value = columns[1]?.trim() || '';
@@ -56,6 +60,8 @@ const ManualComposition = ({
         }
       });
       
+      console.log('New stocks to add:', newStocks);
+      
       if (newStocks.length > 0) {
         // Find the first empty row
         let startIndex = stocks.findIndex(stock => !stock.ric);
@@ -63,16 +69,25 @@ const ManualComposition = ({
           startIndex = stocks.length;
         }
         
+        console.log('Start index:', startIndex);
+        console.log('Current stocks length:', stocks.length);
+        
         // Add enough rows to accommodate all new data
         const rowsNeeded = Math.max(0, (startIndex + newStocks.length) - stocks.length);
+        console.log('Rows needed:', rowsNeeded);
+        
+        // Add all needed rows first
         for (let i = 0; i < rowsNeeded; i++) {
           addRow();
         }
         
-        // Update all the data at once using a slight delay to ensure rows are added
+        // Use a longer timeout to ensure all rows are added before updating
         setTimeout(() => {
+          console.log('Starting to update stocks...');
           newStocks.forEach((newStock, index) => {
             const targetIndex = startIndex + index;
+            console.log(`Updating stock at index ${targetIndex}:`, newStock);
+            
             updateStock(targetIndex, 'ric', newStock.ric);
             if (shareOrWeight === 'shares') {
               updateStock(targetIndex, 'shares', newStock.shares);
@@ -80,12 +95,12 @@ const ManualComposition = ({
               updateStock(targetIndex, 'weight', newStock.weight);
             }
           });
-        }, 10);
-        
-        toast({
-          title: "Data pasted",
-          description: `${newStocks.length} rows pasted from clipboard`,
-        });
+          
+          toast({
+            title: "Data pasted",
+            description: `${newStocks.length} rows pasted from clipboard`,
+          });
+        }, 100); // Increased timeout to ensure rows are added
       }
     }
   };
