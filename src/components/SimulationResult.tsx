@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import DatePicker from './DatePicker';
@@ -132,7 +131,7 @@ const SimulationResult = () => {
           <div className="mb-4">
             <div className="bg-gray-50 p-3 rounded mb-2">
               <div className="text-xs text-gray-500">Level</div>
-              <div className="text-lg font-medium">{closingLevel}</div>
+              <div className="text-lg font-medium">{closingLevel.toFixed(6)}</div>
             </div>
             <div className="bg-gray-50 p-3 rounded">
               <div className="text-xs text-gray-500">Divisor</div>
@@ -149,7 +148,7 @@ const SimulationResult = () => {
           <div className="mb-4">
             <div className="bg-gray-50 p-3 rounded mb-2">
               <div className="text-xs text-gray-500">Level</div>
-              <div className="text-lg font-medium">{openingLevel}</div>
+              <div className="text-lg font-medium">{openingLevel.toFixed(6)}</div>
             </div>
             <div className="bg-gray-50 p-3 rounded">
               <div className="text-xs text-gray-500">Divisor</div>
@@ -157,7 +156,7 @@ const SimulationResult = () => {
             </div>
           </div>
           <DataTable 
-            title="Opening Index State" 
+            title="Next Day Opening State" 
             data={openingData} 
           />
         </div>
