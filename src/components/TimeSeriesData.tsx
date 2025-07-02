@@ -1,430 +1,159 @@
 
-import React, { useState, useEffect } from 'react';
-import { 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer,
-  Legend,
-  BarChart,
-  Bar
-} from 'recharts';
-import { Search, ChevronLeft, ChevronRight, Download, Filter, Columns, Maximize2, ArrowUpDown, ChevronDown, ChevronUp } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card } from '@/components/ui/card';
+import React, { useState } from 'react';
 import { SimulationService } from '@/services/simulationService';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
-interface TimeSeriesDataProps {
-  simulationComplete?: boolean;
-  selectedIndex?: string;
-}
-
-const TimeSeriesData = ({ simulationComplete = false, selectedIndex = '' }: TimeSeriesDataProps) => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [rowsPerPage, setRowsPerPage] = useState(10); // Changed from 50 to 10
-  const [reportType, setReportType] = useState('Closing');
-  const [comparisonExpanded, setComparisonExpanded] = useState(true);
-  const [timeSeriesData, setTimeSeriesData] = useState<Array<{ date: string; indexLevel: number; divisor: number }>>([]);
-  const [dailyReturns, setDailyReturns] = useState<Array<{ date: string; dailyReturn: number }>>([]);
-  const [keyFigures, setKeyFigures] = useState<{
-    totalReturn: number;
-    startLevel: number;
-    endLevel: number;
-    startDate: string;
-    endDate: string;
-  } | null>(null);
+const TimeSeriesData = () => {
+  const [showAll, setShowAll] = useState(false);
+  const timeSeriesData = SimulationService.getTimeSeriesData();
   
-  useEffect(() => {
-    if (simulationComplete) {
-      const data = SimulationService.getTimeSeriesData();
-      console.log('Time series data loaded:', data);
-      setTimeSeriesData(data);
-      
-      // Calculate daily returns and key figures
-      if (data.length > 1) {
-        const returns: Array<{ date: string; dailyReturn: number }> = [];
-        
-        for (let i = 1; i < data.length; i++) {
-          const currentLevel = data[i].indexLevel;
-          const previousLevel = data[i - 1].indexLevel;
-          const dailyReturn = (currentLevel / previousLevel - 1) * 100; // Convert to percentage
-          
-          returns.push({
-            date: data[i].date,
-            dailyReturn: dailyReturn
-          });
-        }
-        
-        setDailyReturns(returns);
-        
-        // Calculate total return
-        const startLevel = data[0].indexLevel;
-        const endLevel = data[data.length - 1].indexLevel;
-        const totalReturn = ((endLevel / startLevel - 1) * 100);
-        
-        setKeyFigures({
-          totalReturn,
-          startLevel,
-          endLevel,
-          startDate: data[0].date,
-          endDate: data[data.length - 1].date
-        });
-      }
-    }
-  }, [simulationComplete]);
-  
-  // Sample comparison data - this would need to be calculated from actual vs simulated data
-  const comparisonData = {
-    levelDelta: '+2.17',
-    divisorDelta: '0',
-    percentageDeviation: '+1.07%',
-    componentChanges: [
-      { ric: 'AAPL.OQ', originalWeight: '25.00%', simulatedWeight: '25.00%', delta: '0.00%' },
-      { ric: 'MSFT.OQ', originalWeight: '20.00%', simulatedWeight: '22.50%', delta: '+2.50%' },
-      { ric: 'GOOGL.OQ', originalWeight: '18.00%', simulatedWeight: '17.00%', delta: '-1.00%' },
-    ]
-  };
+  // Calculate daily returns
+  const dailyReturnsData = timeSeriesData.slice(1).map((current, index) => {
+    const previous = timeSeriesData[index];
+    const dailyReturn = ((current.indexLevel / previous.indexLevel) - 1) * 100;
+    return {
+      date: current.date,
+      dailyReturn: dailyReturn,
+      isPositive: dailyReturn >= 0
+    };
+  });
 
-  const sortTable = () => {
-    // Sort implementation would go here
-  };
+  // Calculate key figures
+  const keyFigures = timeSeriesData.length > 0 ? {
+    startLevel: timeSeriesData[0].indexLevel,
+    endLevel: timeSeriesData[timeSeriesData.length - 1].indexLevel,
+    startDate: timeSeriesData[0].date,
+    endDate: timeSeriesData[timeSeriesData.length - 1].date,
+    totalReturn: ((timeSeriesData[timeSeriesData.length - 1].indexLevel / timeSeriesData[0].indexLevel) - 1) * 100,
+    numberOfDays: timeSeriesData.length
+  } : null;
 
-  const toggleComparison = () => {
-    setComparisonExpanded(!comparisonExpanded);
-  };
+  const displayData = showAll ? timeSeriesData : timeSeriesData.slice(0, 10);
+
+  if (timeSeriesData.length === 0) {
+    return (
+      <div className="p-6">
+        <div className="text-center text-gray-500">
+          No simulation data available. Please run a simulation first.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">
-      <div className="bg-white rounded-md shadow-sm p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-lg font-medium">Time Series Analysis</h2>
-          
-          <div className="flex items-center">
-            <span className="text-sm mr-2">Report Type</span>
-            <Select value={reportType} onValueChange={setReportType}>
-              <SelectTrigger className="w-36 h-8">
-                <SelectValue placeholder="Select type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Closing">Closing</SelectItem>
-                <SelectItem value="Opening">Opening</SelectItem>
-              </SelectContent>
-            </Select>
+      <h1 className="text-2xl font-bold mb-6">Time Series Data</h1>
+      
+      {/* Key Figures Section */}
+      {keyFigures && (
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-4">Key Figures</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+              <h3 className="text-sm font-medium text-gray-500 mb-1">Total Return</h3>
+              <p className={`text-2xl font-bold ${keyFigures.totalReturn >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {keyFigures.totalReturn.toFixed(2)}%
+              </p>
+            </div>
+            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+              <h3 className="text-sm font-medium text-gray-500 mb-1">Start Level</h3>
+              <p className="text-xl font-semibold">{keyFigures.startLevel.toFixed(4)}</p>
+              <p className="text-xs text-gray-400">{keyFigures.startDate}</p>
+            </div>
+            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+              <h3 className="text-sm font-medium text-gray-500 mb-1">End Level</h3>
+              <p className="text-xl font-semibold">{keyFigures.endLevel.toFixed(4)}</p>
+              <p className="text-xs text-gray-400">{keyFigures.endDate}</p>
+            </div>
+          </div>
+          <div className="bg-gray-50 p-3 rounded-lg">
+            <p className="text-sm text-gray-600">
+              Simulation period: <strong>{keyFigures.numberOfDays} days</strong> from {keyFigures.startDate} to {keyFigures.endDate}
+            </p>
           </div>
         </div>
+      )}
 
-        {/* Key Figures */}
-        {keyFigures && (
-          <Card className="p-4 mb-6">
-            <h3 className="text-base font-medium mb-4">Key Figures</h3>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-gray-50 p-3 rounded">
-                <div className="text-xs text-gray-500">Total Return</div>
-                <div className={`text-lg font-medium ${keyFigures.totalReturn >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {keyFigures.totalReturn.toFixed(2)}%
-                </div>
-              </div>
-              <div className="bg-gray-50 p-3 rounded">
-                <div className="text-xs text-gray-500">Start Level</div>
-                <div className="text-lg font-medium">
-                  {keyFigures.startLevel.toFixed(6)}
-                </div>
-                <div className="text-xs text-gray-400">{keyFigures.startDate}</div>
-              </div>
-              <div className="bg-gray-50 p-3 rounded">
-                <div className="text-xs text-gray-500">End Level</div>
-                <div className="text-lg font-medium">
-                  {keyFigures.endLevel.toFixed(6)}
-                </div>
-                <div className="text-xs text-gray-400">{keyFigures.endDate}</div>
-              </div>
-              <div className="bg-gray-50 p-3 rounded">
-                <div className="text-xs text-gray-500">Number of Days</div>
-                <div className="text-lg font-medium">
-                  {timeSeriesData.length}
-                </div>
-              </div>
-            </div>
-          </Card>
-        )}
-        
-        {simulationComplete && selectedIndex && (
-          <Card className="p-4 mb-6">
-            <div className="flex justify-between items-center mb-2" onClick={toggleComparison} style={{ cursor: 'pointer' }}>
-              <h3 className="text-base font-medium">Comparison Overview</h3>
-              <button className="p-1 rounded hover:bg-gray-100">
-                {comparisonExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-              </button>
-            </div>
-            
-            {comparisonExpanded && (
-              <>
-                <div className="grid grid-cols-3 gap-4 mb-4">
-                  <div className="bg-gray-50 p-3 rounded">
-                    <div className="text-xs text-gray-500">Level Delta</div>
-                    <div className={`text-lg font-medium ${comparisonData.levelDelta.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
-                      {comparisonData.levelDelta}
-                    </div>
-                  </div>
-                  <div className="bg-gray-50 p-3 rounded">
-                    <div className="text-xs text-gray-500">Divisor Delta</div>
-                    <div className="text-lg font-medium">
-                      {comparisonData.divisorDelta}
-                    </div>
-                  </div>
-                  <div className="bg-gray-50 p-3 rounded">
-                    <div className="text-xs text-gray-500">Percentage Deviation</div>
-                    <div className={`text-lg font-medium ${comparisonData.percentageDeviation.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
-                      {comparisonData.percentageDeviation}
-                    </div>
-                  </div>
-                </div>
-                
-                <h4 className="text-sm font-medium mb-2">Component Weight Comparison</h4>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead>
-                      <tr className="bg-gray-50">
-                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">RIC</th>
-                        <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Original Weight</th>
-                        <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Simulated Weight</th>
-                        <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Delta</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {comparisonData.componentChanges.map((comp, idx) => (
-                        <tr key={idx} className="hover:bg-gray-50">
-                          <td className="px-3 py-2 text-sm">{comp.ric}</td>
-                          <td className="px-3 py-2 text-sm text-right">{comp.originalWeight}</td>
-                          <td className="px-3 py-2 text-sm text-right">{comp.simulatedWeight}</td>
-                          <td className={`px-3 py-2 text-sm text-right ${comp.delta.startsWith('+') ? 'text-green-600' : comp.delta.startsWith('-') ? 'text-red-600' : 'text-gray-600'}`}>
-                            {comp.delta}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </>
-            )}
-          </Card>
-        )}
-
-        {/* Daily Returns Chart */}
-        {dailyReturns.length > 0 && (
-          <Card className="p-4 mb-6">
-            <h3 className="text-base font-medium mb-4">Daily Returns (%)</h3>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={dailyReturns}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis 
-                    dataKey="date" 
-                    tick={{ fontSize: 12 }} 
-                    axisLine={false}
-                    tickLine={false}
-                    dy={10}
-                  />
-                  <YAxis 
-                    axisLine={false}
-                    tickLine={false}
-                    dx={-10}
-                    tickFormatter={(value) => `${value.toFixed(2)}%`}
-                  />
-                  <Tooltip 
-                    formatter={(value: number) => [`${value.toFixed(4)}%`, 'Daily Return']}
-                    labelFormatter={(value) => `Date: ${value}`}
-                  />
-                  <Bar 
-                    dataKey="dailyReturn" 
-                    fill={(entry: any) => entry?.dailyReturn >= 0 ? '#10b981' : '#ef4444'}
-                    name="Daily Return (%)"
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </Card>
-        )}
-        
-        <h3 className="text-sm font-medium mb-4">Time Series Data</h3>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Table */}
-          <div className="bg-gray-50 rounded-md p-2">
-            <div className="flex items-center justify-between mb-4">
-              <div className="relative w-64">
-                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  type="text"
-                  placeholder="Search"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-8 pr-8 py-1.5 h-8 text-sm"
-                />
-              </div>
-              
-              <div className="flex space-x-2">
-                <button className="p-1 border rounded hover:bg-gray-100">
-                  <Filter className="h-4 w-4 text-gray-500" />
-                </button>
-                <button className="p-1 border rounded hover:bg-gray-100">
-                  <Columns className="h-4 w-4 text-gray-500" />
-                </button>
-                <button className="p-1 border rounded hover:bg-gray-100">
-                  <Maximize2 className="h-4 w-4 text-gray-500" />
-                </button>
-              </div>
-            </div>
-            
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead>
-                  <tr className="bg-gray-100">
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      <button className="flex items-center" onClick={sortTable}>
-                        Date
-                        <ArrowUpDown className="h-3 w-3 ml-1" />
-                      </button>
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      <button className="flex items-center" onClick={sortTable}>
-                        Index Level
-                        <ArrowUpDown className="h-3 w-3 ml-1" />
-                      </button>
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      <button className="flex items-center" onClick={sortTable}>
-                        Divisor
-                        <ArrowUpDown className="h-3 w-3 ml-1" />
-                      </button>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {timeSeriesData.slice(0, rowsPerPage).map((row, index) => (
-                    <tr key={index} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 text-sm">{row.date}</td>
-                      <td className="px-4 py-3 text-sm">{row.indexLevel.toFixed(6)}</td>
-                      <td className="px-4 py-3 text-sm">{row.divisor.toLocaleString()}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            
-            <div className="flex items-center justify-between mt-4">
-              <div className="flex items-center">
-                <span className="mr-2 text-xs">Rows per page</span>
-                <select 
-                  value={rowsPerPage}
-                  onChange={(e) => setRowsPerPage(Number(e.target.value))}
-                  className="border rounded px-2 py-1 text-xs"
-                >
-                  <option value={10}>10</option>
-                  <option value={25}>25</option>
-                  <option value={50}>50</option>
-                  <option value={100}>100</option>
-                </select>
-              </div>
-              
-              <div className="flex items-center space-x-2 text-xs">
-                <span>1-{Math.min(rowsPerPage, timeSeriesData.length)} of {timeSeriesData.length}</span>
-                <div className="flex">
-                  <button className="p-1 border rounded-l hover:bg-gray-100">
-                    <ChevronLeft className="h-3 w-3" />
-                  </button>
-                  <button className="p-1 border border-l-0 rounded-r hover:bg-gray-100">
-                    <ChevronRight className="h-3 w-3" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          {/* Chart */}
-          <div className="bg-white h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={timeSeriesData}
-                margin={{
-                  top: 20,
-                  right: 30,
-                  left: 10,
-                  bottom: 30,
-                }}
-              >
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+      {/* Daily Returns Chart */}
+      {dailyReturnsData.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-4">Daily Returns (%)</h2>
+          <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={dailyReturnsData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" />
                 <XAxis 
                   dataKey="date" 
-                  tick={{ fontSize: 12 }} 
-                  axisLine={false}
-                  tickLine={false}
-                  dy={10}
+                  tick={{ fontSize: 12 }}
+                  angle={-45}
+                  textAnchor="end"
+                  height={80}
                 />
-                <YAxis 
-                  yAxisId="left"
-                  domain={['dataMin - 1', 'dataMax + 1']} 
-                  axisLine={false}
-                  tickLine={false}
-                  dx={-10}
-                />
-                <YAxis 
-                  yAxisId="right"
-                  orientation="right"
-                  axisLine={false}
-                  tickLine={false}
-                  dx={10}
-                />
+                <YAxis tick={{ fontSize: 12 }} />
                 <Tooltip 
-                  formatter={(value, name) => {
-                    if (name === 'indexLevel') return [Number(value).toFixed(6), 'Index Level'];
-                    if (name === 'divisor') return [Number(value).toLocaleString(), 'Divisor'];
-                    return [value, name];
-                  }}
-                  labelFormatter={(value) => `Date: ${value}`}
+                  formatter={(value: number) => [`${value.toFixed(2)}%`, 'Daily Return']}
+                  labelStyle={{ color: '#374151' }}
                 />
-                <Legend 
-                  wrapperStyle={{ paddingTop: 10 }}
-                  verticalAlign="top"
-                  align="right"
-                  iconType="circle"
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="indexLevel" 
-                  name="Index Level" 
-                  stroke="#10b981" 
-                  strokeWidth={2} 
-                  dot={{ stroke: '#10b981', strokeWidth: 2, r: 4 }}
-                  activeDot={{ r: 6 }}
-                  yAxisId="left"
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="divisor" 
-                  name="Divisor" 
-                  stroke="#3b82f6" 
-                  strokeWidth={2} 
-                  dot={{ stroke: '#3b82f6', strokeWidth: 2, r: 4 }}
-                  activeDot={{ r: 6 }}
-                  yAxisId="right"
-                />
-              </LineChart>
+                <Bar dataKey="dailyReturn">
+                  {dailyReturnsData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.isPositive ? "#10b981" : "#ef4444"} />
+                  ))}
+                </Bar>
+              </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
-        
-        <div className="flex justify-end mt-4">
-          <button className="flex items-center px-3 py-1.5 text-teal-500 text-sm border border-teal-500 rounded hover:bg-teal-50">
-            <Download className="h-4 w-4 mr-2" />
-            EXPORT DATA
-          </button>
+      )}
+      
+      {/* Time Series Table */}
+      <div className="mb-4">
+        <h2 className="text-xl font-semibold mb-4">Index Levels</h2>
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Date
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Index Level
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Divisor
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {displayData.map((item, index) => (
+                  <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {item.date}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {item.indexLevel.toFixed(6)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {item.divisor.toLocaleString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
+
+      {timeSeriesData.length > 10 && (
+        <div className="text-center">
+          <button
+            onClick={() => setShowAll(!showAll)}
+            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+          >
+            {showAll ? 'Show Less' : `Show All ${timeSeriesData.length} Results`}
+          </button>
+        </div>
+      )}
     </div>
   );
 };

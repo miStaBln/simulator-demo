@@ -824,7 +824,7 @@ export class SimulationService {
         }
       }));
 
-    // Map price overrides to API format
+    // Map price overrides to API format with nested date structure
     const instrumentPrices = priceOverrides
       .filter(override => override.ric && override.date && override.price)
       .map(override => ({
@@ -833,7 +833,9 @@ export class SimulationService {
           identifierType: "RIC",
           id: override.ric
         },
-        closingDate: formatDate(override.date),
+        date: {
+          date: formatDate(override.date)
+        },
         price: parseFloat(override.price)
       }));
 
