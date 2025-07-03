@@ -53,9 +53,9 @@ const SimulationResult = () => {
       
       if (simulationData[apiDate]) {
         const dayData = simulationData[apiDate];
-        
         // Extract closing state data
         const closingResults = SimulationService.getResultsData(apiDate, 'closing');
+
         const closingIndexLevel = dayData.closingIndexState?.indexStateEvaluationDto?.indexLevel || 0;
         const closingDivisorValue = dayData.closingIndexState?.composition?.additionalNumbers?.divisor || 0;
         

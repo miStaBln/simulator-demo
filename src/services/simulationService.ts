@@ -172,7 +172,7 @@ interface ResultsData {
 
 export class SimulationService {
   private static readonly EQUITY_API_URL = "http://test-32.gde.nbg.solactive.com:8274/index-simulator-equity/proxy/v3/simulateEquityIndexSimple";
-  private static readonly BOND_API_URL = "http://test-32.gde.nbg.solactive.com:8274/index-simulator-equity/proxy/v3/simulateSimpleIndexBond";
+  private static readonly BOND_API_URL = "http://test-32.gde.nbg.solactive.com:8274/index-simulator-equity/proxy/v3/simulateBondIndexSimple";
   private static simulationResult: SimulationResult | null = null;
 
   // Updated dummy data to match the new structure
@@ -798,20 +798,24 @@ export class SimulationService {
       .map((stock, index) => {
         if (isBondIndex) {
           return {
-            type: "bond",
             assetIdentifier: {
               assetClass: "BOND",
               identifierType: identifierType,
               id: stock.ric
             },
-            amount: {
+            quantity: {
+              type: "AMOUNT",
               value: parseFloat(stock.shares || stock.weight || '1')
             },
-            weightingCapFactor: {
-              value: 1.0
+            additionalNumbers: {
+              freeFloatFactor: 1,
+              weightingCapFactor: 1,
+              baseValue:parseFloat(stock.baseValue || '0')
             },
-            baseValue: {
-              value: parseFloat(stock.baseValue || '0')
+            dates: {
+                compositionEnteredAt: {
+                    date: "2025-03-03"
+                }
             }
           };
         } else {
@@ -889,6 +893,7 @@ export class SimulationService {
         caHandlingConfiguration: caHandlingConfig
       },
       composition: {
+        type : "bond",
         clusters: [
           {
             name: "NONE",
@@ -982,7 +987,7 @@ export class SimulationService {
         }
         
         const indexLevel = data.closingIndexState.indexStateEvaluationDto.indexLevel;
-        const divisor = data.closingIndexState.composition?.additionalNumbers?.divisor;
+        const divisor = data.closingIndexState.composition?.additionalNumbers?.divisor || 1.0;
         
         // Skip if essential data is missing or zero
         if (!indexLevel || !divisor) {
@@ -1006,7 +1011,6 @@ export class SimulationService {
 
     // Handle both old dummy format and new API format
     const simulationData = SimulationService.simulationResult.simulations || SimulationService.simulationResult;
-    
     if (!simulationData[date]) {
       return [];
     }
