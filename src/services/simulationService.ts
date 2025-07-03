@@ -762,6 +762,7 @@ export class SimulationService {
     divisor: string,
     indexFamily: string,
     identifierType: string,
+    referenceIndexId: string,
     stocks: Array<{ ric: string; shares: string; weight: string; baseValue?: string }>,
     advancedParams: {
       cashDividendTaxHandling: string;
@@ -905,6 +906,15 @@ export class SimulationService {
       resultIdentifierType: identifierType,
       selectionResults: []
     };
+
+    // Add referencedIndex if referenceIndexId is provided
+    if (referenceIndexId && referenceIndexId.trim()) {
+      (payload as any).referencedIndex = {
+        assetClass: "INDEX",
+        identifierType: "GIGANT_ID",
+        id: referenceIndexId.trim()
+      };
+    }
 
     console.log('Simulation payload:', JSON.stringify(payload, null, 2));
 

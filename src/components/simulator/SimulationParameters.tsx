@@ -24,6 +24,8 @@ interface SimulationParametersProps {
   setIndexFamily: (family: string) => void;
   identifierType: string;
   setIdentifierType: (type: string) => void;
+  referenceIndexId: string;
+  setReferenceIndexId: (id: string) => void;
   // Advanced parameters props
   showAdvancedParameters: boolean;
   setShowAdvancedParameters: (show: boolean) => void;
@@ -60,6 +62,8 @@ const SimulationParameters = ({
   setIndexFamily,
   identifierType,
   setIdentifierType,
+  referenceIndexId,
+  setReferenceIndexId,
   showAdvancedParameters,
   setShowAdvancedParameters,
   lateDividendHandling,
@@ -151,7 +155,7 @@ const SimulationParameters = ({
         />
       </div>
       
-      <div className="mb-6">
+      <div className="mb-4">
         <label className="block text-sm font-medium text-gray-900 mb-1">Initial Level</label>
         <Input 
           type="number" 
@@ -159,6 +163,17 @@ const SimulationParameters = ({
           value={initialLevel} 
           onChange={(e) => setInitialLevel(e.target.value)}
           placeholder="Enter initial level"
+          className="w-full h-9"
+        />
+      </div>
+
+      <div className="mb-6">
+        <label className="block text-sm font-medium text-gray-900 mb-1">Reference Index ID</label>
+        <Input 
+          type="text" 
+          value={referenceIndexId} 
+          onChange={(e) => setReferenceIndexId(e.target.value)}
+          placeholder="Enter reference index ID"
           className="w-full h-9"
         />
       </div>

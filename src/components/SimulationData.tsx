@@ -93,6 +93,9 @@ const SimulationData = ({
   const [identifierType, setIdentifierType] = useState(() => 
     localStorage.getItem('sim_identifierType') || 'RIC'
   );
+  const [referenceIndexId, setReferenceIndexId] = useState(() => 
+    localStorage.getItem('sim_referenceIndexId') || ''
+  );
   const [inputMethod, setInputMethod] = useState(() => 
     localStorage.getItem('sim_inputMethod') || 'manual'
   );
@@ -207,6 +210,10 @@ const SimulationData = ({
   }, [identifierType]);
 
   useEffect(() => {
+    localStorage.setItem('sim_referenceIndexId', referenceIndexId);
+  }, [referenceIndexId]);
+
+  useEffect(() => {
     localStorage.setItem('sim_inputMethod', inputMethod);
   }, [inputMethod]);
 
@@ -298,13 +305,13 @@ const SimulationData = ({
     // Clear all localStorage items
     const keysToRemove = [
       'sim_startDate', 'sim_endDate', 'sim_currency', 'sim_returnType', 'sim_divisor',
-      'sim_initialLevel', 'sim_indexFamily', 'sim_identifierType', 'sim_inputMethod', 
-      'sim_selectedIndex', 'sim_indexDate', 'sim_priceType', 'sim_complete', 'sim_showAdvanced', 
-      'sim_lateDividendHandling', 'sim_cashDividendTaxHandling', 'sim_specialDividendTaxHandling', 
-      'sim_considerStockDividend', 'sim_considerStockSplit', 'sim_considerRightsIssue', 
-      'sim_considerDividendFee', 'sim_drDividendTreatment', 'sim_globalDrTaxRate', 
-      'sim_shareOrWeight', 'sim_stocks', 'sim_rebalancings', 'sim_priceOverrides', 
-      'sim_rebalancingUploads'
+      'sim_initialLevel', 'sim_indexFamily', 'sim_identifierType', 'sim_referenceIndexId',
+      'sim_inputMethod', 'sim_selectedIndex', 'sim_indexDate', 'sim_priceType', 'sim_complete', 
+      'sim_showAdvanced', 'sim_lateDividendHandling', 'sim_cashDividendTaxHandling', 
+      'sim_specialDividendTaxHandling', 'sim_considerStockDividend', 'sim_considerStockSplit', 
+      'sim_considerRightsIssue', 'sim_considerDividendFee', 'sim_drDividendTreatment', 
+      'sim_globalDrTaxRate', 'sim_shareOrWeight', 'sim_stocks', 'sim_rebalancings', 
+      'sim_priceOverrides', 'sim_rebalancingUploads'
     ];
     
     keysToRemove.forEach(key => localStorage.removeItem(key));
@@ -318,6 +325,7 @@ const SimulationData = ({
     setInitialLevel('1000.00');
     setIndexFamily('DEFAULT_LASPEYRE');
     setIdentifierType('RIC');
+    setReferenceIndexId('');
     setInputMethod('manual');
     setSelectedIndex('');
     setIndexDate('11.04.2025');
@@ -490,6 +498,7 @@ const SimulationData = ({
         divisor,
         indexFamily,
         identifierType,
+        referenceIndexId,
         stocks,
         {
           cashDividendTaxHandling,
@@ -559,6 +568,8 @@ const SimulationData = ({
           setIndexFamily={setIndexFamily}
           identifierType={identifierType}
           setIdentifierType={setIdentifierType}
+          referenceIndexId={referenceIndexId}
+          setReferenceIndexId={setReferenceIndexId}
           showAdvancedParameters={showAdvancedParameters}
           setShowAdvancedParameters={setShowAdvancedParameters}
           lateDividendHandling={lateDividendHandling}
