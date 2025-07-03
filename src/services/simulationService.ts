@@ -140,4 +140,32 @@ export class SimulationService {
             adjustedClosingPrice: instrument.priceInformation.adjustedClosingPrice
         }));
     }
+
+    static getTimeSeriesData(): Array<{date: string, indexLevel: number, divisor: number}> {
+        const simulationResult = SimulationService.getSimulationResult();
+        if (!simulationResult) {
+            return [];
+        }
+
+        const simulationData = simulationResult.simulations || simulationResult;
+        const timeSeriesData: Array<{date: string, indexLevel: number, divisor: number}> = [];
+
+        Object.keys(simulationData).sort().forEach(date => {
+            const dayData = simulationData[date];
+            if (dayData.closingIndexState) {
+                const formattedDate = (() => {
+                    const [year, month, day] = date.split('-');
+                    return `${day}.${month}.${year}`;
+                })();
+                
+                timeSeriesData.push({
+                    date: formattedDate,
+                    indexLevel: dayData.closingIndexState.indexStateEvaluationDto?.indexLevel || 0,
+                    divisor: dayData.closingIndexState.composition?.additionalNumbers?.divisor || 0
+                });
+            }
+        });
+
+        return timeSeriesData;
+    }
 }
