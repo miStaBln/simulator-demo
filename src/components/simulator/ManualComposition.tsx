@@ -1,171 +1,84 @@
 
 import React from 'react';
-import { Plus } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import StockRow from './StockRow';
-import { toast } from '@/hooks/use-toast';
 
 interface Stock {
   ric: string;
   shares: string;
   weight: string;
+  baseValue?: string;
 }
 
 interface ManualCompositionProps {
   stocks: Stock[];
   shareOrWeight: string;
   setShareOrWeight: (value: string) => void;
-  updateStock: (index: number, field: 'ric' | 'shares' | 'weight', value: string) => void;
+  updateStock: (index: number, field: 'ric' | 'shares' | 'weight' | 'baseValue', value: string) => void;
   removeStock: (index: number) => void;
   addRow: () => void;
+  indexFamily: string;
 }
 
-const ManualComposition = ({ 
-  stocks, 
-  shareOrWeight, 
-  setShareOrWeight, 
-  updateStock, 
-  removeStock, 
-  addRow 
+const ManualComposition = ({
+  stocks,
+  shareOrWeight,
+  setShareOrWeight,
+  updateStock,
+  removeStock,
+  addRow,
+  indexFamily
 }: ManualCompositionProps) => {
-  const handlePaste = (e: React.ClipboardEvent) => {
-    const pastedData = e.clipboardData.getData('text');
-    console.log('Pasted data:', pastedData);
-    
-    // Check if the pasted data contains tabs or multiple lines (typical Excel paste)
-    if (pastedData.includes('\t') || pastedData.includes('\n')) {
-      e.preventDefault();
-      
-      const lines = pastedData.trim().split('\n').filter(line => line.trim());
-      console.log('Lines found:', lines);
-      
-      const newStocks: Stock[] = [];
-      
-      lines.forEach((line, lineIndex) => {
-        const columns = line.split('\t');
-        console.log(`Line ${lineIndex}:`, columns);
-        
-        if (columns.length >= 2) {
-          const ric = columns[0]?.trim() || '';
-          const value = columns[1]?.trim() || '';
-          
-          if (ric && value) {
-            newStocks.push({
-              ric,
-              shares: shareOrWeight === 'shares' ? value : '',
-              weight: shareOrWeight === 'weight' ? value : ''
-            });
-          }
-        }
-      });
-      
-      console.log('New stocks to add:', newStocks);
-      
-      if (newStocks.length > 0) {
-        // Find the first empty row
-        let startIndex = stocks.findIndex(stock => !stock.ric);
-        if (startIndex === -1) {
-          startIndex = stocks.length;
-        }
-        
-        console.log('Start index:', startIndex);
-        console.log('Current stocks length:', stocks.length);
-        
-        // Calculate how many rows we need to add
-        const rowsNeeded = Math.max(0, (startIndex + newStocks.length) - stocks.length);
-        console.log('Rows needed:', rowsNeeded);
-        
-        // Add all needed rows first - do this synchronously in a loop
-        for (let i = 0; i < rowsNeeded; i++) {
-          addRow();
-        }
-        
-        // Use multiple timeouts to ensure state updates have time to propagate
-        setTimeout(() => {
-          console.log('Starting to update stocks after first timeout...');
-          console.log('Current stocks length after adding rows:', stocks.length);
-          
-          // Try updating after a longer delay to ensure all state updates are complete
-          setTimeout(() => {
-            console.log('Starting final stock updates...');
-            
-            newStocks.forEach((newStock, index) => {
-              const targetIndex = startIndex + index;
-              console.log(`Attempting to update stock at index ${targetIndex}:`, newStock);
-              console.log(`Current stocks array length: ${stocks.length}`);
-              
-              // Only update if the target index exists in the array
-              if (targetIndex < stocks.length || targetIndex === stocks.length - 1) {
-                updateStock(targetIndex, 'ric', newStock.ric);
-                if (shareOrWeight === 'shares') {
-                  updateStock(targetIndex, 'shares', newStock.shares);
-                } else {
-                  updateStock(targetIndex, 'weight', newStock.weight);
-                }
-              } else {
-                console.warn(`Target index ${targetIndex} is out of bounds for stocks array of length ${stocks.length}`);
-              }
-            });
-            
-            toast({
-              title: "Data pasted",
-              description: `${newStocks.length} rows pasted from clipboard`,
-            });
-          }, 200); // Second timeout to ensure all rows are properly added
-        }, 100); // First timeout to let initial state updates propagate
-      }
-    }
-  };
+  const isBondIndex = indexFamily === 'BOND_DEFAULT' || indexFamily === 'BOND_BASEMARKETVALUE';
 
   return (
-    <div onPaste={handlePaste}>
+    <div>
       <div className="mb-4">
-        <RadioGroup 
-          value={shareOrWeight} 
-          onValueChange={setShareOrWeight} 
-          className="flex space-x-4"
-        >
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="shares" id="r1" />
-            <Label htmlFor="r1">Shares</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="weight" id="r2" />
-            <Label htmlFor="r2">Weight</Label>
-          </div>
-        </RadioGroup>
+        <label className="block text-sm font-medium text-gray-900 mb-1">Entry Type</label>
+        <Select value={shareOrWeight} onValueChange={setShareOrWeight}>
+          <SelectTrigger className="w-full h-9">
+            <SelectValue placeholder="Select entry type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="shares">Shares</SelectItem>
+            <SelectItem value="weight">Weight</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
-      
-      <div className="mb-2 p-3 bg-blue-50 rounded-md text-sm text-blue-700">
-        💡 <strong>Tip:</strong> You can copy data from Excel and paste it here. Make sure the first column contains RIC codes and the second column contains {shareOrWeight === 'shares' ? 'shares' : 'weights'}.
+
+      <div className="border rounded-md">
+        <div className={`grid ${isBondIndex ? 'grid-cols-5' : 'grid-cols-4'} gap-2 p-3 bg-gray-50 border-b font-medium text-sm`}>
+          <div>Identifier</div>
+          <div>{shareOrWeight === 'shares' ? 'Shares' : 'Weight (%)'}</div>
+          {isBondIndex && <div>Base Value</div>}
+          <div>Actions</div>
+        </div>
+        
+        {stocks.map((stock, index) => (
+          <StockRow
+            key={index}
+            stock={stock}
+            index={index}
+            shareOrWeight={shareOrWeight}
+            updateStock={updateStock}
+            removeStock={removeStock}
+            showBaseValue={isBondIndex}
+          />
+        ))}
       </div>
-      
-      <div className="grid grid-cols-12 gap-4 mb-2 font-medium text-sm">
-        <div className="col-span-5">RIC</div>
-        <div className="col-span-5">{shareOrWeight === 'shares' ? 'Shares' : 'Weight (%)'}</div>
-        <div className="col-span-2">Actions</div>
+
+      <div className="mt-4">
+        <Button onClick={addRow} variant="outline" size="sm">
+          Add Row
+        </Button>
       </div>
-      
-      {stocks.map((stock, index) => (
-        <StockRow
-          key={index}
-          stock={stock}
-          index={index}
-          shareOrWeight={shareOrWeight}
-          updateStock={updateStock}
-          removeStock={removeStock}
-        />
-      ))}
-      
-      <button 
-        onClick={addRow}
-        className="flex items-center mt-4 px-4 py-2 bg-teal-500 text-white rounded-md hover:bg-teal-600 transition-colors"
-      >
-        <Plus className="h-4 w-4 mr-2" />
-        Add row
-      </button>
     </div>
   );
 };

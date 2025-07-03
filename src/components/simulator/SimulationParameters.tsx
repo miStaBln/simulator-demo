@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import {
@@ -19,6 +20,10 @@ interface SimulationParametersProps {
   setDivisor: (divisor: string) => void;
   initialLevel: string;
   setInitialLevel: (initialLevel: string) => void;
+  indexFamily: string;
+  setIndexFamily: (family: string) => void;
+  identifierType: string;
+  setIdentifierType: (type: string) => void;
   // Advanced parameters props
   showAdvancedParameters: boolean;
   setShowAdvancedParameters: (show: boolean) => void;
@@ -51,6 +56,10 @@ const SimulationParameters = ({
   setDivisor,
   initialLevel,
   setInitialLevel,
+  indexFamily,
+  setIndexFamily,
+  identifierType,
+  setIdentifierType,
   showAdvancedParameters,
   setShowAdvancedParameters,
   lateDividendHandling,
@@ -100,6 +109,34 @@ const SimulationParameters = ({
             <SelectItem value="NTR">NTR</SelectItem>
             <SelectItem value="GTR">GTR</SelectItem>
             <SelectItem value="PR">PR</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-900 mb-1">Index Family</label>
+        <Select value={indexFamily} onValueChange={setIndexFamily}>
+          <SelectTrigger className="w-full h-9">
+            <SelectValue placeholder="Select Index Family" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="DEFAULT_LASPEYRE">DEFAULT_LASPEYRE</SelectItem>
+            <SelectItem value="DEFAULT_DEFAULT">DEFAULT_DEFAULT</SelectItem>
+            <SelectItem value="BOND_DEFAULT">BOND_DEFAULT</SelectItem>
+            <SelectItem value="BOND_BASEMARKETVALUE">BOND_BASEMARKETVALUE</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-900 mb-1">Identifier Type</label>
+        <Select value={identifierType} onValueChange={setIdentifierType}>
+          <SelectTrigger className="w-full h-9">
+            <SelectValue placeholder="Select Identifier Type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="RIC">RIC</SelectItem>
+            <SelectItem value="GIGANT_ID">GIGANT_ID</SelectItem>
           </SelectContent>
         </Select>
       </div>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
@@ -87,6 +86,12 @@ const SimulationData = ({
   );
   const [initialLevel, setInitialLevel] = useState(() => 
     localStorage.getItem('sim_initialLevel') || '1000.00'
+  );
+  const [indexFamily, setIndexFamily] = useState(() => 
+    localStorage.getItem('sim_indexFamily') || 'DEFAULT_LASPEYRE'
+  );
+  const [identifierType, setIdentifierType] = useState(() => 
+    localStorage.getItem('sim_identifierType') || 'RIC'
   );
   const [inputMethod, setInputMethod] = useState(() => 
     localStorage.getItem('sim_inputMethod') || 'manual'
@@ -194,6 +199,14 @@ const SimulationData = ({
   }, [initialLevel]);
 
   useEffect(() => {
+    localStorage.setItem('sim_indexFamily', indexFamily);
+  }, [indexFamily]);
+
+  useEffect(() => {
+    localStorage.setItem('sim_identifierType', identifierType);
+  }, [identifierType]);
+
+  useEffect(() => {
     localStorage.setItem('sim_inputMethod', inputMethod);
   }, [inputMethod]);
 
@@ -285,12 +298,13 @@ const SimulationData = ({
     // Clear all localStorage items
     const keysToRemove = [
       'sim_startDate', 'sim_endDate', 'sim_currency', 'sim_returnType', 'sim_divisor',
-      'sim_initialLevel', 'sim_inputMethod', 'sim_selectedIndex', 'sim_indexDate',
-      'sim_priceType', 'sim_complete', 'sim_showAdvanced', 'sim_lateDividendHandling',
-      'sim_cashDividendTaxHandling', 'sim_specialDividendTaxHandling', 'sim_considerStockDividend',
-      'sim_considerStockSplit', 'sim_considerRightsIssue', 'sim_considerDividendFee',
-      'sim_drDividendTreatment', 'sim_globalDrTaxRate', 'sim_shareOrWeight', 'sim_stocks',
-      'sim_rebalancings', 'sim_priceOverrides', 'sim_rebalancingUploads'
+      'sim_initialLevel', 'sim_indexFamily', 'sim_identifierType', 'sim_inputMethod', 
+      'sim_selectedIndex', 'sim_indexDate', 'sim_priceType', 'sim_complete', 'sim_showAdvanced', 
+      'sim_lateDividendHandling', 'sim_cashDividendTaxHandling', 'sim_specialDividendTaxHandling', 
+      'sim_considerStockDividend', 'sim_considerStockSplit', 'sim_considerRightsIssue', 
+      'sim_considerDividendFee', 'sim_drDividendTreatment', 'sim_globalDrTaxRate', 
+      'sim_shareOrWeight', 'sim_stocks', 'sim_rebalancings', 'sim_priceOverrides', 
+      'sim_rebalancingUploads'
     ];
     
     keysToRemove.forEach(key => localStorage.removeItem(key));
@@ -302,6 +316,8 @@ const SimulationData = ({
     setReturnType('NTR');
     setDivisor('100000');
     setInitialLevel('1000.00');
+    setIndexFamily('DEFAULT_LASPEYRE');
+    setIdentifierType('RIC');
     setInputMethod('manual');
     setSelectedIndex('');
     setIndexDate('11.04.2025');
@@ -331,10 +347,14 @@ const SimulationData = ({
   };
   
   const addRow = () => {
-    setStocks([...stocks, { ric: '', shares: '', weight: '' }]);
+    const isBondIndex = indexFamily === 'BOND_DEFAULT' || indexFamily === 'BOND_BASEMARKETVALUE';
+    const newStock = isBondIndex 
+      ? { ric: '', shares: '', weight: '', baseValue: '' }
+      : { ric: '', shares: '', weight: '' };
+    setStocks([...stocks, newStock]);
   };
 
-  const updateStock = (index: number, field: 'ric' | 'shares' | 'weight', value: string) => {
+  const updateStock = (index: number, field: 'ric' | 'shares' | 'weight' | 'baseValue', value: string) => {
     const newStocks = [...stocks];
     newStocks[index][field] = value;
     setStocks(newStocks);
@@ -468,6 +488,8 @@ const SimulationData = ({
         currency,
         returnType,
         divisor,
+        indexFamily,
+        identifierType,
         stocks,
         {
           cashDividendTaxHandling,
@@ -533,6 +555,10 @@ const SimulationData = ({
           setDivisor={setDivisor}
           initialLevel={initialLevel}
           setInitialLevel={setInitialLevel}
+          indexFamily={indexFamily}
+          setIndexFamily={setIndexFamily}
+          identifierType={identifierType}
+          setIdentifierType={setIdentifierType}
           showAdvancedParameters={showAdvancedParameters}
           setShowAdvancedParameters={setShowAdvancedParameters}
           lateDividendHandling={lateDividendHandling}
@@ -583,6 +609,7 @@ const SimulationData = ({
         priceType={priceType}
         setPriceType={setPriceType}
         fetchIndexData={fetchIndexData}
+        indexFamily={indexFamily}
         mockIndices={mockIndices}
       />
       

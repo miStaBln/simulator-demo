@@ -19,6 +19,7 @@ interface Stock {
   ric: string;
   shares: string;
   weight: string;
+  baseValue?: string;
 }
 
 interface CompositionProps {
@@ -27,7 +28,7 @@ interface CompositionProps {
   stocks: Stock[];
   shareOrWeight: string;
   setShareOrWeight: (value: string) => void;
-  updateStock: (index: number, field: 'ric' | 'shares' | 'weight', value: string) => void;
+  updateStock: (index: number, field: 'ric' | 'shares' | 'weight' | 'baseValue', value: string) => void;
   removeStock: (index: number) => void;
   addRow: () => void;
   selectedIndex: string;
@@ -37,6 +38,7 @@ interface CompositionProps {
   priceType: string;
   setPriceType: (type: string) => void;
   fetchIndexData: () => void;
+  indexFamily: string;
   mockIndices: Array<{
     id: string;
     name: string;
@@ -63,6 +65,7 @@ const Composition = ({
   priceType,
   setPriceType,
   fetchIndexData,
+  indexFamily,
   mockIndices
 }: CompositionProps) => {
   const [isOpen, setIsOpen] = useState(true);
@@ -90,6 +93,7 @@ const Composition = ({
                 updateStock={updateStock}
                 removeStock={removeStock}
                 addRow={addRow}
+                indexFamily={indexFamily}
               />
             </TabsContent>
             

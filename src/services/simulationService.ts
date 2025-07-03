@@ -787,7 +787,9 @@ export class SimulationService {
     currency: string,
     returnType: string,
     divisor: string,
-    stocks: Array<{ ric: string; shares: string; weight: string }>,
+    indexFamily: string,
+    identifierType: string,
+    stocks: Array<{ ric: string; shares: string; weight: string; baseValue?: string }>,
     advancedParams: {
       cashDividendTaxHandling: string;
       specialDividendTaxHandling: string;
@@ -813,32 +815,57 @@ export class SimulationService {
       }
     };
 
+    // Determine if this is a bond index
+    const isBondIndex = indexFamily === 'BOND_DEFAULT' || indexFamily === 'BOND_BASEMARKETVALUE';
+
     // Create constituents from stocks data
     const constituents = stocks
       .filter(stock => stock.ric && (stock.shares || stock.weight))
-      .map((stock, index) => ({
-        assetIdentifier: {
-          assetClass: "SHARE",
-          identifierType: "RIC",
-          id: (stock.ric).toString()
-        },
-        quantity: {
-          type: "UNITS",
-          value: parseFloat(stock.shares || stock.weight || '1')
-        },
-        additionalNumbers: {
-          freeFloatFactor: 1,
-          weightingCapFactor: 1
+      .map((stock, index) => {
+        if (isBondIndex) {
+          return {
+            type: "bond",
+            assetIdentifier: {
+              assetClass: "BOND",
+              identifierType: identifierType,
+              id: stock.ric
+            },
+            amount: {
+              value: parseFloat(stock.shares || stock.weight || '1')
+            },
+            weightingCapFactor: {
+              value: 1.0
+            },
+            baseValue: {
+              value: parseFloat(stock.baseValue || '0')
+            }
+          };
+        } else {
+          return {
+            assetIdentifier: {
+              assetClass: "SHARE",
+              identifierType: identifierType,
+              id: stock.ric
+            },
+            quantity: {
+              type: "UNITS",
+              value: parseFloat(stock.shares || stock.weight || '1')
+            },
+            additionalNumbers: {
+              freeFloatFactor: 1,
+              weightingCapFactor: 1
+            }
+          };
         }
-      }));
+      });
 
     // Map price overrides to API format with nested date structure
     const instrumentPrices = priceOverrides
       .filter(override => override.ric && override.date && override.price)
       .map(override => ({
         instrumentKey: {
-          assetClass: "SHARE",
-          identifierType: "RIC",
+          assetClass: isBondIndex ? "BOND" : "SHARE",
+          identifierType: identifierType,
           id: override.ric
         },
         date: {
@@ -871,25 +898,25 @@ export class SimulationService {
         instrumentPrices: instrumentPrices
       },
       indexProperties: {
-         metadata: {
-                      DEFAULT_DELETION_TREATMENT: "INDIVIDUAL",
-                      ACQUISITION_TREATMENT_ONLY_TARGET_STOCKS: "STOCK",
-                      ACQUISITION_TREATMENT_ONLY_TARGET_CASH: "CASH_PROPORTIONAL",
-                      ACQUISITION_TREATMENT_ONLY_TARGET_CASHNSTOCKS: "CASH_AND_STOCK_PROPORTIONAL",
-                      ACQUISITION_TREATMENT_TARGET_AND_ACQUIRER_STOCKS: "STOCK",
-                      ACQUISITION_TREATMENT_TARGET_AND_ACQUIRER_CASH: "CASH_PROPORTIONAL",
-                      ACQUISITION_TREATMENT_TARGET_AND_ACQUIRER_CASHNSTOCKS: "CASH_AND_STOCK_PROPORTIONAL"
-                  },
+        metadata: {
+          DEFAULT_DELETION_TREATMENT: "INDIVIDUAL",
+          ACQUISITION_TREATMENT_ONLY_TARGET_STOCKS: "STOCK",
+          ACQUISITION_TREATMENT_ONLY_TARGET_CASH: "CASH_PROPORTIONAL",
+          ACQUISITION_TREATMENT_ONLY_TARGET_CASHNSTOCKS: "CASH_AND_STOCK_PROPORTIONAL",
+          ACQUISITION_TREATMENT_TARGET_AND_ACQUIRER_STOCKS: "STOCK",
+          ACQUISITION_TREATMENT_TARGET_AND_ACQUIRER_CASH: "CASH_PROPORTIONAL",
+          ACQUISITION_TREATMENT_TARGET_AND_ACQUIRER_CASHNSTOCKS: "CASH_AND_STOCK_PROPORTIONAL"
+        },
         coreIndexData: {
           name: "Simulation Index",
           identifiers: [
             {
               assetClass: "INDEX",
-              identifierType: "RIC",
+              identifierType: identifierType,
               id: ".SIMULATE"
             }
           ],
-          family: "DEFAULT_LASPEYRE",
+          family: indexFamily,
           type: getIndexType(returnType),
           currency: currency,
           ignoreFx: false
@@ -911,7 +938,7 @@ export class SimulationService {
         caModificationInitialization: "FULL",
         rules: []
       },
-      resultIdentifierType: "RIC",
+      resultIdentifierType: identifierType,
       selectionResults: []
     };
 

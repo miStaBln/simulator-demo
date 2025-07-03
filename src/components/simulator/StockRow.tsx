@@ -1,43 +1,68 @@
 
 import React from 'react';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
 
-interface StockRowProps {
-  stock: { ric: string; shares: string; weight: string };
-  index: number;
-  shareOrWeight: string;
-  updateStock: (index: number, field: 'ric' | 'shares' | 'weight', value: string) => void;
-  removeStock: (index: number) => void;
+interface Stock {
+  ric: string;
+  shares: string;
+  weight: string;
+  baseValue?: string;
 }
 
-const StockRow = ({ stock, index, shareOrWeight, updateStock, removeStock }: StockRowProps) => {
+interface StockRowProps {
+  stock: Stock;
+  index: number;
+  shareOrWeight: string;
+  updateStock: (index: number, field: 'ric' | 'shares' | 'weight' | 'baseValue', value: string) => void;
+  removeStock: (index: number) => void;
+  showBaseValue?: boolean;
+}
+
+const StockRow = ({ 
+  stock, 
+  index, 
+  shareOrWeight, 
+  updateStock, 
+  removeStock,
+  showBaseValue = false
+}: StockRowProps) => {
   return (
-    <div className="grid grid-cols-12 gap-4 mb-3 items-center">
-      <div className="col-span-5">
+    <div className={`grid ${showBaseValue ? 'grid-cols-5' : 'grid-cols-4'} gap-2 p-3 border-b last:border-b-0`}>
+      <Input
+        type="text"
+        value={stock.ric}
+        onChange={(e) => updateStock(index, 'ric', e.target.value)}
+        placeholder="Enter RIC"
+        className="h-8"
+      />
+      <Input
+        type="number"
+        value={shareOrWeight === 'shares' ? stock.shares : stock.weight}
+        onChange={(e) => updateStock(index, shareOrWeight === 'shares' ? 'shares' : 'weight', e.target.value)}
+        placeholder={shareOrWeight === 'shares' ? "0" : "0.00"}
+        step={shareOrWeight === 'shares' ? "1" : "0.01"}
+        className="h-8"
+      />
+      {showBaseValue && (
         <Input
-          type="text"
-          value={stock.ric}
-          onChange={(e) => updateStock(index, 'ric', e.target.value)}
-          className="w-full h-9"
+          type="number"
+          value={stock.baseValue || ''}
+          onChange={(e) => updateStock(index, 'baseValue', e.target.value)}
+          placeholder="0.00"
+          step="0.01"
+          className="h-8"
         />
-      </div>
-      <div className="col-span-5">
-        <Input
-          type="text"
-          value={shareOrWeight === 'shares' ? stock.shares : stock.weight}
-          onChange={(e) => updateStock(index, shareOrWeight === 'shares' ? 'shares' : 'weight', e.target.value)}
-          className="w-full h-9"
-        />
-      </div>
-      <div className="col-span-2">
-        <button 
-          onClick={() => removeStock(index)}
-          className="p-2 text-gray-500 hover:text-gray-700"
-        >
-          <Trash2 className="h-4 w-4" />
-        </button>
-      </div>
+      )}
+      <Button
+        onClick={() => removeStock(index)}
+        variant="ghost"
+        size="sm"
+        className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
     </div>
   );
 };
