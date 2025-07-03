@@ -46,21 +46,7 @@ interface SimulationPayload {
   composition: {
     clusters: Array<{
       name: string;
-      constituents: Array<{
-        assetIdentifier: {
-          assetClass: string;
-          identifierType: string;
-          id: string;
-        };
-        quantity: {
-          type: string;
-          value: number;
-        };
-        additionalNumbers: {
-          freeFloatFactor: number;
-          weightingCapFactor: number;
-        };
-      }>;
+      constituents: Array<any>; // Updated to allow both bond and equity structures
     }>;
     additionalNumbers: {
       divisor: number;
@@ -77,21 +63,7 @@ interface SimulationPayload {
     adaptionType: string;
     clusters: Array<{
       name: string;
-      constituents: Array<{
-        assetIdentifier: {
-          assetClass: string;
-          identifierType: string;
-          id: string;
-        };
-        quantity: {
-          type: string;
-          value: number;
-        };
-        additionalNumbers: {
-          freeFloatFactor: number;
-          weightingCapFactor: number;
-        };
-      }>;
+      constituents: Array<any>;
     }>;
     additionalParameters: {
       weightingType: string;
@@ -199,7 +171,8 @@ interface ResultsData {
 }
 
 export class SimulationService {
-  private static readonly API_URL = "http://test-32.gde.nbg.solactive.com:8274/index-simulator-equity/proxy/v3/simulateEquityIndexSimple";
+  private static readonly EQUITY_API_URL = "http://test-32.gde.nbg.solactive.com:8274/index-simulator-equity/proxy/v3/simulateEquityIndexSimple";
+  private static readonly BOND_API_URL = "http://test-32.gde.nbg.solactive.com:8274/index-simulator-equity/proxy/v3/simulateSimpleIndexBond";
   private static simulationResult: SimulationResult | null = null;
 
   // Updated dummy data to match the new structure
@@ -898,15 +871,6 @@ export class SimulationService {
         instrumentPrices: instrumentPrices
       },
       indexProperties: {
-        metadata: {
-          DEFAULT_DELETION_TREATMENT: "INDIVIDUAL",
-          ACQUISITION_TREATMENT_ONLY_TARGET_STOCKS: "STOCK",
-          ACQUISITION_TREATMENT_ONLY_TARGET_CASH: "CASH_PROPORTIONAL",
-          ACQUISITION_TREATMENT_ONLY_TARGET_CASHNSTOCKS: "CASH_AND_STOCK_PROPORTIONAL",
-          ACQUISITION_TREATMENT_TARGET_AND_ACQUIRER_STOCKS: "STOCK",
-          ACQUISITION_TREATMENT_TARGET_AND_ACQUIRER_CASH: "CASH_PROPORTIONAL",
-          ACQUISITION_TREATMENT_TARGET_AND_ACQUIRER_CASHNSTOCKS: "CASH_AND_STOCK_PROPORTIONAL"
-        },
         coreIndexData: {
           name: "Simulation Index",
           identifiers: [
@@ -944,9 +908,13 @@ export class SimulationService {
 
     console.log('Simulation payload:', JSON.stringify(payload, null, 2));
 
+    // Choose API URL based on index family
+    const apiUrl = isBondIndex ? this.BOND_API_URL : this.EQUITY_API_URL;
+    console.log(`Using ${isBondIndex ? 'Bond' : 'Equity'} API: ${apiUrl}`);
+
     try {
       // First, try the direct API call
-      const response = await fetch(this.API_URL, {
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
