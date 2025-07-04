@@ -547,10 +547,16 @@ export class SimulationService {
         initialIndexLevel: {
                         value: 100.0
                     },
-        caHandlingConfiguration: caHandlingConfig
+        previousIndexValue: {
+                                value: 100.0
+                            },
+        previousRebalancingIndexValue: {
+                                        value: 100.0
+                                    },
+        caHandlingConfiguration: caHandlingConfig,
+        taxRates: []
       },
       composition: {
-        type : "bond",
         clusters: [
           {
             name: "NONE",

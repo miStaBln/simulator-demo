@@ -85,7 +85,7 @@ const SimulationData = ({
     localStorage.getItem('sim_divisor') || '100000'
   );
   const [initialLevel, setInitialLevel] = useState(() => 
-    localStorage.getItem('sim_initialLevel') || '1000.00'
+    localStorage.getItem('sim_initialLevel') || '100.00'
   );
   const [indexFamily, setIndexFamily] = useState(() => 
     localStorage.getItem('sim_indexFamily') || 'DEFAULT_LASPEYRE'
@@ -322,7 +322,7 @@ const SimulationData = ({
     setCurrency('USD');
     setReturnType('NTR');
     setDivisor('100000');
-    setInitialLevel('1000.00');
+    setInitialLevel('100.00');
     setIndexFamily('DEFAULT_LASPEYRE');
     setIdentifierType('RIC');
     setReferenceIndexId('');
