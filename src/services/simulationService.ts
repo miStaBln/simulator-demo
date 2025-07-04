@@ -531,16 +531,16 @@ export class SimulationService {
       priceHistory: {
         instrumentPrices: instrumentPrices
       },
-      initialIndexLevel: {
-        value: parseFloat(initialLevel) || 100.0
-      },
-      previousIndexValue: {
-        value: parseFloat(initialLevel) || 100.0
-      },
-      previousRebalancingIndexValue: {
-        value: parseFloat(previousRebalancingIndexValue) || 100.0
-      },
       indexProperties: {
+        initialIndexLevel: {
+          value: parseFloat(initialLevel) || 100.0
+        },
+        previousIndexValue: {
+          value: parseFloat(initialLevel) || 100.0
+        },
+        previousRebalancingIndexValue: {
+          value: parseFloat(previousRebalancingIndexValue) || 100.0
+        },
         coreIndexData: {
           name: "Simulation Index",
           identifiers: [
