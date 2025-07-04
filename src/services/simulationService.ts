@@ -533,6 +533,15 @@ export class SimulationService {
         instrumentPrices: instrumentPrices
       },
       indexProperties: {
+          initialIndexLevel: {
+                  value: parseFloat(initialLevel) || 100.0
+                },
+            previousIndexValue: {
+              value: parseFloat(initialLevel) || 100.0
+            },
+            previousRebalancingIndexValue: {
+              value: parseFloat(previousRebalancingIndexValue) || 100.0
+            },
         coreIndexData: {
           name: "Simulation Index",
           identifiers: [
@@ -566,16 +575,7 @@ export class SimulationService {
         rules: []
       },
       resultIdentifierType: identifierType,
-      selectionResults: [],
-      initialIndexLevel: {
-        value: parseFloat(initialLevel) || 100.0
-      },
-      previousIndexValue: {
-        value: parseFloat(initialLevel) || 100.0
-      },
-      previousRebalancingIndexValue: {
-        value: parseFloat(previousRebalancingIndexValue) || 100.0
-      }
+      selectionResults: []
     };
 
     // Add cashes if it's a bond index and cashes are provided
