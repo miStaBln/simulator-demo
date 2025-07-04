@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { SimulationService } from '@/services/simulationService';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LineChart, Line, Legend } from 'recharts';
@@ -16,6 +17,25 @@ const TimeSeriesData = () => {
       isPositive: dailyReturn >= 0
     };
   });
+
+  // Calculate Y-axis domains for better visualization
+  const calculateYAxisDomain = (data: number[], padding: number = 0.1) => {
+    if (data.length === 0) return [0, 100];
+    
+    const min = Math.min(...data);
+    const max = Math.max(...data);
+    const range = max - min;
+    const paddingAmount = range * padding;
+    
+    return [
+      Math.max(0, min - paddingAmount),
+      max + paddingAmount
+    ];
+  };
+
+  const indexLevelDomain = calculateYAxisDomain(timeSeriesData.map(d => d.indexLevel));
+  const divisorDomain = calculateYAxisDomain(timeSeriesData.map(d => d.divisor));
+  const dailyReturnsDomain = calculateYAxisDomain(dailyReturnsData.map(d => d.dailyReturn));
 
   // Calculate key figures
   const keyFigures = timeSeriesData.length > 0 ? {
@@ -90,8 +110,18 @@ const TimeSeriesData = () => {
                     textAnchor="end"
                     height={80}
                   />
-                  <YAxis yAxisId="level" orientation="left" tick={{ fontSize: 12 }} />
-                  <YAxis yAxisId="divisor" orientation="right" tick={{ fontSize: 12 }} />
+                  <YAxis 
+                    yAxisId="level" 
+                    orientation="left" 
+                    tick={{ fontSize: 12 }} 
+                    domain={indexLevelDomain}
+                  />
+                  <YAxis 
+                    yAxisId="divisor" 
+                    orientation="right" 
+                    tick={{ fontSize: 12 }} 
+                    domain={divisorDomain}
+                  />
                   <Tooltip 
                     formatter={(value: number, name: string) => [
                       name === 'indexLevel' ? value.toFixed(6) : value.toLocaleString(),
@@ -139,7 +169,10 @@ const TimeSeriesData = () => {
                     textAnchor="end"
                     height={80}
                   />
-                  <YAxis tick={{ fontSize: 12 }} />
+                  <YAxis 
+                    tick={{ fontSize: 12 }} 
+                    domain={dailyReturnsDomain}
+                  />
                   <Tooltip 
                     formatter={(value: number) => [`${value.toFixed(2)}%`, 'Daily Return']}
                     labelStyle={{ color: '#374151' }}
