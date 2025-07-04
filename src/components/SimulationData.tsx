@@ -7,6 +7,7 @@ import SimulationParameters from './simulator/SimulationParameters';
 import Composition from './simulator/Composition';
 import RebalancingSection from './simulator/RebalancingSection';
 import PriceOverrides from './simulator/PriceOverrides';
+import BottomActions from './simulator/BottomActions';
 
 // Mock index data with parameters
 const mockIndices = [

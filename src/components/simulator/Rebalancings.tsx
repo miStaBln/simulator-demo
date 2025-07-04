@@ -13,12 +13,13 @@ interface RebalancingItem {
   id: string;
   selectionDate: string;
   rebalancingDate: string;
-  components: Array<{ ric: string; shares: string; weight: string }>;
+  components: Array<{ ric: string; shares: string; weight: string; weightingCapFactor?: string }>;
 }
 
 interface RebalancingsProps {
   rebalancings: RebalancingItem[];
   shareOrWeight: string;
+  indexFamily: string;
   addRebalancing: () => void;
   removeRebalancing: (index: number) => void;
   updateRebalancingDate: (index: number, field: 'selectionDate' | 'rebalancingDate', value: string) => void;
@@ -26,7 +27,7 @@ interface RebalancingsProps {
   updateRebalancingComponent: (
     rebalancingIndex: number, 
     componentIndex: number, 
-    field: 'ric' | 'shares' | 'weight', 
+    field: 'ric' | 'shares' | 'weight' | 'weightingCapFactor', 
     value: string
   ) => void;
   removeRebalancingComponent: (rebalancingIndex: number, componentIndex: number) => void;
@@ -35,6 +36,7 @@ interface RebalancingsProps {
 const Rebalancings = ({
   rebalancings,
   shareOrWeight,
+  indexFamily,
   addRebalancing,
   removeRebalancing,
   updateRebalancingDate,
@@ -71,6 +73,7 @@ const Rebalancings = ({
                   rebalancing={rebalancing}
                   index={index}
                   shareOrWeight={shareOrWeight}
+                  indexFamily={indexFamily}
                   updateRebalancingDate={updateRebalancingDate}
                   addRebalancingComponent={addRebalancingComponent}
                   updateRebalancingComponent={updateRebalancingComponent}
