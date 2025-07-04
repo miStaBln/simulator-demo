@@ -526,7 +526,7 @@ export class SimulationService {
     caHandlingConfig.drDividendTreatment = advancedParams.drDividendTreatment;
     caHandlingConfig.globalDrTaxRate = parseFloat(advancedParams.globalDrTaxRate) || 0;
 
-    const payload: SimulationPayload = {
+    const payload: any = {
       simulationStart: formatDate(startDate),
       simulationEnd: formatDate(endDate),
       priceHistory: {
@@ -547,15 +547,6 @@ export class SimulationService {
           currency: currency,
           ignoreFx: false
         },
-        initialIndexLevel: {
-          value: parseFloat(initialLevel) || 100.0
-        },
-        previousIndexValue: {
-          value: parseFloat(initialLevel) || 100.0
-        },
-        previousRebalancingIndexValue: {
-          value: parseFloat(previousRebalancingIndexValue) || 100.0
-        },
         caHandlingConfiguration: caHandlingConfig,
         taxRates: []
       },
@@ -575,7 +566,16 @@ export class SimulationService {
         rules: []
       },
       resultIdentifierType: identifierType,
-      selectionResults: []
+      selectionResults: [],
+      initialIndexLevel: {
+        value: parseFloat(initialLevel) || 100.0
+      },
+      previousIndexValue: {
+        value: parseFloat(initialLevel) || 100.0
+      },
+      previousRebalancingIndexValue: {
+        value: parseFloat(previousRebalancingIndexValue) || 100.0
+      }
     };
 
     // Add cashes if it's a bond index and cashes are provided
