@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { SimulationService } from '@/services/simulationService';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LineChart, Line, Legend } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LineChart, Line, Legend, ReferenceLine } from 'recharts';
 
 const TimeSeriesData = () => {
   const [showAll, setShowAll] = useState(false);
@@ -36,6 +36,58 @@ const TimeSeriesData = () => {
   const indexLevelDomain = calculateYAxisDomain(timeSeriesData.map(d => d.indexLevel));
   const divisorDomain = calculateYAxisDomain(timeSeriesData.map(d => d.divisor));
   const dailyReturnsDomain = calculateYAxisDomain(dailyReturnsData.map(d => d.dailyReturn));
+
+  // Create histogram data for daily returns distribution
+  const createHistogramData = () => {
+    if (dailyReturnsData.length === 0) return [];
+    
+    const returns = dailyReturnsData.map(d => d.dailyReturn);
+    const min = Math.min(...returns);
+    const max = Math.max(...returns);
+    const numBins = 15;
+    const binWidth = (max - min) / numBins;
+    
+    const bins = Array.from({ length: numBins }, (_, i) => ({
+      binStart: min + i * binWidth,
+      binEnd: min + (i + 1) * binWidth,
+      count: 0,
+      percentage: 0
+    }));
+    
+    // Count occurrences in each bin
+    returns.forEach(returnValue => {
+      const binIndex = Math.min(Math.floor((returnValue - min) / binWidth), numBins - 1);
+      bins[binIndex].count++;
+    });
+    
+    // Calculate percentages
+    bins.forEach(bin => {
+      bin.percentage = (bin.count / returns.length) * 100;
+    });
+    
+    return bins.map(bin => ({
+      range: `${bin.binStart.toFixed(1)}%`,
+      count: bin.count,
+      percentage: bin.percentage,
+      midpoint: (bin.binStart + bin.binEnd) / 2
+    }));
+  };
+
+  const histogramData = createHistogramData();
+  
+  // Calculate statistics for the distribution
+  const calculateStats = () => {
+    if (dailyReturnsData.length === 0) return { mean: 0, stdDev: 0 };
+    
+    const returns = dailyReturnsData.map(d => d.dailyReturn);
+    const mean = returns.reduce((sum, val) => sum + val, 0) / returns.length;
+    const variance = returns.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / returns.length;
+    const stdDev = Math.sqrt(variance);
+    
+    return { mean, stdDev };
+  };
+
+  const { mean, stdDev } = calculateStats();
 
   // Calculate key figures
   const keyFigures = timeSeriesData.length > 0 ? {
@@ -93,7 +145,7 @@ const TimeSeriesData = () => {
         </div>
       )}
 
-      {/* Charts Section - Side by Side */}
+      {/* Charts Section - Three Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Index Level and Divisor Line Chart */}
         {timeSeriesData.length > 0 && (
@@ -188,6 +240,54 @@ const TimeSeriesData = () => {
           </div>
         )}
       </div>
+
+      {/* Distribution of Daily Returns */}
+      {histogramData.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-4">Distribution of Daily Returns</h2>
+          <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div className="text-center">
+                <p className="text-sm text-gray-500">Mean Return</p>
+                <p className="text-lg font-semibold">{mean.toFixed(2)}%</p>
+              </div>
+              <div className="text-center">
+                <p className="text-sm text-gray-500">Standard Deviation</p>
+                <p className="text-lg font-semibold">{stdDev.toFixed(2)}%</p>
+              </div>
+              <div className="text-center">
+                <p className="text-sm text-gray-500">Observations</p>
+                <p className="text-lg font-semibold">{dailyReturnsData.length}</p>
+              </div>
+            </div>
+            <ResponsiveContainer width="100%" height={400}>
+              <BarChart data={histogramData} margin={{ top: 20, right: 30, left: 20, bottom: 40 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  dataKey="range" 
+                  tick={{ fontSize: 12 }}
+                  angle={-45}
+                  textAnchor="end"
+                  height={60}
+                />
+                <YAxis 
+                  tick={{ fontSize: 12 }}
+                  label={{ value: 'Occurrences', angle: -90, position: 'insideLeft' }}
+                />
+                <Tooltip 
+                  formatter={(value: number, name: string) => [
+                    name === 'count' ? `${value} occurrences` : `${value.toFixed(1)}%`,
+                    name === 'count' ? 'Count' : 'Percentage'
+                  ]}
+                  labelFormatter={(label) => `Return Range: ${label}`}
+                />
+                <ReferenceLine x={mean.toFixed(1) + '%'} stroke="#ef4444" strokeDasharray="3 3" />
+                <Bar dataKey="count" fill="#60a5fa" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
       
       {/* Time Series Table */}
       <div className="mb-4">
