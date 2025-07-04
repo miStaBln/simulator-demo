@@ -417,7 +417,7 @@ export class SimulationService {
     indexFamily: string,
     identifierType: string,
     referenceIndexId: string,
-    stocks: Array<{ ric: string; shares: string; weight: string; baseValue?: string; cashValue?: string; cashType?: string }>,
+    stocks: Array<{ ric: string; shares: string; weight: string; baseValue?: string; weightingCapFactor?: string; caCash?: string; couponCash?: string; sinkingCash?: string }>,
     advancedParams: {
       cashDividendTaxHandling: string;
       specialDividendTaxHandling: string;
@@ -465,7 +465,7 @@ export class SimulationService {
             },
             additionalNumbers: {
               freeFloatFactor: 1,
-              weightingCapFactor: 1,
+              weightingCapFactor: parseFloat(stock.weightingCapFactor || '1'),
               baseValue: parseFloat(stock.baseValue || '0')
             },
             dates: {
@@ -476,12 +476,31 @@ export class SimulationService {
           };
 
           // Add cashes to individual constituent if present
-          if (stock.cashValue && stock.cashType) {
-            constituent.cashes = [{
-              value: parseFloat(stock.cashValue),
+          const cashes = [];
+          if (stock.caCash && parseFloat(stock.caCash) !== 0) {
+            cashes.push({
+              value: parseFloat(stock.caCash),
               date: null,
-              type: stock.cashType
-            }];
+              type: 'CA_CASH'
+            });
+          }
+          if (stock.couponCash && parseFloat(stock.couponCash) !== 0) {
+            cashes.push({
+              value: parseFloat(stock.couponCash),
+              date: null,
+              type: 'COUPON_CASH'
+            });
+          }
+          if (stock.sinkingCash && parseFloat(stock.sinkingCash) !== 0) {
+            cashes.push({
+              value: parseFloat(stock.sinkingCash),
+              date: null,
+              type: 'SINKING_CASH'
+            });
+          }
+          
+          if (cashes.length > 0) {
+            constituent.cashes = cashes;
           }
 
           return constituent;
@@ -498,7 +517,7 @@ export class SimulationService {
             },
             additionalNumbers: {
               freeFloatFactor: 1,
-              weightingCapFactor: 1
+              weightingCapFactor: parseFloat(stock.weightingCapFactor || '1')
             }
           };
         }

@@ -2,13 +2,6 @@
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Trash2 } from 'lucide-react';
 
 interface Stock {
@@ -16,15 +9,17 @@ interface Stock {
   shares: string;
   weight: string;
   baseValue?: string;
-  cashValue?: string;
-  cashType?: string;
+  weightingCapFactor?: string;
+  caCash?: string;
+  couponCash?: string;
+  sinkingCash?: string;
 }
 
 interface StockRowProps {
   stock: Stock;
   index: number;
   shareOrWeight: string;
-  updateStock: (index: number, field: 'ric' | 'shares' | 'weight' | 'baseValue' | 'cashValue' | 'cashType', value: string) => void;
+  updateStock: (index: number, field: 'ric' | 'shares' | 'weight' | 'baseValue' | 'weightingCapFactor' | 'caCash' | 'couponCash' | 'sinkingCash', value: string) => void;
   removeStock: (index: number) => void;
   showBaseValue?: boolean;
   showCashFields?: boolean;
@@ -39,12 +34,15 @@ const StockRow = ({
   showBaseValue = false,
   showCashFields = false
 }: StockRowProps) => {
-  const gridCols = showBaseValue && showCashFields ? 'grid-cols-6' : 
-                   showBaseValue ? 'grid-cols-5' : 
-                   showCashFields ? 'grid-cols-5' : 'grid-cols-4';
+  const getGridCols = () => {
+    if (showBaseValue && showCashFields) return 'grid-cols-8'; // RIC, Shares/Weight, Weighting Cap Factor, Base Value, CA Cash, Coupon Cash, Sinking Cash, Actions
+    if (showBaseValue) return 'grid-cols-5'; // RIC, Shares/Weight, Weighting Cap Factor, Base Value, Actions
+    if (showCashFields) return 'grid-cols-7'; // RIC, Shares/Weight, Weighting Cap Factor, CA Cash, Coupon Cash, Sinking Cash, Actions
+    return 'grid-cols-4'; // RIC, Shares/Weight, Weighting Cap Factor, Actions
+  };
 
   return (
-    <div className={`grid ${gridCols} gap-2 p-3 border-b last:border-b-0`}>
+    <div className={`grid ${getGridCols()} gap-2 p-3 border-b last:border-b-0`}>
       <Input
         type="text"
         value={stock.ric}
@@ -58,6 +56,14 @@ const StockRow = ({
         onChange={(e) => updateStock(index, shareOrWeight === 'shares' ? 'shares' : 'weight', e.target.value)}
         placeholder={shareOrWeight === 'shares' ? "0" : "0.00"}
         step={shareOrWeight === 'shares' ? "1" : "0.01"}
+        className="h-8"
+      />
+      <Input
+        type="number"
+        value={stock.weightingCapFactor || ''}
+        onChange={(e) => updateStock(index, 'weightingCapFactor', e.target.value)}
+        placeholder="1.00"
+        step="0.01"
         className="h-8"
       />
       {showBaseValue && (
@@ -74,22 +80,28 @@ const StockRow = ({
         <>
           <Input
             type="number"
-            value={stock.cashValue || ''}
-            onChange={(e) => updateStock(index, 'cashValue', e.target.value)}
-            placeholder="0.00"
+            value={stock.caCash || ''}
+            onChange={(e) => updateStock(index, 'caCash', e.target.value)}
+            placeholder="CA Cash"
             step="0.01"
             className="h-8"
           />
-          <Select value={stock.cashType || ''} onValueChange={(value) => updateStock(index, 'cashType', value)}>
-            <SelectTrigger className="h-8">
-              <SelectValue placeholder="Cash type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="CA_CASH">CA Cash</SelectItem>
-              <SelectItem value="COUPON_CASH">Coupon Cash</SelectItem>
-              <SelectItem value="SINKING_CASH">Sinking Cash</SelectItem>
-            </SelectContent>
-          </Select>
+          <Input
+            type="number"
+            value={stock.couponCash || ''}
+            onChange={(e) => updateStock(index, 'couponCash', e.target.value)}
+            placeholder="Coupon Cash"
+            step="0.01"
+            className="h-8"
+          />
+          <Input
+            type="number"
+            value={stock.sinkingCash || ''}
+            onChange={(e) => updateStock(index, 'sinkingCash', e.target.value)}
+            placeholder="Sinking Cash"
+            step="0.01"
+            className="h-8"
+          />
         </>
       )}
       <Button

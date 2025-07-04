@@ -15,15 +15,17 @@ interface Stock {
   shares: string;
   weight: string;
   baseValue?: string;
-  cashValue?: string;
-  cashType?: string;
+  weightingCapFactor?: string;
+  caCash?: string;
+  couponCash?: string;
+  sinkingCash?: string;
 }
 
 interface ManualCompositionProps {
   stocks: Stock[];
   shareOrWeight: string;
   setShareOrWeight: (value: string) => void;
-  updateStock: (index: number, field: 'ric' | 'shares' | 'weight' | 'baseValue' | 'cashValue' | 'cashType', value: string) => void;
+  updateStock: (index: number, field: 'ric' | 'shares' | 'weight' | 'baseValue' | 'weightingCapFactor' | 'caCash' | 'couponCash' | 'sinkingCash', value: string) => void;
   removeStock: (index: number) => void;
   addRow: () => void;
   indexFamily: string;
@@ -41,7 +43,7 @@ const ManualComposition = ({
   const isBondIndex = indexFamily === 'BOND_DEFAULT' || indexFamily === 'BOND_BASEMARKETVALUE';
 
   const getGridCols = () => {
-    if (isBondIndex) return 'grid-cols-6';
+    if (isBondIndex) return 'grid-cols-8';
     return 'grid-cols-4';
   };
 
@@ -64,9 +66,11 @@ const ManualComposition = ({
         <div className={`grid ${getGridCols()} gap-2 p-3 bg-gray-50 border-b font-medium text-sm`}>
           <div>Identifier</div>
           <div>{shareOrWeight === 'shares' ? 'Shares' : 'Weight (%)'}</div>
+          <div>Weighting Cap Factor</div>
           {isBondIndex && <div>Base Value</div>}
-          {isBondIndex && <div>Cash Value</div>}
-          {isBondIndex && <div>Cash Type</div>}
+          {isBondIndex && <div>CA Cash</div>}
+          {isBondIndex && <div>Coupon Cash</div>}
+          {isBondIndex && <div>Sinking Cash</div>}
           <div>Actions</div>
         </div>
         

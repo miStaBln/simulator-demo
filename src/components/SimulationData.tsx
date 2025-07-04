@@ -158,9 +158,9 @@ const SimulationData = ({
   const [stocks, setStocks] = useState(() => {
     const stored = localStorage.getItem('sim_stocks');
     return stored ? JSON.parse(stored) : [
-      { ric: 'AAPL.OQ', shares: '10000', weight: '25.0' },
-      { ric: 'MSFT.OQ', shares: '8000', weight: '35.0' },
-      { ric: 'GOOGL.OQ', shares: '5000', weight: '40.0' },
+      { ric: 'AAPL.OQ', shares: '10000', weight: '25.0', weightingCapFactor: '1.0' },
+      { ric: 'MSFT.OQ', shares: '8000', weight: '35.0', weightingCapFactor: '1.0' },
+      { ric: 'GOOGL.OQ', shares: '5000', weight: '40.0', weightingCapFactor: '1.0' },
     ];
   });
 
@@ -353,9 +353,9 @@ const SimulationData = ({
     setRebalancings([]);
     setShareOrWeight('shares');
     setStocks([
-      { ric: 'AAPL.OQ', shares: '10000', weight: '25.0' },
-      { ric: 'MSFT.OQ', shares: '8000', weight: '35.0' },
-      { ric: 'GOOGL.OQ', shares: '5000', weight: '40.0' },
+      { ric: 'AAPL.OQ', shares: '10000', weight: '25.0', weightingCapFactor: '1.0' },
+      { ric: 'MSFT.OQ', shares: '8000', weight: '35.0', weightingCapFactor: '1.0' },
+      { ric: 'GOOGL.OQ', shares: '5000', weight: '40.0', weightingCapFactor: '1.0' },
     ]);
     setPriceOverrides([]);
     setRebalancingUploads([]);
@@ -368,12 +368,12 @@ const SimulationData = ({
   const addRow = () => {
     const isBondIndex = indexFamily === 'BOND_DEFAULT' || indexFamily === 'BOND_BASEMARKETVALUE';
     const newStock = isBondIndex 
-      ? { ric: '', shares: '', weight: '', baseValue: '', cashValue: '', cashType: 'CA_CASH' }
-      : { ric: '', shares: '', weight: '' };
+      ? { ric: '', shares: '', weight: '', baseValue: '', weightingCapFactor: '1.0', caCash: '', couponCash: '', sinkingCash: '' }
+      : { ric: '', shares: '', weight: '', weightingCapFactor: '1.0' };
     setStocks([...stocks, newStock]);
   };
 
-  const updateStock = (index: number, field: 'ric' | 'shares' | 'weight' | 'baseValue' | 'cashValue' | 'cashType', value: string) => {
+  const updateStock = (index: number, field: 'ric' | 'shares' | 'weight' | 'baseValue' | 'weightingCapFactor' | 'caCash' | 'couponCash' | 'sinkingCash', value: string) => {
     const newStocks = [...stocks];
     newStocks[index][field] = value;
     setStocks(newStocks);
