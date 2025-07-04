@@ -417,7 +417,7 @@ export class SimulationService {
     indexFamily: string,
     identifierType: string,
     referenceIndexId: string,
-    stocks: Array<{ ric: string; shares: string; weight: string; baseValue?: string }>,
+    stocks: Array<{ ric: string; shares: string; weight: string; baseValue?: string; cashValue?: string; cashType?: string }>,
     advancedParams: {
       cashDividendTaxHandling: string;
       specialDividendTaxHandling: string;
@@ -430,8 +430,7 @@ export class SimulationService {
     },
     priceOverrides: Array<{ric: string, date: string, price: string}> = [],
     initialLevel: string = '100.0',
-    previousRebalancingIndexValue: string = '100.0',
-    cashes: Array<{value: string, type: string}> = []
+    previousRebalancingIndexValue: string = '100.0'
   ) {
     // Convert date format from DD.MM.YYYY to YYYY-MM-DD
     const formatDate = (dateStr: string) => {
@@ -467,12 +466,12 @@ export class SimulationService {
             additionalNumbers: {
               freeFloatFactor: 1,
               weightingCapFactor: 1,
-              baseValue:parseFloat(stock.baseValue || '0')
+              baseValue: parseFloat(stock.baseValue || '0')
             },
             dates: {
-                compositionEnteredAt: {
-                    date: "2025-03-03"
-                }
+              compositionEnteredAt: {
+                date: "2025-03-03"
+              }
             }
           };
         } else {
@@ -532,16 +531,16 @@ export class SimulationService {
       priceHistory: {
         instrumentPrices: instrumentPrices
       },
+      initialIndexLevel: {
+        value: parseFloat(initialLevel) || 100.0
+      },
+      previousIndexValue: {
+        value: parseFloat(initialLevel) || 100.0
+      },
+      previousRebalancingIndexValue: {
+        value: parseFloat(previousRebalancingIndexValue) || 100.0
+      },
       indexProperties: {
-          initialIndexLevel: {
-                  value: parseFloat(initialLevel) || 100.0
-                },
-            previousIndexValue: {
-              value: parseFloat(initialLevel) || 100.0
-            },
-            previousRebalancingIndexValue: {
-              value: parseFloat(previousRebalancingIndexValue) || 100.0
-            },
         coreIndexData: {
           name: "Simulation Index",
           identifiers: [
@@ -578,15 +577,19 @@ export class SimulationService {
       selectionResults: []
     };
 
-    // Add cashes if it's a bond index and cashes are provided
-    if (isBondIndex && cashes.length > 0) {
-      (payload.composition as any).cashes = cashes
-        .filter(cash => cash.value && cash.type)
-        .map(cash => ({
-          value: parseFloat(cash.value),
+    // Add cashes from individual stock cash entries if it's a bond index
+    if (isBondIndex) {
+      const stockCashes = stocks
+        .filter(stock => stock.cashValue && stock.cashType)
+        .map(stock => ({
+          value: parseFloat(stock.cashValue),
           date: null,
-          type: cash.type
+          type: stock.cashType
         }));
+      
+      if (stockCashes.length > 0) {
+        (payload.composition as any).cashes = stockCashes;
+      }
     }
 
     // Add referencedIndex if referenceIndexId is provided

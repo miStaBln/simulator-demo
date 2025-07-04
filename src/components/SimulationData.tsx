@@ -154,7 +154,7 @@ const SimulationData = ({
     localStorage.getItem('sim_shareOrWeight') || 'shares'
   );
   
-  // Stock data
+  // Stock data - updated interface
   const [stocks, setStocks] = useState(() => {
     const stored = localStorage.getItem('sim_stocks');
     return stored ? JSON.parse(stored) : [
@@ -178,16 +178,6 @@ const SimulationData = ({
   const [rebalancingUploads, setRebalancingUploads] = useState<Array<{selectionDate: string, rebalancingDate: string, file: string}>>(() => {
     const stored = localStorage.getItem('sim_rebalancingUploads');
     return stored ? JSON.parse(stored) : [];
-  });
-
-  // Cash data for bond indices
-  const [cashes, setCashes] = useState<Array<{value: string, type: string}>>(() => {
-    const stored = localStorage.getItem('sim_cashes');
-    return stored ? JSON.parse(stored) : [
-      { value: '100.0', type: 'CA_CASH' },
-      { value: '110.0', type: 'COUPON_CASH' },
-      { value: '120.0', type: 'SINKING_CASH' }
-    ];
   });
 
   // Save state to localStorage whenever values change
@@ -311,10 +301,6 @@ const SimulationData = ({
     localStorage.setItem('sim_previousRebalancingIndexValue', previousRebalancingIndexValue);
   }, [previousRebalancingIndexValue]);
 
-  useEffect(() => {
-    localStorage.setItem('sim_cashes', JSON.stringify(cashes));
-  }, [cashes]);
-
   // Handle reset from parent component
   useEffect(() => {
     if (shouldReset) {
@@ -322,7 +308,7 @@ const SimulationData = ({
       onResetComplete();
     }
   }, [shouldReset]);
-
+  
   const handleReset = () => {
     // Clear all localStorage items
     const keysToRemove = [
@@ -338,7 +324,6 @@ const SimulationData = ({
     
     keysToRemove.forEach(key => localStorage.removeItem(key));
     localStorage.removeItem('sim_previousRebalancingIndexValue');
-    localStorage.removeItem('sim_cashes');
 
     // Reset all state to defaults
     setStartDate('11.04.2025');
@@ -376,11 +361,6 @@ const SimulationData = ({
     setRebalancingUploads([]);
     
     setPreviousRebalancingIndexValue('100.00');
-    setCashes([
-      { value: '100.0', type: 'CA_CASH' },
-      { value: '110.0', type: 'COUPON_CASH' },
-      { value: '120.0', type: 'SINKING_CASH' }
-    ]);
     
     SimulationService.clearResults();
   };
@@ -388,12 +368,12 @@ const SimulationData = ({
   const addRow = () => {
     const isBondIndex = indexFamily === 'BOND_DEFAULT' || indexFamily === 'BOND_BASEMARKETVALUE';
     const newStock = isBondIndex 
-      ? { ric: '', shares: '', weight: '', baseValue: '' }
+      ? { ric: '', shares: '', weight: '', baseValue: '', cashValue: '', cashType: 'CA_CASH' }
       : { ric: '', shares: '', weight: '' };
     setStocks([...stocks, newStock]);
   };
 
-  const updateStock = (index: number, field: 'ric' | 'shares' | 'weight' | 'baseValue', value: string) => {
+  const updateStock = (index: number, field: 'ric' | 'shares' | 'weight' | 'baseValue' | 'cashValue' | 'cashType', value: string) => {
     const newStocks = [...stocks];
     newStocks[index][field] = value;
     setStocks(newStocks);
@@ -401,21 +381,6 @@ const SimulationData = ({
 
   const removeStock = (index: number) => {
     setStocks(stocks.filter((_, i) => i !== index));
-  };
-
-  // Cash management functions
-  const addCash = () => {
-    setCashes([...cashes, { value: '', type: 'CA_CASH' }]);
-  };
-
-  const updateCash = (index: number, field: 'value' | 'type', value: string) => {
-    const newCashes = [...cashes];
-    newCashes[index][field] = value;
-    setCashes(newCashes);
-  };
-
-  const removeCash = (index: number) => {
-    setCashes(cashes.filter((_, i) => i !== index));
   };
 
   const addPriceOverride = () => {
@@ -534,6 +499,14 @@ const SimulationData = ({
       title: "Simulation started",
       description: "Calling real simulation API...",
     });
+    
+    // Extract cashes from stocks for bond indices
+    const cashes = stocks
+      .filter(stock => stock.cashValue && stock.cashType)
+      .map(stock => ({
+        value: stock.cashValue,
+        type: stock.cashType
+      }));
     
     try {
       const result = await SimulationService.runSimulation(
@@ -673,10 +646,10 @@ const SimulationData = ({
         fetchIndexData={fetchIndexData}
         indexFamily={indexFamily}
         mockIndices={mockIndices}
-        cashes={cashes}
-        addCash={addCash}
-        updateCash={updateCash}
-        removeCash={removeCash}
+        cashes={[]}
+        addCash={() => {}}
+        updateCash={() => {}}
+        removeCash={() => {}}
       />
       
       {/* Combined Rebalancing Section */}

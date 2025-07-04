@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Trash2, ChevronDown } from 'lucide-react';
 import {
@@ -13,13 +14,14 @@ import {
 } from "@/components/ui/collapsible";
 import ManualComposition from './ManualComposition';
 import IndexComposition from './IndexComposition';
-import CashManagement from './CashManagement';
 
 interface Stock {
   ric: string;
   shares: string;
   weight: string;
   baseValue?: string;
+  cashValue?: string;
+  cashType?: string;
 }
 
 interface CompositionProps {
@@ -28,7 +30,7 @@ interface CompositionProps {
   stocks: Stock[];
   shareOrWeight: string;
   setShareOrWeight: (value: string) => void;
-  updateStock: (index: number, field: 'ric' | 'shares' | 'weight' | 'baseValue', value: string) => void;
+  updateStock: (index: number, field: 'ric' | 'shares' | 'weight' | 'baseValue' | 'cashValue' | 'cashType', value: string) => void;
   removeStock: (index: number) => void;
   addRow: () => void;
   selectedIndex: string;
@@ -77,7 +79,6 @@ const Composition = ({
   removeCash
 }: CompositionProps) => {
   const [isOpen, setIsOpen] = useState(true);
-  const isBondIndex = indexFamily === 'BOND_DEFAULT' || indexFamily === 'BOND_BASEMARKETVALUE';
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
@@ -104,17 +105,6 @@ const Composition = ({
                 addRow={addRow}
                 indexFamily={indexFamily}
               />
-              
-              {isBondIndex && (
-                <div className="mt-6">
-                  <CashManagement
-                    cashes={cashes}
-                    addCash={addCash}
-                    updateCash={updateCash}
-                    removeCash={removeCash}
-                  />
-                </div>
-              )}
             </TabsContent>
             
             <TabsContent value="index">
@@ -130,17 +120,6 @@ const Composition = ({
                 fetchIndexData={fetchIndexData}
                 mockIndices={mockIndices}
               />
-              
-              {isBondIndex && (
-                <div className="mt-6">
-                  <CashManagement
-                    cashes={cashes}
-                    addCash={addCash}
-                    updateCash={updateCash}
-                    removeCash={removeCash}
-                  />
-                </div>
-              )}
             </TabsContent>
           </Tabs>
         </CollapsibleContent>
