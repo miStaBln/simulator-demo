@@ -20,8 +20,10 @@ interface Stock {
   shares: string;
   weight: string;
   baseValue?: string;
-  cashValue?: string;
-  cashType?: string;
+  weightingCapFactor?: string;
+  caCash?: string;
+  couponCash?: string;
+  sinkingCash?: string;
 }
 
 interface CompositionProps {
@@ -30,7 +32,7 @@ interface CompositionProps {
   stocks: Stock[];
   shareOrWeight: string;
   setShareOrWeight: (value: string) => void;
-  updateStock: (index: number, field: 'ric' | 'shares' | 'weight' | 'baseValue' | 'cashValue' | 'cashType', value: string) => void;
+  updateStock: (index: number, field: 'ric' | 'shares' | 'weight' | 'baseValue' | 'weightingCapFactor' | 'caCash' | 'couponCash' | 'sinkingCash', value: string) => void;
   removeStock: (index: number) => void;
   addRow: () => void;
   selectedIndex: string;
