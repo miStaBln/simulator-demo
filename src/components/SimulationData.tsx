@@ -500,14 +500,6 @@ const SimulationData = ({
       description: "Calling real simulation API...",
     });
     
-    // Extract cashes from stocks for bond indices
-    const cashes = stocks
-      .filter(stock => stock.cashValue && stock.cashType)
-      .map(stock => ({
-        value: stock.cashValue,
-        type: stock.cashType
-      }));
-    
     try {
       const result = await SimulationService.runSimulation(
         startDate,
@@ -531,8 +523,7 @@ const SimulationData = ({
         },
         priceOverrides,
         initialLevel,
-        previousRebalancingIndexValue,
-        cashes
+        previousRebalancingIndexValue
       );
       
       setLoading(false);
