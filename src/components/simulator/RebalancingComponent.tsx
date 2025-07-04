@@ -51,10 +51,6 @@ const RebalancingComponent = ({
     }
   };
 
-  const getGridCols = () => {
-    return 'grid-cols-16'; // RIC, Shares/Weight, Weighting Cap Factor, Actions
-  };
-
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -75,16 +71,16 @@ const RebalancingComponent = ({
       <div className="mb-4">
         <h3 className="text-sm font-medium mb-2">Components</h3>
         
-        <div className="grid grid-cols-16 gap-4 mb-2 font-medium text-xs">
-          <div className="col-span-5">RIC</div>
-          <div className="col-span-4">{shareOrWeight === 'shares' ? 'Shares' : 'Weight (%)'}</div>
-          <div className="col-span-5">Weighting Cap Factor</div>
+        <div className="grid grid-cols-12 gap-4 mb-2 font-medium text-xs">
+          <div className="col-span-3">RIC</div>
+          <div className="col-span-3">{shareOrWeight === 'shares' ? 'Shares' : 'Weight (%)'}</div>
+          <div className="col-span-4">Weighting Cap Factor</div>
           <div className="col-span-2">Actions</div>
         </div>
         
         {rebalancing.components.map((component, compIndex) => (
-          <div key={compIndex} className="grid grid-cols-16 gap-4 mb-3 items-center">
-            <div className="col-span-5">
+          <div key={compIndex} className="grid grid-cols-12 gap-4 mb-3 items-center">
+            <div className="col-span-3">
               <Input
                 type="text"
                 value={component.ric}
@@ -92,7 +88,7 @@ const RebalancingComponent = ({
                 className="w-full h-8 text-sm"
               />
             </div>
-            <div className="col-span-4">
+            <div className="col-span-3">
               <Input
                 type="text"
                 value={shareOrWeight === 'shares' ? component.shares : component.weight}
@@ -105,7 +101,7 @@ const RebalancingComponent = ({
                 className="w-full h-8 text-sm"
               />
             </div>
-            <div className="col-span-5">
+            <div className="col-span-4">
               <Input
                 type="number"
                 value={component.weightingCapFactor || '1.0'}
