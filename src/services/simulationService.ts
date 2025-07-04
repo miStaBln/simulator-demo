@@ -428,7 +428,10 @@ export class SimulationService {
       drDividendTreatment: string;
       globalDrTaxRate: string;
     },
-    priceOverrides: Array<{ric: string, date: string, price: string}> = []
+    priceOverrides: Array<{ric: string, date: string, price: string}> = [],
+    initialLevel: string = '100.0',
+    previousRebalancingIndexValue: string = '100.0',
+    cashes: Array<{value: string, type: string}> = []
   ) {
     // Convert date format from DD.MM.YYYY to YYYY-MM-DD
     const formatDate = (dateStr: string) => {
@@ -545,14 +548,14 @@ export class SimulationService {
           ignoreFx: false
         },
         initialIndexLevel: {
-                        value: 100.0
-                    },
+          value: parseFloat(initialLevel) || 100.0
+        },
         previousIndexValue: {
-                                value: 100.0
-                            },
+          value: parseFloat(initialLevel) || 100.0
+        },
         previousRebalancingIndexValue: {
-                                        value: 100.0
-                                    },
+          value: parseFloat(previousRebalancingIndexValue) || 100.0
+        },
         caHandlingConfiguration: caHandlingConfig,
         taxRates: []
       },
@@ -574,6 +577,17 @@ export class SimulationService {
       resultIdentifierType: identifierType,
       selectionResults: []
     };
+
+    // Add cashes if it's a bond index and cashes are provided
+    if (isBondIndex && cashes.length > 0) {
+      (payload.composition as any).cashes = cashes
+        .filter(cash => cash.value && cash.type)
+        .map(cash => ({
+          value: parseFloat(cash.value),
+          date: null,
+          type: cash.type
+        }));
+    }
 
     // Add referencedIndex if referenceIndexId is provided
     if (referenceIndexId && referenceIndexId.trim()) {

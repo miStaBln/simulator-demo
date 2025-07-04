@@ -164,6 +164,10 @@ const SimulationData = ({
     ];
   });
 
+  const [previousRebalancingIndexValue, setPreviousRebalancingIndexValue] = useState(() => 
+    localStorage.getItem('sim_previousRebalancingIndexValue') || '100.00'
+  );
+
   // Price overrides
   const [priceOverrides, setPriceOverrides] = useState<Array<{ric: string, date: string, price: string}>>(() => {
     const stored = localStorage.getItem('sim_priceOverrides');
@@ -174,6 +178,16 @@ const SimulationData = ({
   const [rebalancingUploads, setRebalancingUploads] = useState<Array<{selectionDate: string, rebalancingDate: string, file: string}>>(() => {
     const stored = localStorage.getItem('sim_rebalancingUploads');
     return stored ? JSON.parse(stored) : [];
+  });
+
+  // Cash data for bond indices
+  const [cashes, setCashes] = useState<Array<{value: string, type: string}>>(() => {
+    const stored = localStorage.getItem('sim_cashes');
+    return stored ? JSON.parse(stored) : [
+      { value: '100.0', type: 'CA_CASH' },
+      { value: '110.0', type: 'COUPON_CASH' },
+      { value: '120.0', type: 'SINKING_CASH' }
+    ];
   });
 
   // Save state to localStorage whenever values change
@@ -293,6 +307,14 @@ const SimulationData = ({
     localStorage.setItem('sim_rebalancingUploads', JSON.stringify(rebalancingUploads));
   }, [rebalancingUploads]);
 
+  useEffect(() => {
+    localStorage.setItem('sim_previousRebalancingIndexValue', previousRebalancingIndexValue);
+  }, [previousRebalancingIndexValue]);
+
+  useEffect(() => {
+    localStorage.setItem('sim_cashes', JSON.stringify(cashes));
+  }, [cashes]);
+
   // Handle reset from parent component
   useEffect(() => {
     if (shouldReset) {
@@ -315,6 +337,8 @@ const SimulationData = ({
     ];
     
     keysToRemove.forEach(key => localStorage.removeItem(key));
+    localStorage.removeItem('sim_previousRebalancingIndexValue');
+    localStorage.removeItem('sim_cashes');
 
     // Reset all state to defaults
     setStartDate('11.04.2025');
@@ -351,6 +375,13 @@ const SimulationData = ({
     setPriceOverrides([]);
     setRebalancingUploads([]);
     
+    setPreviousRebalancingIndexValue('100.00');
+    setCashes([
+      { value: '100.0', type: 'CA_CASH' },
+      { value: '110.0', type: 'COUPON_CASH' },
+      { value: '120.0', type: 'SINKING_CASH' }
+    ]);
+    
     SimulationService.clearResults();
   };
   
@@ -370,6 +401,21 @@ const SimulationData = ({
 
   const removeStock = (index: number) => {
     setStocks(stocks.filter((_, i) => i !== index));
+  };
+
+  // Cash management functions
+  const addCash = () => {
+    setCashes([...cashes, { value: '', type: 'CA_CASH' }]);
+  };
+
+  const updateCash = (index: number, field: 'value' | 'type', value: string) => {
+    const newCashes = [...cashes];
+    newCashes[index][field] = value;
+    setCashes(newCashes);
+  };
+
+  const removeCash = (index: number) => {
+    setCashes(cashes.filter((_, i) => i !== index));
   };
 
   const addPriceOverride = () => {
@@ -510,7 +556,10 @@ const SimulationData = ({
           drDividendTreatment,
           globalDrTaxRate
         },
-        priceOverrides
+        priceOverrides,
+        initialLevel,
+        previousRebalancingIndexValue,
+        cashes
       );
       
       setLoading(false);
@@ -545,8 +594,8 @@ const SimulationData = ({
 
   return (
     <div className="p-6 pb-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Left Panel - Simulation Period */}
+      <div className="space-y-6">
+        {/* Simulation Period */}
         <SimulationPeriod
           startDate={startDate}
           setStartDate={setStartDate}
@@ -554,7 +603,7 @@ const SimulationData = ({
           setEndDate={setEndDate}
         />
         
-        {/* Right Panel - Parameters */}
+        {/* Parameters */}
         <SimulationParameters
           currency={currency}
           setCurrency={setCurrency}
@@ -570,6 +619,8 @@ const SimulationData = ({
           setIdentifierType={setIdentifierType}
           referenceIndexId={referenceIndexId}
           setReferenceIndexId={setReferenceIndexId}
+          previousRebalancingIndexValue={previousRebalancingIndexValue}
+          setPreviousRebalancingIndexValue={setPreviousRebalancingIndexValue}
           showAdvancedParameters={showAdvancedParameters}
           setShowAdvancedParameters={setShowAdvancedParameters}
           lateDividendHandling={lateDividendHandling}
@@ -622,6 +673,10 @@ const SimulationData = ({
         fetchIndexData={fetchIndexData}
         indexFamily={indexFamily}
         mockIndices={mockIndices}
+        cashes={cashes}
+        addCash={addCash}
+        updateCash={updateCash}
+        removeCash={removeCash}
       />
       
       {/* Combined Rebalancing Section */}

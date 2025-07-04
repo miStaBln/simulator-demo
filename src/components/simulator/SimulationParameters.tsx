@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import {
@@ -26,7 +25,8 @@ interface SimulationParametersProps {
   setIdentifierType: (type: string) => void;
   referenceIndexId: string;
   setReferenceIndexId: (id: string) => void;
-  // Advanced parameters props
+  previousRebalancingIndexValue: string;
+  setPreviousRebalancingIndexValue: (value: string) => void;
   showAdvancedParameters: boolean;
   setShowAdvancedParameters: (show: boolean) => void;
   lateDividendHandling: string;
@@ -64,6 +64,8 @@ const SimulationParameters = ({
   setIdentifierType,
   referenceIndexId,
   setReferenceIndexId,
+  previousRebalancingIndexValue,
+  setPreviousRebalancingIndexValue,
   showAdvancedParameters,
   setShowAdvancedParameters,
   lateDividendHandling,
@@ -85,6 +87,8 @@ const SimulationParameters = ({
   globalDrTaxRate,
   setGlobalDrTaxRate,
 }: SimulationParametersProps) => {
+  const isBondIndex = indexFamily === 'BOND_DEFAULT' || indexFamily === 'BOND_BASEMARKETVALUE';
+
   return (
     <div className="bg-white rounded-md shadow-sm p-6">
       <h2 className="text-lg font-medium mb-4">Parameters</h2>
@@ -167,6 +171,20 @@ const SimulationParameters = ({
           className="w-full h-9"
         />
       </div>
+
+      {isBondIndex && (
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-900 mb-1">Previous Rebalancing Index Value</label>
+          <Input 
+            type="number" 
+            step="0.01"
+            value={previousRebalancingIndexValue} 
+            onChange={(e) => setPreviousRebalancingIndexValue(e.target.value)}
+            placeholder="Enter previous rebalancing index value"
+            className="w-full h-9"
+          />
+        </div>
+      )}
 
       <div className="mb-6">
         <label className="block text-sm font-medium text-gray-900 mb-1">Reference Index ID</label>

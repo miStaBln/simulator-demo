@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Trash2, ChevronDown } from 'lucide-react';
 import {
@@ -14,6 +13,7 @@ import {
 } from "@/components/ui/collapsible";
 import ManualComposition from './ManualComposition';
 import IndexComposition from './IndexComposition';
+import CashManagement from './CashManagement';
 
 interface Stock {
   ric: string;
@@ -47,6 +47,10 @@ interface CompositionProps {
     divisor: string;
     constituents: Stock[];
   }>;
+  cashes: Array<{value: string, type: string}>;
+  addCash: () => void;
+  updateCash: (index: number, field: 'value' | 'type', value: string) => void;
+  removeCash: (index: number) => void;
 }
 
 const Composition = ({
@@ -66,9 +70,14 @@ const Composition = ({
   setPriceType,
   fetchIndexData,
   indexFamily,
-  mockIndices
+  mockIndices,
+  cashes,
+  addCash,
+  updateCash,
+  removeCash
 }: CompositionProps) => {
   const [isOpen, setIsOpen] = useState(true);
+  const isBondIndex = indexFamily === 'BOND_DEFAULT' || indexFamily === 'BOND_BASEMARKETVALUE';
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
@@ -95,6 +104,17 @@ const Composition = ({
                 addRow={addRow}
                 indexFamily={indexFamily}
               />
+              
+              {isBondIndex && (
+                <div className="mt-6">
+                  <CashManagement
+                    cashes={cashes}
+                    addCash={addCash}
+                    updateCash={updateCash}
+                    removeCash={removeCash}
+                  />
+                </div>
+              )}
             </TabsContent>
             
             <TabsContent value="index">
@@ -110,6 +130,17 @@ const Composition = ({
                 fetchIndexData={fetchIndexData}
                 mockIndices={mockIndices}
               />
+              
+              {isBondIndex && (
+                <div className="mt-6">
+                  <CashManagement
+                    cashes={cashes}
+                    addCash={addCash}
+                    updateCash={updateCash}
+                    removeCash={removeCash}
+                  />
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         </CollapsibleContent>
