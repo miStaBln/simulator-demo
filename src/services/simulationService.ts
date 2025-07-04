@@ -5,6 +5,15 @@ interface SimulationPayload {
     instrumentPrices: any[];
   };
   indexProperties: {
+    initialIndexLevel: {
+      value: number;
+    };
+    previousIndexValue: {
+      value: number;
+    };
+    previousRebalancingIndexValue: {
+      value: number;
+    };
     coreIndexData: {
       name: string;
       identifiers: Array<{
@@ -42,6 +51,7 @@ interface SimulationPayload {
       drDividendTreatment: string;
       globalDrTaxRate: number;
     };
+    taxRates: any[];
   };
   composition: {
     clusters: Array<{
@@ -68,6 +78,26 @@ interface SimulationPayload {
     additionalParameters: {
       weightingType: string;
     };
+  }>;
+  rebalancingAdaptions?: Array<{
+    adaptionBaseData: {
+      adaptionType: string;
+      effectiveDates: string[];
+    };
+    constituents: Array<{
+      assetIdentifier: {
+        assetClass: string;
+        identifierType: string;
+        id: string;
+      };
+      quantity: {
+        type: string;
+        value: number;
+      };
+      additionalNumbers: {
+        weightingCapFactor: number;
+      };
+    }>;
   }>;
 }
 
@@ -430,7 +460,13 @@ export class SimulationService {
     },
     priceOverrides: Array<{ric: string, date: string, price: string}> = [],
     initialLevel: string = '100.0',
-    previousRebalancingIndexValue: string = '100.0'
+    previousRebalancingIndexValue: string = '100.0',
+    rebalancings: Array<{
+      id: string;
+      selectionDate: string;
+      rebalancingDate: string;
+      components: Array<{ ric: string; shares: string; weight: string; weightingCapFactor?: string }>;
+    }> = []
   ) {
     // Convert date format from DD.MM.YYYY to YYYY-MM-DD
     const formatDate = (dateStr: string) => {
@@ -607,7 +643,33 @@ export class SimulationService {
       selectionResults: []
     };
 
-    // Remove the old composition-level cash handling since it's now in individual constituents
+    // Add rebalancing adaptions for bond indices
+    if (isBondIndex && rebalancings.length > 0) {
+      const rebalancingAdaptions = rebalancings.map(rebalancing => ({
+        adaptionBaseData: {
+          adaptionType: "DEFAULT_AMOUNTS",
+          effectiveDates: [formatDate(rebalancing.rebalancingDate)]
+        },
+        constituents: rebalancing.components
+          .filter(component => component.ric && (component.shares || component.weight))
+          .map(component => ({
+            assetIdentifier: {
+              assetClass: "BOND",
+              identifierType: identifierType,
+              id: component.ric
+            },
+            quantity: {
+              type: "AMOUNT",
+              value: parseFloat(component.shares || component.weight || '1')
+            },
+            additionalNumbers: {
+              weightingCapFactor: parseFloat(component.weightingCapFactor || '1')
+            }
+          }))
+      }));
+
+      payload.rebalancingAdaptions = rebalancingAdaptions;
+    }
 
     // Add referencedIndex if referenceIndexId is provided
     if (referenceIndexId && referenceIndexId.trim()) {

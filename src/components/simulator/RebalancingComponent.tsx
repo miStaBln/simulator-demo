@@ -9,16 +9,17 @@ interface RebalancingComponentProps {
     id: string;
     selectionDate: string;
     rebalancingDate: string;
-    components: Array<{ ric: string; shares: string; weight: string }>;
+    components: Array<{ ric: string; shares: string; weight: string; weightingCapFactor?: string }>;
   };
   index: number;
   shareOrWeight: string;
+  indexFamily: string;
   updateRebalancingDate: (index: number, field: 'selectionDate' | 'rebalancingDate', value: string) => void;
   addRebalancingComponent: (rebalancingIndex: number) => void;
   updateRebalancingComponent: (
     rebalancingIndex: number, 
     componentIndex: number, 
-    field: 'ric' | 'shares' | 'weight', 
+    field: 'ric' | 'shares' | 'weight' | 'weightingCapFactor', 
     value: string
   ) => void;
   removeRebalancingComponent: (rebalancingIndex: number, componentIndex: number) => void;
@@ -28,38 +29,61 @@ const RebalancingComponent = ({
   rebalancing,
   index,
   shareOrWeight,
+  indexFamily,
   updateRebalancingDate,
   addRebalancingComponent,
   updateRebalancingComponent,
   removeRebalancingComponent
 }: RebalancingComponentProps) => {
+  const isBondIndex = indexFamily === 'BOND_DEFAULT' || indexFamily === 'BOND_BASEMARKETVALUE';
+
+  const handleSelectionDateChange = (value: string) => {
+    updateRebalancingDate(index, 'selectionDate', value);
+    // For bond indices, rebalancing date equals selection date
+    if (isBondIndex) {
+      updateRebalancingDate(index, 'rebalancingDate', value);
+    }
+  };
+
+  const handleRebalancingDateChange = (value: string) => {
+    if (!isBondIndex) {
+      updateRebalancingDate(index, 'rebalancingDate', value);
+    }
+  };
+
+  const getGridCols = () => {
+    return 'grid-cols-16'; // RIC, Shares/Weight, Weighting Cap Factor, Actions
+  };
+
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <DatePicker 
           label="Selection Date" 
           value={rebalancing.selectionDate} 
-          onChange={(value) => updateRebalancingDate(index, 'selectionDate', value)} 
+          onChange={handleSelectionDateChange} 
         />
         
         <DatePicker 
           label="Rebalancing Date" 
           value={rebalancing.rebalancingDate} 
-          onChange={(value) => updateRebalancingDate(index, 'rebalancingDate', value)} 
+          onChange={handleRebalancingDateChange}
+          disabled={isBondIndex}
         />
       </div>
       
       <div className="mb-4">
         <h3 className="text-sm font-medium mb-2">Components</h3>
         
-        <div className="grid grid-cols-12 gap-4 mb-2 font-medium text-xs">
+        <div className="grid grid-cols-16 gap-4 mb-2 font-medium text-xs">
           <div className="col-span-5">RIC</div>
-          <div className="col-span-5">{shareOrWeight === 'shares' ? 'Shares' : 'Weight (%)'}</div>
+          <div className="col-span-4">{shareOrWeight === 'shares' ? 'Shares' : 'Weight (%)'}</div>
+          <div className="col-span-5">Weighting Cap Factor</div>
           <div className="col-span-2">Actions</div>
         </div>
         
         {rebalancing.components.map((component, compIndex) => (
-          <div key={compIndex} className="grid grid-cols-12 gap-4 mb-3 items-center">
+          <div key={compIndex} className="grid grid-cols-16 gap-4 mb-3 items-center">
             <div className="col-span-5">
               <Input
                 type="text"
@@ -68,7 +92,7 @@ const RebalancingComponent = ({
                 className="w-full h-8 text-sm"
               />
             </div>
-            <div className="col-span-5">
+            <div className="col-span-4">
               <Input
                 type="text"
                 value={shareOrWeight === 'shares' ? component.shares : component.weight}
@@ -78,6 +102,16 @@ const RebalancingComponent = ({
                   shareOrWeight === 'shares' ? 'shares' : 'weight', 
                   e.target.value
                 )}
+                className="w-full h-8 text-sm"
+              />
+            </div>
+            <div className="col-span-5">
+              <Input
+                type="number"
+                value={component.weightingCapFactor || '1.0'}
+                onChange={(e) => updateRebalancingComponent(index, compIndex, 'weightingCapFactor', e.target.value)}
+                placeholder="1.0"
+                step="0.01"
                 className="w-full h-8 text-sm"
               />
             </div>

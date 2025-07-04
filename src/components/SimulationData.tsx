@@ -7,7 +7,6 @@ import SimulationParameters from './simulator/SimulationParameters';
 import Composition from './simulator/Composition';
 import RebalancingSection from './simulator/RebalancingSection';
 import PriceOverrides from './simulator/PriceOverrides';
-import BottomActions from './simulator/BottomActions';
 
 // Mock index data with parameters
 const mockIndices = [
@@ -445,18 +444,17 @@ const SimulationData = ({
   };
 
   const addRebalancing = () => {
-    setRebalancings([
-      ...rebalancings, 
-      { 
-        id: `rebal-${rebalancings.length + 1}`,
-        selectionDate: startDate,
-        rebalancingDate: startDate,
-        components: [
-          { ric: 'AAPL.OQ', shares: '1000', weight: '20' },
-          { ric: 'MSFT.OQ', shares: '500', weight: '15' },
-        ]
-      }
-    ]);
+    const newRebalancing = { 
+      id: `rebal-${rebalancings.length + 1}`,
+      selectionDate: startDate,
+      rebalancingDate: startDate,
+      components: [
+        { ric: 'AAPL.OQ', shares: '1000', weight: '20', weightingCapFactor: '1.0' },
+        { ric: 'MSFT.OQ', shares: '500', weight: '15', weightingCapFactor: '1.0' },
+      ]
+    };
+    
+    setRebalancings([...rebalancings, newRebalancing]);
   };
 
   const removeRebalancing = (index: number) => {
@@ -471,14 +469,19 @@ const SimulationData = ({
 
   const addRebalancingComponent = (rebalancingIndex: number) => {
     const newRebalancings = [...rebalancings];
-    newRebalancings[rebalancingIndex].components.push({ ric: '', shares: '', weight: '' });
+    newRebalancings[rebalancingIndex].components.push({ 
+      ric: '', 
+      shares: '', 
+      weight: '', 
+      weightingCapFactor: '1.0' 
+    });
     setRebalancings(newRebalancings);
   };
 
   const updateRebalancingComponent = (
     rebalancingIndex: number, 
     componentIndex: number, 
-    field: 'ric' | 'shares' | 'weight', 
+    field: 'ric' | 'shares' | 'weight' | 'weightingCapFactor', 
     value: string
   ) => {
     const newRebalancings = [...rebalancings];
@@ -523,7 +526,8 @@ const SimulationData = ({
         },
         priceOverrides,
         initialLevel,
-        previousRebalancingIndexValue
+        previousRebalancingIndexValue,
+        rebalancings // Pass rebalancings to the simulation service
       );
       
       setLoading(false);
@@ -647,6 +651,7 @@ const SimulationData = ({
       <RebalancingSection
         rebalancings={rebalancings}
         shareOrWeight={shareOrWeight}
+        indexFamily={indexFamily}
         addRebalancing={addRebalancing}
         removeRebalancing={removeRebalancing}
         updateRebalancingDate={updateRebalancingDate}
