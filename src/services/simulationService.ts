@@ -453,7 +453,7 @@ export class SimulationService {
       .filter(stock => stock.ric && (stock.shares || stock.weight))
       .map((stock, index) => {
         if (isBondIndex) {
-          return {
+          const constituent: any = {
             assetIdentifier: {
               assetClass: "BOND",
               identifierType: identifierType,
@@ -474,6 +474,17 @@ export class SimulationService {
               }
             }
           };
+
+          // Add cashes to individual constituent if present
+          if (stock.cashValue && stock.cashType) {
+            constituent.cashes = [{
+              value: parseFloat(stock.cashValue),
+              date: null,
+              type: stock.cashType
+            }];
+          }
+
+          return constituent;
         } else {
           return {
             assetIdentifier: {
@@ -577,20 +588,7 @@ export class SimulationService {
       selectionResults: []
     };
 
-    // Add cashes from individual stock cash entries if it's a bond index
-    if (isBondIndex) {
-      const stockCashes = stocks
-        .filter(stock => stock.cashValue && stock.cashType)
-        .map(stock => ({
-          value: parseFloat(stock.cashValue),
-          date: null,
-          type: stock.cashType
-        }));
-      
-      if (stockCashes.length > 0) {
-        (payload.composition as any).cashes = stockCashes;
-      }
-    }
+    // Remove the old composition-level cash handling since it's now in individual constituents
 
     // Add referencedIndex if referenceIndexId is provided
     if (referenceIndexId && referenceIndexId.trim()) {
