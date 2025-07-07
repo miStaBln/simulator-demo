@@ -135,7 +135,7 @@ const SimulationParameters = ({
             {isBondIndex ? (
               <>
                 <SelectItem value="PERFORMANCE">PERFORMANCE</SelectItem>
-                <SelectItem value="PRICE">PRICE</SelectItem>
+                <SelectItem value="RATE">RATE</SelectItem>
               </>
             ) : (
               <>
@@ -175,7 +175,7 @@ const SimulationParameters = ({
       )}
       
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-900 mb-1">Initial Level</label>
+        <label className="block text-sm font-medium text-gray-900 mb-1">Previous Index Level</label>
         <Input 
           type="number" 
           step="0.01"

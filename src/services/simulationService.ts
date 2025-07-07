@@ -509,7 +509,7 @@ export class SimulationService {
             },
             dates: {
               compositionEnteredAt: {
-                date: "2025-03-03"
+                date: null
               }
             }
           };
