@@ -16,6 +16,11 @@ export interface VolatilityData {
   volatility: number;
 }
 
+export interface UnderwaterData {
+  date: string;
+  drawdown: number;
+}
+
 export interface HistogramBin {
   range: string;
   count: number;
@@ -64,6 +69,27 @@ export const calculateRollingVolatility = (dailyReturnsData: DailyReturn[]): Vol
       volatility: volatility
     };
   }).filter(item => item !== null) as VolatilityData[];
+};
+
+export const calculateUnderwaterPlot = (timeSeriesData: TimeSeriesItem[]): UnderwaterData[] => {
+  if (timeSeriesData.length === 0) return [];
+  
+  let peak = timeSeriesData[0].indexLevel;
+  
+  return timeSeriesData.map((item) => {
+    const currentLevel = item.indexLevel;
+    
+    if (currentLevel > peak) {
+      peak = currentLevel;
+    }
+    
+    const drawdown = ((currentLevel - peak) / peak) * 100;
+    
+    return {
+      date: item.date,
+      drawdown: drawdown
+    };
+  });
 };
 
 export const calculateMaxDrawdown = (timeSeriesData: TimeSeriesItem[]): number => {

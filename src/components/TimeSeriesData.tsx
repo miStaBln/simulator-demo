@@ -4,6 +4,7 @@ import { SimulationService } from '@/services/simulationService';
 import {
   calculateDailyReturns,
   calculateRollingVolatility,
+  calculateUnderwaterPlot,
   calculateMaxDrawdown,
   calculateYAxisDomain,
   createHistogramData,
@@ -14,6 +15,7 @@ import KeyFigures from '@/components/charts/KeyFigures';
 import IndexLevelChart from '@/components/charts/IndexLevelChart';
 import DailyReturnsChart from '@/components/charts/DailyReturnsChart';
 import RollingVolatilityChart from '@/components/charts/RollingVolatilityChart';
+import UnderwaterChart from '@/components/charts/UnderwaterChart';
 import DistributionChart from '@/components/charts/DistributionChart';
 import TimeSeriesTable from '@/components/charts/TimeSeriesTable';
 
@@ -24,6 +26,7 @@ const TimeSeriesData = () => {
   // Calculate all derived data
   const dailyReturnsData = calculateDailyReturns(timeSeriesData);
   const rollingVolatilityData = calculateRollingVolatility(dailyReturnsData);
+  const underwaterData = calculateUnderwaterPlot(timeSeriesData);
   const maxDrawdown = calculateMaxDrawdown(timeSeriesData);
   const keyFigures = calculateKeyFigures(timeSeriesData, maxDrawdown);
   const histogramData = createHistogramData(dailyReturnsData);
@@ -34,6 +37,7 @@ const TimeSeriesData = () => {
   const divisorDomain = calculateYAxisDomain(timeSeriesData.map(d => d.divisor));
   const dailyReturnsDomain = calculateYAxisDomain(dailyReturnsData.map(d => d.dailyReturn));
   const volatilityDomain = calculateYAxisDomain(rollingVolatilityData.map(d => d.volatility));
+  const underwaterDomain = calculateYAxisDomain(underwaterData.map(d => d.drawdown));
 
   const displayData = showAll ? timeSeriesData : timeSeriesData.slice(0, 10);
 
@@ -78,6 +82,14 @@ const TimeSeriesData = () => {
           <RollingVolatilityChart 
             data={rollingVolatilityData}
             domain={volatilityDomain}
+          />
+        )}
+
+        {/* Underwater Plot Chart */}
+        {underwaterData.length > 0 && (
+          <UnderwaterChart 
+            data={underwaterData}
+            domain={underwaterDomain}
           />
         )}
       </div>
