@@ -6,15 +6,16 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 interface DataTableProps {
   title: string;
   data: any[];
+  isBondIndex?: boolean;
 }
 
-const DataTable = ({ title, data }: DataTableProps) => {
+const DataTable = ({ title, data, isBondIndex = false }: DataTableProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [rowsPerPage, setRowsPerPage] = useState(50);
   
-  // Sample data headers for the table
-  const headers = [
-    { key: 'ric', label: 'Ric' },
+  // Define headers based on index type
+  const equityHeaders = [
+    { key: 'ric', label: 'RIC' },
     { key: 'cas', label: 'CAs' },
     { key: 'quantity', label: 'Quantity (Units)' },
     { key: 'price', label: 'Price' },
@@ -22,12 +23,47 @@ const DataTable = ({ title, data }: DataTableProps) => {
     { key: 'fx', label: 'FX' },
   ];
 
+  const bondHeaders = [
+    { key: 'ric', label: 'RIC' },
+    { key: 'quantity', label: 'Amount' },
+    { key: 'price', label: 'Price' },
+    { key: 'weightingCapFactor', label: 'Weighting Cap Factor' },
+    { key: 'baseMarketValue', label: 'Base Market Value' },
+    { key: 'cashFlows', label: 'Cash Flows' },
+    { key: 'compositionEnteredAt', label: 'Composition Entered At' },
+  ];
+
+  const headers = isBondIndex ? bondHeaders : equityHeaders;
+
+  const renderCellContent = (row: any, key: string) => {
+    if (key === 'cashFlows' && row.cashFlows) {
+      return (
+        <div className="text-xs">
+          {row.cashFlows.map((flow: any, index: number) => (
+            <div key={index} className="mb-1">
+              <div className="font-medium">{flow.labels?.join(', ') || 'N/A'}</div>
+              <div>{flow.value?.toLocaleString() || 'N/A'}</div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+    
+    if (key === 'baseMarketValue' && row.baseMarketValue) {
+      return parseFloat(row.baseMarketValue).toLocaleString();
+    }
+    
+    if (key === 'weightingCapFactor' && row.weightingCapFactor) {
+      return parseFloat(row.weightingCapFactor).toFixed(4);
+    }
+    
+    return row[key] || '';
+  };
+
   return (
     <div className="bg-white rounded-md shadow-sm">
       <div className="p-4">
         <h2 className="text-lg font-medium mb-4">{title}</h2>
-        
-
         
         <div className="flex items-center justify-between mb-4">
           <button className="flex items-center px-3 py-1.5 text-green-500 text-sm border border-green-500 rounded hover:bg-green-50">
@@ -84,12 +120,11 @@ const DataTable = ({ title, data }: DataTableProps) => {
             <tbody className="bg-white divide-y divide-gray-200">
               {data.map((row, index) => (
                 <tr key={index} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-sm">{row.ric}</td>
-                  <td className="px-4 py-3 text-sm">{row.cas}</td>
-                  <td className="px-4 py-3 text-sm">{row.quantity}</td>
-                  <td className="px-4 py-3 text-sm">{row.price}</td>
-                  <td className="px-4 py-3 text-sm">{row.currency}</td>
-                  <td className="px-4 py-3 text-sm">{row.fx}</td>
+                  {headers.map((header) => (
+                    <td key={header.key} className="px-4 py-3 text-sm">
+                      {renderCellContent(row, header.key)}
+                    </td>
+                  ))}
                 </tr>
               ))}
             </tbody>
@@ -112,7 +147,7 @@ const DataTable = ({ title, data }: DataTableProps) => {
           </div>
           
           <div className="flex items-center space-x-2 text-sm">
-            <span>1-8 of 8</span>
+            <span>1-{Math.min(data.length, rowsPerPage)} of {data.length}</span>
             <div className="flex">
               <button className="p-1 border rounded-l hover:bg-gray-50">
                 <ChevronLeft className="h-4 w-4" />

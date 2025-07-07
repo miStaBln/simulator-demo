@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import DatePicker from './DatePicker';
@@ -15,6 +14,7 @@ const SimulationResult = () => {
   const [openingLevel, setOpeningLevel] = useState<number>(0);
   const [closingDivisor, setClosingDivisor] = useState<number>(0);
   const [openingDivisor, setOpeningDivisor] = useState<number>(0);
+  const [isBondIndex, setIsBondIndex] = useState<boolean>(false);
   
   useEffect(() => {
     // Get available simulation dates
@@ -33,6 +33,15 @@ const SimulationResult = () => {
       if (formattedDates.length > 0) {
         setSelectedDate(formattedDates[0]);
         setCurrentDateIndex(0);
+      }
+
+      // Check if this is a bond index by looking at the first constituent
+      if (dates.length > 0) {
+        const firstDayData = simulationData[dates[0]];
+        if (firstDayData?.closingIndexState?.composition?.clusters?.[0]?.constituents?.[0]) {
+          const firstConstituent = firstDayData.closingIndexState.composition.clusters[0].constituents[0];
+          setIsBondIndex(firstConstituent.assetIdentifier?.assetClass === 'BOND');
+        }
       }
     }
   }, []);
@@ -59,17 +68,20 @@ const SimulationResult = () => {
         const closingIndexLevel = dayData.closingIndexState?.indexStateEvaluationDto?.indexLevel || 0;
         const closingDivisorValue = dayData.closingIndexState?.composition?.additionalNumbers?.divisor || 0;
         
-        // Extract opening state data
-        const openingResults = SimulationService.getResultsData(apiDate, 'opening');
-        const openingIndexLevel = dayData.openingIndexState?.indexStateEvaluationDto?.indexLevel || 0;
-        const openingDivisorValue = dayData.openingIndexState?.composition?.additionalNumbers?.divisor || 0;
-        
         setClosingData(closingResults);
-        setOpeningData(openingResults);
         setClosingLevel(closingIndexLevel);
-        setOpeningLevel(openingIndexLevel);
         setClosingDivisor(closingDivisorValue);
-        setOpeningDivisor(openingDivisorValue);
+
+        // Only extract opening data for non-bond indices
+        if (!isBondIndex) {
+          const openingResults = SimulationService.getResultsData(apiDate, 'opening');
+          const openingIndexLevel = dayData.openingIndexState?.indexStateEvaluationDto?.indexLevel || 0;
+          const openingDivisorValue = dayData.openingIndexState?.composition?.additionalNumbers?.divisor || 0;
+          
+          setOpeningData(openingResults);
+          setOpeningLevel(openingIndexLevel);
+          setOpeningDivisor(openingDivisorValue);
+        }
       } else {
         setClosingData([]);
         setOpeningData([]);
@@ -79,7 +91,7 @@ const SimulationResult = () => {
         setOpeningDivisor(0);
       }
     }
-  }, [selectedDate]);
+  }, [selectedDate, isBondIndex]);
 
   const navigateDate = (direction: 'prev' | 'next') => {
     if (direction === 'prev' && currentDateIndex > 0) {
@@ -134,41 +146,65 @@ const SimulationResult = () => {
         </span>
       </div>
       
-      <div className="grid grid-cols-2 gap-8">
-        <div>
+      {isBondIndex ? (
+        // Single column layout for bond indices
+        <div className="w-full">
           <div className="mb-4">
-            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-              <div className="text-xs text-gray-500">Level</div>
-              <div className="text-lg font-medium">{closingLevel.toFixed(6)}</div>
-            </div>
-            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-              <div className="text-xs text-gray-500">Divisor</div>
-              <div className="text-lg font-medium">{closingDivisor.toLocaleString()}</div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                <div className="text-xs text-gray-500">Level</div>
+                <div className="text-lg font-medium">{closingLevel.toFixed(6)}</div>
+              </div>
+              <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                <div className="text-xs text-gray-500">Divisor</div>
+                <div className="text-lg font-medium">{closingDivisor.toLocaleString()}</div>
+              </div>
             </div>
           </div>
           <DataTable 
-            title="Closing Index State" 
-            data={closingData} 
+            title="Bond Index Composition" 
+            data={closingData}
+            isBondIndex={true}
           />
         </div>
-        
-        <div>
-          <div className="mb-4">
-            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-              <div className="text-xs text-gray-500">Level</div>
-              <div className="text-lg font-medium">{openingLevel.toFixed(6)}</div>
+      ) : (
+        // Two column layout for equity indices
+        <div className="grid grid-cols-2 gap-8">
+          <div>
+            <div className="mb-4">
+              <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                <div className="text-xs text-gray-500">Level</div>
+                <div className="text-lg font-medium">{closingLevel.toFixed(6)}</div>
+              </div>
+              <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                <div className="text-xs text-gray-500">Divisor</div>
+                <div className="text-lg font-medium">{closingDivisor.toLocaleString()}</div>
+              </div>
             </div>
-            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-              <div className="text-xs text-gray-500">Divisor</div>
-              <div className="text-lg font-medium">{openingDivisor.toLocaleString()}</div>
-            </div>
+            <DataTable 
+              title="Closing Index State" 
+              data={closingData} 
+            />
           </div>
-          <DataTable 
-            title="Next Day Opening State" 
-            data={openingData} 
-          />
+          
+          <div>
+            <div className="mb-4">
+              <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                <div className="text-xs text-gray-500">Level</div>
+                <div className="text-lg font-medium">{openingLevel.toFixed(6)}</div>
+              </div>
+              <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                <div className="text-xs text-gray-500">Divisor</div>
+                <div className="text-lg font-medium">{openingDivisor.toLocaleString()}</div>
+              </div>
+            </div>
+            <DataTable 
+              title="Next Day Opening State" 
+              data={openingData} 
+            />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

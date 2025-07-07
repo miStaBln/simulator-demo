@@ -794,7 +794,10 @@ export class SimulationService {
         price.instrumentKey.id === constituent.assetIdentifier.id
       );
       
-      return {
+      // Check if this is a bond constituent based on asset class
+      const isBond = constituent.assetIdentifier?.assetClass === 'BOND';
+      
+      const result: any = {
         ric: constituent.assetIdentifier.id,
         cas: '',
         quantity: constituent.quantity.value.toString(),
@@ -802,6 +805,32 @@ export class SimulationService {
         currency: '',
         fx: ''
       };
+
+      // Add bond-specific fields if this is a bond
+      if (isBond) {
+        // Add additional numbers
+        if (constituent.additionalNumbers?.weightingCapFactor) {
+          result.weightingCapFactor = constituent.additionalNumbers.weightingCapFactor.toString();
+        }
+        if (constituent.additionalNumbers?.baseMarketValue) {
+          result.baseMarketValue = constituent.additionalNumbers.baseMarketValue.toString();
+        }
+
+        // Add cash flows
+        if (constituent.cashFlows && constituent.cashFlows.length > 0) {
+          result.cashFlows = constituent.cashFlows.map((flow: any) => ({
+            value: flow.value?.value || 0,
+            labels: flow.labels || []
+          }));
+        }
+
+        // Add composition entered date
+        if (constituent.dates?.compositionEnteredAt?.date) {
+          result.compositionEnteredAt = constituent.dates.compositionEnteredAt.date;
+        }
+      }
+      
+      return result;
     });
   }
 
