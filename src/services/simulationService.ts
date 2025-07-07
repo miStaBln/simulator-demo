@@ -26,7 +26,7 @@ interface SimulationPayload {
       currency: string;
       ignoreFx: boolean;
     };
-    caHandlingConfiguration: {
+    caHandlingConfiguration?: {
       enableCaHandling: boolean;
       cashDividendTaxHandling: string;
       specialDividendTaxHandling: string;
@@ -56,9 +56,9 @@ interface SimulationPayload {
   composition: {
     clusters: Array<{
       name: string;
-      constituents: Array<any>; // Updated to allow both bond and equity structures
+      constituents: Array<any>;
     }>;
-    additionalNumbers: {
+    additionalNumbers?: {
       divisor: number;
     };
   };
@@ -474,11 +474,14 @@ export class SimulationService {
       return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
     };
 
-    // Map return type to API format
-    const getIndexType = (returnType: string) => {
-      switch (returnType) {
-        default: return 'PERFORMANCE';
+    // Map return type to API format for bond indices
+    const getIndexType = (returnType: string, isBondIndex: boolean) => {
+      if (isBondIndex) {
+        // For bond indices, use the return type directly
+        return returnType; // "PERFORMANCE" or "PRICE"
       }
+      // For equity indices, always use PERFORMANCE
+      return 'PERFORMANCE';
     };
 
     // Determine if this is a bond index
@@ -574,23 +577,6 @@ export class SimulationService {
         price: parseFloat(override.price)
       }));
 
-    // Build CA handling configuration based on return type
-    const caHandlingConfig = this.buildCAHandlingDefault(returnType);
-
-    // Override with advanced parameters if they are not default values
-    if (advancedParams.cashDividendTaxHandling !== 'None') {
-      caHandlingConfig.cashDividendTaxHandling = advancedParams.cashDividendTaxHandling;
-    }
-    if (advancedParams.specialDividendTaxHandling !== 'None') {
-      caHandlingConfig.specialDividendTaxHandling = advancedParams.specialDividendTaxHandling;
-    }
-    caHandlingConfig.considerStockDividend = advancedParams.considerStockDividend;
-    caHandlingConfig.considerStockSplit = advancedParams.considerStockSplit;
-    caHandlingConfig.considerRightsIssue = advancedParams.considerRightsIssue;
-    caHandlingConfig.considerDividendFee = advancedParams.considerDividendFee;
-    caHandlingConfig.drDividendTreatment = advancedParams.drDividendTreatment;
-    caHandlingConfig.globalDrTaxRate = parseFloat(advancedParams.globalDrTaxRate) || 0;
-
     const payload: any = {
       simulationStart: formatDate(startDate),
       simulationEnd: formatDate(endDate),
@@ -617,11 +603,10 @@ export class SimulationService {
             }
           ],
           family: indexFamily,
-          type: getIndexType(returnType),
+          type: getIndexType(returnType, isBondIndex),
           currency: currency,
           ignoreFx: false
         },
-        caHandlingConfiguration: caHandlingConfig,
         taxRates: []
       },
       composition: {
@@ -630,10 +615,7 @@ export class SimulationService {
             name: "NONE",
             constituents: constituents
           }
-        ],
-        additionalNumbers: {
-          divisor: parseFloat(divisor) || 1
-        }
+        ]
       },
       caModificationChain: {
         caModificationInitialization: "FULL",
@@ -642,6 +624,34 @@ export class SimulationService {
       resultIdentifierType: identifierType,
       selectionResults: []
     };
+
+    // Add divisor only for non-bond indices
+    if (!isBondIndex) {
+      payload.composition.additionalNumbers = {
+        divisor: parseFloat(divisor) || 1
+      };
+    }
+
+    // Add CA handling configuration only for non-bond indices
+    if (!isBondIndex) {
+      const caHandlingConfig = this.buildCAHandlingDefault(returnType);
+
+      // Override with advanced parameters if they are not default values
+      if (advancedParams.cashDividendTaxHandling !== 'None') {
+        caHandlingConfig.cashDividendTaxHandling = advancedParams.cashDividendTaxHandling;
+      }
+      if (advancedParams.specialDividendTaxHandling !== 'None') {
+        caHandlingConfig.specialDividendTaxHandling = advancedParams.specialDividendTaxHandling;
+      }
+      caHandlingConfig.considerStockDividend = advancedParams.considerStockDividend;
+      caHandlingConfig.considerStockSplit = advancedParams.considerStockSplit;
+      caHandlingConfig.considerRightsIssue = advancedParams.considerRightsIssue;
+      caHandlingConfig.considerDividendFee = advancedParams.considerDividendFee;
+      caHandlingConfig.drDividendTreatment = advancedParams.drDividendTreatment;
+      caHandlingConfig.globalDrTaxRate = parseFloat(advancedParams.globalDrTaxRate) || 0;
+
+      payload.indexProperties.caHandlingConfiguration = caHandlingConfig;
+    }
 
     // Add rebalancing adaptions for bond indices
     if (isBondIndex && rebalancings.length > 0) {

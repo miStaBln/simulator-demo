@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import {
@@ -93,6 +94,22 @@ const SimulationParameters = ({
     <div className="bg-white rounded-md shadow-sm p-6">
       <h2 className="text-lg font-medium mb-4">Parameters</h2>
       
+      {/* Index Family - moved to first position */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-900 mb-1">Index Family</label>
+        <Select value={indexFamily} onValueChange={setIndexFamily}>
+          <SelectTrigger className="w-full h-9">
+            <SelectValue placeholder="Select Index Family" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="DEFAULT_LASPEYRE">DEFAULT_LASPEYRE</SelectItem>
+            <SelectItem value="DEFAULT_DEFAULT">DEFAULT_DEFAULT</SelectItem>
+            <SelectItem value="BOND_DEFAULT">BOND_DEFAULT</SelectItem>
+            <SelectItem value="BOND_BASEMARKETVALUE">BOND_BASEMARKETVALUE</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-900 mb-1">Currency</label>
         <Select value={currency} onValueChange={setCurrency}>
@@ -115,24 +132,18 @@ const SimulationParameters = ({
             <SelectValue placeholder="Select Return Type" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="NTR">NTR</SelectItem>
-            <SelectItem value="GTR">GTR</SelectItem>
-            <SelectItem value="PR">PR</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-900 mb-1">Index Family</label>
-        <Select value={indexFamily} onValueChange={setIndexFamily}>
-          <SelectTrigger className="w-full h-9">
-            <SelectValue placeholder="Select Index Family" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="DEFAULT_LASPEYRE">DEFAULT_LASPEYRE</SelectItem>
-            <SelectItem value="DEFAULT_DEFAULT">DEFAULT_DEFAULT</SelectItem>
-            <SelectItem value="BOND_DEFAULT">BOND_DEFAULT</SelectItem>
-            <SelectItem value="BOND_BASEMARKETVALUE">BOND_BASEMARKETVALUE</SelectItem>
+            {isBondIndex ? (
+              <>
+                <SelectItem value="PERFORMANCE">PERFORMANCE</SelectItem>
+                <SelectItem value="PRICE">PRICE</SelectItem>
+              </>
+            ) : (
+              <>
+                <SelectItem value="NTR">NTR</SelectItem>
+                <SelectItem value="GTR">GTR</SelectItem>
+                <SelectItem value="PR">PR</SelectItem>
+              </>
+            )}
           </SelectContent>
         </Select>
       </div>
@@ -150,15 +161,18 @@ const SimulationParameters = ({
         </Select>
       </div>
       
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-900 mb-1">Divisor</label>
-        <Input 
-          type="text" 
-          value={divisor} 
-          onChange={(e) => setDivisor(e.target.value)}
-          className="w-full h-9"
-        />
-      </div>
+      {/* Divisor - only show for non-bond indices */}
+      {!isBondIndex && (
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-900 mb-1">Divisor</label>
+          <Input 
+            type="text" 
+            value={divisor} 
+            onChange={(e) => setDivisor(e.target.value)}
+            className="w-full h-9"
+          />
+        </div>
+      )}
       
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-900 mb-1">Initial Level</label>
@@ -197,147 +211,149 @@ const SimulationParameters = ({
         />
       </div>
 
-      {/* Advanced Parameters Collapsible Section */}
-      <div className="border-t pt-4">
-        <button
-          onClick={() => setShowAdvancedParameters(!showAdvancedParameters)}
-          className="flex items-center justify-between w-full text-left mb-4"
-        >
-          <h3 className="text-md font-medium text-gray-900">Advanced Parameters</h3>
-          {showAdvancedParameters ? (
-            <ChevronUp className="h-4 w-4 text-gray-500" />
-          ) : (
-            <ChevronDown className="h-4 w-4 text-gray-500" />
+      {/* Advanced Parameters - only show for non-bond indices */}
+      {!isBondIndex && (
+        <div className="border-t pt-4">
+          <button
+            onClick={() => setShowAdvancedParameters(!showAdvancedParameters)}
+            className="flex items-center justify-between w-full text-left mb-4"
+          >
+            <h3 className="text-md font-medium text-gray-900">Advanced Parameters</h3>
+            {showAdvancedParameters ? (
+              <ChevronUp className="h-4 w-4 text-gray-500" />
+            ) : (
+              <ChevronDown className="h-4 w-4 text-gray-500" />
+            )}
+          </button>
+          
+          {showAdvancedParameters && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 mb-1">
+                    Late Dividend Handling
+                  </label>
+                  <Select value={lateDividendHandling} onValueChange={setLateDividendHandling}>
+                    <SelectTrigger className="w-full h-9">
+                      <SelectValue placeholder="Select handling" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="NONE">NONE</SelectItem>
+                      <SelectItem value="Weekly Friday">Weekly Friday</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 mb-1">
+                    Cash Dividend Tax Handling
+                  </label>
+                  <Select value={cashDividendTaxHandling} onValueChange={setCashDividendTaxHandling}>
+                    <SelectTrigger className="w-full h-9">
+                      <SelectValue placeholder="Select handling" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="None">None</SelectItem>
+                      <SelectItem value="USE_WITH_TAX">USE_WITH_TAX</SelectItem>
+                      <SelectItem value="USE_WITHOUT_TAX">USE_WITHOUT_TAX</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 mb-1">
+                    Special Dividend Tax Handling
+                  </label>
+                  <Select value={specialDividendTaxHandling} onValueChange={setSpecialDividendTaxHandling}>
+                    <SelectTrigger className="w-full h-9">
+                      <SelectValue placeholder="Select handling" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="None">None</SelectItem>
+                      <SelectItem value="USE_WITH_TAX">USE_WITH_TAX</SelectItem>
+                      <SelectItem value="USE_WITHOUT_TAX">USE_WITHOUT_TAX</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 mb-1">
+                    DR Dividend Treatment
+                  </label>
+                  <Select value={drDividendTreatment} onValueChange={setDrDividendTreatment}>
+                    <SelectTrigger className="w-full h-9">
+                      <SelectValue placeholder="Select treatment" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="DEFAULT">DEFAULT</SelectItem>
+                      <SelectItem value="TREATY_RATES">TREATY_RATES</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-1">
+                  Global DR Tax Rate (%)
+                </label>
+                <Input 
+                  type="number" 
+                  value={globalDrTaxRate} 
+                  onChange={(e) => setGlobalDrTaxRate(e.target.value)}
+                  placeholder="Enter tax rate percentage"
+                  className="w-full h-9"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 gap-4">
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="considerStockDividend"
+                    checked={considerStockDividend}
+                    onCheckedChange={setConsiderStockDividend}
+                  />
+                  <label htmlFor="considerStockDividend" className="text-sm font-medium text-gray-900">
+                    Consider Stock Dividend
+                  </label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="considerStockSplit"
+                    checked={considerStockSplit}
+                    onCheckedChange={setConsiderStockSplit}
+                  />
+                  <label htmlFor="considerStockSplit" className="text-sm font-medium text-gray-900">
+                    Consider Stock Split
+                  </label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="considerRightsIssue"
+                    checked={considerRightsIssue}
+                    onCheckedChange={setConsiderRightsIssue}
+                  />
+                  <label htmlFor="considerRightsIssue" className="text-sm font-medium text-gray-900">
+                    Consider Rights Issue
+                  </label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="considerDividendFee"
+                    checked={considerDividendFee}
+                    onCheckedChange={setConsiderDividendFee}
+                  />
+                  <label htmlFor="considerDividendFee" className="text-sm font-medium text-gray-900">
+                    Consider Dividend Fee
+                  </label>
+                </div>
+              </div>
+            </div>
           )}
-        </button>
-        
-        {showAdvancedParameters && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-1">
-                  Late Dividend Handling
-                </label>
-                <Select value={lateDividendHandling} onValueChange={setLateDividendHandling}>
-                  <SelectTrigger className="w-full h-9">
-                    <SelectValue placeholder="Select handling" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="NONE">NONE</SelectItem>
-                    <SelectItem value="Weekly Friday">Weekly Friday</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-1">
-                  Cash Dividend Tax Handling
-                </label>
-                <Select value={cashDividendTaxHandling} onValueChange={setCashDividendTaxHandling}>
-                  <SelectTrigger className="w-full h-9">
-                    <SelectValue placeholder="Select handling" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="None">None</SelectItem>
-                    <SelectItem value="USE_WITH_TAX">USE_WITH_TAX</SelectItem>
-                    <SelectItem value="USE_WITHOUT_TAX">USE_WITHOUT_TAX</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-1">
-                  Special Dividend Tax Handling
-                </label>
-                <Select value={specialDividendTaxHandling} onValueChange={setSpecialDividendTaxHandling}>
-                  <SelectTrigger className="w-full h-9">
-                    <SelectValue placeholder="Select handling" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="None">None</SelectItem>
-                    <SelectItem value="USE_WITH_TAX">USE_WITH_TAX</SelectItem>
-                    <SelectItem value="USE_WITHOUT_TAX">USE_WITHOUT_TAX</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-1">
-                  DR Dividend Treatment
-                </label>
-                <Select value={drDividendTreatment} onValueChange={setDrDividendTreatment}>
-                  <SelectTrigger className="w-full h-9">
-                    <SelectValue placeholder="Select treatment" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="DEFAULT">DEFAULT</SelectItem>
-                    <SelectItem value="TREATY_RATES">TREATY_RATES</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-900 mb-1">
-                Global DR Tax Rate (%)
-              </label>
-              <Input 
-                type="number" 
-                value={globalDrTaxRate} 
-                onChange={(e) => setGlobalDrTaxRate(e.target.value)}
-                placeholder="Enter tax rate percentage"
-                className="w-full h-9"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 gap-4">
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="considerStockDividend"
-                  checked={considerStockDividend}
-                  onCheckedChange={setConsiderStockDividend}
-                />
-                <label htmlFor="considerStockDividend" className="text-sm font-medium text-gray-900">
-                  Consider Stock Dividend
-                </label>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="considerStockSplit"
-                  checked={considerStockSplit}
-                  onCheckedChange={setConsiderStockSplit}
-                />
-                <label htmlFor="considerStockSplit" className="text-sm font-medium text-gray-900">
-                  Consider Stock Split
-                </label>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="considerRightsIssue"
-                  checked={considerRightsIssue}
-                  onCheckedChange={setConsiderRightsIssue}
-                />
-                <label htmlFor="considerRightsIssue" className="text-sm font-medium text-gray-900">
-                  Consider Rights Issue
-                </label>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="considerDividendFee"
-                  checked={considerDividendFee}
-                  onCheckedChange={setConsiderDividendFee}
-                />
-                <label htmlFor="considerDividendFee" className="text-sm font-medium text-gray-900">
-                  Consider Dividend Fee
-                </label>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
