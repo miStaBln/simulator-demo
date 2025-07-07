@@ -18,8 +18,8 @@ const TimeSeriesData = () => {
     };
   });
 
-  // Calculate Y-axis domains for better visualization
-  const calculateYAxisDomain = (data: number[], padding: number = 0.1) => {
+  // Calculate Y-axis domains with proper rounding for better visualization
+  const calculateYAxisDomain = (data: number[], padding: number = 0.05) => {
     if (data.length === 0) return [0, 100];
     
     const min = Math.min(...data);
@@ -27,9 +27,22 @@ const TimeSeriesData = () => {
     const range = max - min;
     const paddingAmount = range * padding;
     
+    // Round to nice numbers
+    const minWithPadding = min - paddingAmount;
+    const maxWithPadding = max + paddingAmount;
+    
+    // For index levels, use more precise rounding
+    if (max > 1) {
+      const magnitude = Math.pow(10, Math.floor(Math.log10(range)) - 1);
+      return [
+        Math.floor(minWithPadding / magnitude) * magnitude,
+        Math.ceil(maxWithPadding / magnitude) * magnitude
+      ];
+    }
+    
     return [
-      Math.max(0, min - paddingAmount),
-      max + paddingAmount
+      Math.floor(minWithPadding * 1000) / 1000,
+      Math.ceil(maxWithPadding * 1000) / 1000
     ];
   };
 
@@ -87,7 +100,35 @@ const TimeSeriesData = () => {
     return { mean, stdDev };
   };
 
+  // Calculate Maximum Drawdown
+  const calculateMaxDrawdown = () => {
+    if (timeSeriesData.length === 0) return 0;
+    
+    let maxDrawdown = 0;
+    let peak = timeSeriesData[0].indexLevel;
+    
+    for (let i = 1; i < timeSeriesData.length; i++) {
+      const currentLevel = timeSeriesData[i].indexLevel;
+      
+      // Update peak if current level is higher
+      if (currentLevel > peak) {
+        peak = currentLevel;
+      }
+      
+      // Calculate drawdown from peak
+      const drawdown = ((peak - currentLevel) / peak) * 100;
+      
+      // Update max drawdown if current drawdown is larger
+      if (drawdown > maxDrawdown) {
+        maxDrawdown = drawdown;
+      }
+    }
+    
+    return maxDrawdown;
+  };
+
   const { mean, stdDev } = calculateStats();
+  const maxDrawdown = calculateMaxDrawdown();
 
   // Calculate key figures
   const keyFigures = timeSeriesData.length > 0 ? {
@@ -96,7 +137,8 @@ const TimeSeriesData = () => {
     startDate: timeSeriesData[0].date,
     endDate: timeSeriesData[timeSeriesData.length - 1].date,
     totalReturn: ((timeSeriesData[timeSeriesData.length - 1].indexLevel / timeSeriesData[0].indexLevel) - 1) * 100,
-    numberOfDays: timeSeriesData.length
+    numberOfDays: timeSeriesData.length,
+    maxDrawdown: maxDrawdown
   } : null;
 
   const displayData = showAll ? timeSeriesData : timeSeriesData.slice(0, 10);
@@ -119,11 +161,17 @@ const TimeSeriesData = () => {
       {keyFigures && (
         <div className="mb-8">
           <h2 className="text-xl font-semibold mb-4">Key Figures</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
               <h3 className="text-sm font-medium text-gray-500 mb-1">Total Return</h3>
               <p className={`text-2xl font-bold ${keyFigures.totalReturn >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {keyFigures.totalReturn.toFixed(2)}%
+              </p>
+            </div>
+            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+              <h3 className="text-sm font-medium text-gray-500 mb-1">Maximum Drawdown</h3>
+              <p className="text-2xl font-bold text-red-600">
+                -{keyFigures.maxDrawdown.toFixed(2)}%
               </p>
             </div>
             <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
@@ -167,12 +215,14 @@ const TimeSeriesData = () => {
                     orientation="left" 
                     tick={{ fontSize: 12 }} 
                     domain={indexLevelDomain}
+                    tickFormatter={(value) => value.toFixed(2)}
                   />
                   <YAxis 
                     yAxisId="divisor" 
                     orientation="right" 
                     tick={{ fontSize: 12 }} 
                     domain={divisorDomain}
+                    tickFormatter={(value) => value.toLocaleString()}
                   />
                   <Tooltip 
                     formatter={(value: number, name: string) => [
@@ -224,6 +274,7 @@ const TimeSeriesData = () => {
                   <YAxis 
                     tick={{ fontSize: 12 }} 
                     domain={dailyReturnsDomain}
+                    tickFormatter={(value) => `${value.toFixed(1)}%`}
                   />
                   <Tooltip 
                     formatter={(value: number) => [`${value.toFixed(2)}%`, 'Daily Return']}
