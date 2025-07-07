@@ -123,20 +123,25 @@ const SimulationResult = () => {
           onClick={() => navigateDate('prev')}
           disabled={currentDateIndex === 0}
           className="p-2 rounded border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          title="Previous date"
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
         
-        <DatePicker 
-          label="Simulation Date" 
-          value={selectedDate} 
-          onChange={handleDateChange}
-        />
+        <div className="min-w-[200px]">
+          <DatePicker 
+            label="Simulation Date" 
+            value={selectedDate} 
+            onChange={handleDateChange}
+            availableDates={availableDates}
+          />
+        </div>
         
         <button
           onClick={() => navigateDate('next')}
           disabled={currentDateIndex === availableDates.length - 1}
           className="p-2 rounded border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          title="Next date"
         >
           <ChevronRight className="h-4 w-4" />
         </button>
