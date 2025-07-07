@@ -18,6 +18,21 @@ const TimeSeriesData = () => {
     };
   });
 
+  // Calculate 1-month (21 trading days) rolling volatility
+  const rollingVolatilityData = dailyReturnsData.map((_, index) => {
+    if (index < 20) return null; // Need at least 21 data points
+    
+    const windowReturns = dailyReturnsData.slice(index - 20, index + 1).map(d => d.dailyReturn);
+    const mean = windowReturns.reduce((sum, val) => sum + val, 0) / windowReturns.length;
+    const variance = windowReturns.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / (windowReturns.length - 1);
+    const volatility = Math.sqrt(variance) * Math.sqrt(252) * 100; // Annualized volatility in %
+    
+    return {
+      date: dailyReturnsData[index].date,
+      volatility: volatility
+    };
+  }).filter(item => item !== null);
+
   // Calculate Y-axis domains with proper rounding for better visualization
   const calculateYAxisDomain = (data: number[], padding: number = 0.05) => {
     if (data.length === 0) return [0, 100];
@@ -49,6 +64,7 @@ const TimeSeriesData = () => {
   const indexLevelDomain = calculateYAxisDomain(timeSeriesData.map(d => d.indexLevel));
   const divisorDomain = calculateYAxisDomain(timeSeriesData.map(d => d.divisor));
   const dailyReturnsDomain = calculateYAxisDomain(dailyReturnsData.map(d => d.dailyReturn));
+  const volatilityDomain = calculateYAxisDomain(rollingVolatilityData.map(d => d.volatility));
 
   // Create histogram data for daily returns distribution
   const createHistogramData = () => {
@@ -193,7 +209,7 @@ const TimeSeriesData = () => {
         </div>
       )}
 
-      {/* Charts Section - Three Charts */}
+      {/* Charts Section - Three Charts in grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Index Level and Divisor Line Chart */}
         {timeSeriesData.length > 0 && (
@@ -286,6 +302,44 @@ const TimeSeriesData = () => {
                     ))}
                   </Bar>
                 </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
+
+        {/* 1-Month Rolling Volatility Chart */}
+        {rollingVolatilityData.length > 0 && (
+          <div className="lg:col-span-2">
+            <h2 className="text-xl font-semibold mb-4">1-Month Rolling Volatility (Annualized %)</h2>
+            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+              <ResponsiveContainer width="100%" height={400}>
+                <LineChart data={rollingVolatilityData} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="date" 
+                    tick={{ fontSize: 12 }}
+                    angle={-45}
+                    textAnchor="end"
+                    height={80}
+                  />
+                  <YAxis 
+                    tick={{ fontSize: 12 }} 
+                    domain={volatilityDomain}
+                    tickFormatter={(value) => `${value.toFixed(1)}%`}
+                  />
+                  <Tooltip 
+                    formatter={(value: number) => [`${value.toFixed(2)}%`, 'Rolling Volatility']}
+                    labelStyle={{ color: '#374151' }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="volatility" 
+                    stroke="#8b5cf6" 
+                    strokeWidth={2}
+                    name="Volatility"
+                    dot={false}
+                  />
+                </LineChart>
               </ResponsiveContainer>
             </div>
           </div>
