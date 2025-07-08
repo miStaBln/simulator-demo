@@ -691,7 +691,7 @@ export class SimulationService {
     }
 
     console.log('Simulation payload:', JSON.stringify(payload, null, 2));
-
+    const start = performance.now();
     // Choose API URL based on index family
     const apiUrl = isBondIndex ? this.BOND_API_URL : this.EQUITY_API_URL;
     console.log(`Using ${isBondIndex ? 'Bond' : 'Equity'} API: ${apiUrl}`);
@@ -715,6 +715,8 @@ export class SimulationService {
       }
 
       const result = await response.json();
+      const end = performance.now();
+      console.log(`Execution time: ${end - start} ms`);
       console.log('Simulation result:', result);
       
       // Store the result for use in other components
