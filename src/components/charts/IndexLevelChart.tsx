@@ -2,6 +2,7 @@
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { TimeSeriesItem } from '@/utils/timeSeriesCalculations';
+import { SimulationService } from '@/services/simulationService';
 
 interface IndexLevelChartProps {
   data: TimeSeriesItem[];
@@ -10,9 +11,12 @@ interface IndexLevelChartProps {
 }
 
 const IndexLevelChart: React.FC<IndexLevelChartProps> = ({ data, indexLevelDomain, divisorDomain }) => {
+  const isBondIndex = SimulationService.isBondIndex();
+  const chartTitle = isBondIndex ? "Index Level Over Time" : "Index Level and Divisor Over Time";
+
   return (
     <div>
-      <h2 className="text-xl font-semibold mb-4">Index Level and Divisor Over Time</h2>
+      <h2 className="text-xl font-semibold mb-4">{chartTitle}</h2>
       <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
         <ResponsiveContainer width="100%" height={400}>
           <LineChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
@@ -31,13 +35,15 @@ const IndexLevelChart: React.FC<IndexLevelChartProps> = ({ data, indexLevelDomai
               domain={indexLevelDomain}
               tickFormatter={(value) => value.toFixed(2)}
             />
-            <YAxis 
-              yAxisId="divisor" 
-              orientation="right" 
-              tick={{ fontSize: 12 }} 
-              domain={divisorDomain}
-              tickFormatter={(value) => value.toLocaleString()}
-            />
+            {!isBondIndex && (
+              <YAxis 
+                yAxisId="divisor" 
+                orientation="right" 
+                tick={{ fontSize: 12 }} 
+                domain={divisorDomain}
+                tickFormatter={(value) => value.toLocaleString()}
+              />
+            )}
             <Tooltip 
               formatter={(value: number, name: string) => [
                 name === 'indexLevel' ? value.toFixed(6) : value.toLocaleString(),
@@ -55,15 +61,17 @@ const IndexLevelChart: React.FC<IndexLevelChartProps> = ({ data, indexLevelDomai
               name="Index Level"
               dot={false}
             />
-            <Line 
-              yAxisId="divisor"
-              type="monotone" 
-              dataKey="divisor" 
-              stroke="#ef4444" 
-              strokeWidth={2}
-              name="Divisor"
-              dot={false}
-            />
+            {!isBondIndex && (
+              <Line 
+                yAxisId="divisor"
+                type="monotone" 
+                dataKey="divisor" 
+                stroke="#ef4444" 
+                strokeWidth={2}
+                name="Divisor"
+                dot={false}
+              />
+            )}
           </LineChart>
         </ResponsiveContainer>
       </div>

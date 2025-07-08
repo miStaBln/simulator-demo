@@ -204,6 +204,7 @@ export class SimulationService {
   private static readonly EQUITY_API_URL = "http://test-32.gde.nbg.solactive.com:8274/index-simulator-equity/proxy/v3/simulateEquityIndexSimple";
   private static readonly BOND_API_URL = "http://test-32.gde.nbg.solactive.com:8274/index-simulator-equity/proxy/v3/simulateBondIndexSimple";
   private static simulationResult: SimulationResult | null = null;
+  private static currentIndexFamily: string | null = null;
 
   // Updated dummy data to match the new structure
   private static readonly DUMMY_SIMULATION_RESULT: SimulationResult = {
@@ -721,6 +722,7 @@ export class SimulationService {
       
       // Store the result for use in other components
       SimulationService.simulationResult = result;
+      SimulationService.currentIndexFamily = indexFamily;
       
       return result;
     } catch (error) {
@@ -731,6 +733,7 @@ export class SimulationService {
         
         // Use dummy data as fallback
         SimulationService.simulationResult = SimulationService.DUMMY_SIMULATION_RESULT;
+        SimulationService.currentIndexFamily = indexFamily;
         
         // Show a toast to inform the user
         console.log('Using dummy simulation data due to CORS restrictions');
@@ -858,5 +861,11 @@ export class SimulationService {
 
   static clearResults(): void {
     SimulationService.simulationResult = null;
+    SimulationService.currentIndexFamily = null;
+  }
+
+  static isBondIndex(): boolean {
+    return SimulationService.currentIndexFamily === 'BOND_DEFAULT' || 
+           SimulationService.currentIndexFamily === 'BOND_BASEMARKETVALUE';
   }
 }
