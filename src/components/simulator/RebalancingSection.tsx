@@ -59,6 +59,24 @@ const RebalancingSection = ({
   removeRebalancingUpload
 }: RebalancingSectionProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  const isBondIndex = indexFamily === 'BOND_DEFAULT' || indexFamily === 'BOND_BASEMARKETVALUE';
+
+  const handleMatrixUpload = (matrixData: any[]) => {
+    // Convert matrix data to rebalancing format and add to the existing rebalancings
+    matrixData.forEach((entry) => {
+      const newRebalancing = {
+        id: `matrix-rebal-${Date.now()}-${Math.random()}`,
+        selectionDate: entry.selectionDate,
+        rebalancingDate: entry.rebalancingDate,
+        components: entry.components
+      };
+      
+      // Add to rebalancings (this would need to be passed as a prop function)
+      // For now, we'll add it as a rebalancing upload entry
+      const fileName = `matrix_${entry.selectionDate.replace(/\./g, '_')}.csv`;
+      addRebalancingUpload(entry.selectionDate, entry.rebalancingDate, fileName);
+    });
+  };
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
@@ -127,6 +145,8 @@ const RebalancingSection = ({
                 rebalancingUploads={rebalancingUploads}
                 addRebalancingUpload={addRebalancingUpload}
                 removeRebalancingUpload={removeRebalancingUpload}
+                isBondIndex={isBondIndex}
+                onMatrixUpload={handleMatrixUpload}
               />
             </TabsContent>
           </Tabs>
