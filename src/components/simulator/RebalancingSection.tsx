@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import {
@@ -42,6 +41,7 @@ interface RebalancingSectionProps {
   rebalancingUploads: Array<{ selectionDate: string, rebalancingDate: string, file: string }>;
   addRebalancingUpload: (selectionDate: string, rebalancingDate: string, file: string) => void;
   removeRebalancingUpload: (index: number) => void;
+  onMatrixRebalancingAdd?: (matrixEntry: any) => void;
 }
 
 const RebalancingSection = ({
@@ -56,27 +56,28 @@ const RebalancingSection = ({
   removeRebalancingComponent,
   rebalancingUploads,
   addRebalancingUpload,
-  removeRebalancingUpload
+  removeRebalancingUpload,
+  onMatrixRebalancingAdd
 }: RebalancingSectionProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [matrixUploads, setMatrixUploads] = useState<any[]>([]);
   const isBondIndex = indexFamily === 'BOND_DEFAULT' || indexFamily === 'BOND_BASEMARKETVALUE';
 
   const handleMatrixUpload = (matrixData: any[]) => {
+    console.log('Matrix data received in RebalancingSection:', matrixData);
+    
     // Store matrix uploads for preview
     setMatrixUploads(prev => [...prev, ...matrixData]);
     
-    // Convert matrix data to rebalancing format and add to the existing rebalancings
+    // Add each matrix entry to the main rebalancings array
     matrixData.forEach((entry) => {
-      const newRebalancing = {
-        id: `matrix-rebal-${Date.now()}-${Math.random()}`,
-        selectionDate: entry.selectionDate,
-        rebalancingDate: entry.rebalancingDate,
-        components: entry.components
-      };
+      console.log('Processing matrix entry:', entry);
       
-      // Add to rebalancings (this would need to be passed as a prop function)
-      // For now, we'll add it as a rebalancing upload entry
+      if (onMatrixRebalancingAdd) {
+        onMatrixRebalancingAdd(entry);
+      }
+      
+      // Also add as upload entry for tracking
       const fileName = `matrix_${entry.selectionDate.replace(/\./g, '_')}.csv`;
       addRebalancingUpload(entry.selectionDate, entry.rebalancingDate, fileName);
     });
@@ -124,7 +125,7 @@ const RebalancingSection = ({
                     ))}
                   </div>
                   <div className="mt-3 text-xs text-blue-700">
-                    This data was imported from your matrix upload and is available in the manual entries above.
+                    This data was imported from your matrix upload. Note: The simulation will use this data from the upload files, not from manual entries.
                   </div>
                 </div>
               )}

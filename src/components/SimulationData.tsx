@@ -561,6 +561,24 @@ const SimulationData = ({
     navigate('/simulator?tab=results');
   };
 
+  const addMatrixRebalancing = (matrixEntry: any) => {
+    console.log('Adding matrix rebalancing to main state:', matrixEntry);
+    
+    const newRebalancing = {
+      id: `matrix-rebal-${Date.now()}-${Math.random()}`,
+      selectionDate: matrixEntry.selectionDate,
+      rebalancingDate: matrixEntry.rebalancingDate,
+      components: matrixEntry.components.map((comp: any) => ({
+        ric: comp.ric,
+        shares: '', // Bond indices typically use weights
+        weight: comp.weight,
+        weightingCapFactor: comp.weightingCapFactor || '1.0'
+      }))
+    };
+    
+    setRebalancings(prev => [...prev, newRebalancing]);
+  };
+
   return (
     <div className="p-6 pb-6">
       <div className="space-y-6">
@@ -662,6 +680,7 @@ const SimulationData = ({
         rebalancingUploads={rebalancingUploads}
         addRebalancingUpload={addRebalancingUpload}
         removeRebalancingUpload={removeRebalancingUpload}
+        onMatrixRebalancingAdd={addMatrixRebalancing}
       />
       
       {/* Price Overrides Panel */}
