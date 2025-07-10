@@ -59,9 +59,13 @@ const RebalancingSection = ({
   removeRebalancingUpload
 }: RebalancingSectionProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [matrixUploads, setMatrixUploads] = useState<any[]>([]);
   const isBondIndex = indexFamily === 'BOND_DEFAULT' || indexFamily === 'BOND_BASEMARKETVALUE';
 
   const handleMatrixUpload = (matrixData: any[]) => {
+    // Store matrix uploads for preview
+    setMatrixUploads(prev => [...prev, ...matrixData]);
+    
     // Convert matrix data to rebalancing format and add to the existing rebalancings
     matrixData.forEach((entry) => {
       const newRebalancing = {
@@ -94,6 +98,37 @@ const RebalancingSection = ({
             </TabsList>
             
             <TabsContent value="manual">
+              {/* Matrix Upload Preview */}
+              {isBondIndex && matrixUploads.length > 0 && (
+                <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
+                  <h3 className="text-sm font-medium text-blue-900 mb-3">Matrix Upload Preview</h3>
+                  <div className="space-y-3">
+                    {matrixUploads.map((matrixEntry, matrixIndex) => (
+                      <div key={matrixIndex} className="bg-white p-3 rounded border">
+                        <div className="text-sm font-medium mb-2">
+                          Selection Date: {matrixEntry.selectionDate} | Rebalancing Date: {matrixEntry.rebalancingDate}
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 text-xs">
+                          <div className="font-medium">RIC</div>
+                          <div className="font-medium">Weight</div>
+                          <div className="font-medium">Cap Factor</div>
+                        </div>
+                        {matrixEntry.components.map((comp: any, compIndex: number) => (
+                          <div key={compIndex} className="grid grid-cols-3 gap-2 text-xs py-1 border-t">
+                            <div>{comp.ric}</div>
+                            <div>{comp.weight}</div>
+                            <div>{comp.weightingCapFactor}</div>
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-3 text-xs text-blue-700">
+                    This data was imported from your matrix upload and is available in the manual entries above.
+                  </div>
+                </div>
+              )}
+
               {rebalancings.length === 0 ? (
                 <div className="text-gray-500 text-sm mb-4">No rebalancing data added yet</div>
               ) : (

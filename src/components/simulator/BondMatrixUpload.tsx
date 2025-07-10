@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Upload, Download, AlertCircle } from 'lucide-react';
+import { Upload, Download, AlertCircle, Eye } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 
@@ -10,6 +10,7 @@ interface BondMatrixUploadProps {
 
 const BondMatrixUpload = ({ onMatrixUpload }: BondMatrixUploadProps) => {
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadedData, setUploadedData] = useState<any[]>([]);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -82,11 +83,12 @@ const BondMatrixUpload = ({ onMatrixUpload }: BondMatrixUploadProps) => {
         throw new Error("No valid rebalancing data found in CSV");
       }
 
+      setUploadedData(matrixData);
       onMatrixUpload(matrixData);
       
       toast({
         title: "Matrix uploaded successfully",
-        description: `Processed ${matrixData.length} rebalancing entries with ${gigantIds.length} instruments`,
+        description: `Processed ${matrixData.length} rebalancing entries with ${gigantIds.length} instruments. Switch to Manual Entry tab to preview the data.`,
       });
 
     } catch (error) {
@@ -149,6 +151,7 @@ const BondMatrixUpload = ({ onMatrixUpload }: BondMatrixUploadProps) => {
               <li>First column: Selection dates (DD.MM.YY or DD.MM.YYYY format)</li>
               <li>Matrix cells: Weighting factors (use 0 for no weight, 1 for included)</li>
               <li>For bond indices: Rebalancing date equals selection date</li>
+              <li>After upload, switch to "Manual Entry" tab to preview the imported data</li>
             </ul>
           </div>
         </div>
@@ -181,6 +184,20 @@ const BondMatrixUpload = ({ onMatrixUpload }: BondMatrixUploadProps) => {
           Download Template
         </Button>
       </div>
+
+      {uploadedData.length > 0 && (
+        <div className="p-3 bg-green-50 border border-green-200 rounded-md">
+          <div className="flex items-center gap-2 text-green-800">
+            <Eye className="h-4 w-4" />
+            <span className="text-sm font-medium">
+              Upload Complete: {uploadedData.length} rebalancing entries processed
+            </span>
+          </div>
+          <p className="text-xs text-green-700 mt-1">
+            Switch to the "Manual Entry" tab to preview and modify the imported data.
+          </p>
+        </div>
+      )}
     </div>
   );
 };
