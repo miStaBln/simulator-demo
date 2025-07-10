@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine } from 'recharts';
 import { TimeSeriesItem } from '@/utils/timeSeriesCalculations';
 import { SimulationService } from '@/services/simulationService';
 
@@ -13,6 +13,9 @@ interface IndexLevelChartProps {
 const IndexLevelChart: React.FC<IndexLevelChartProps> = ({ data, indexLevelDomain, divisorDomain }) => {
   const isBondIndex = SimulationService.isBondIndex();
   const chartTitle = isBondIndex ? "Index Level Over Time" : "Index Level and Divisor Over Time";
+  
+  // Get the starting simulation level (first data point)
+  const startingLevel = data.length > 0 ? data[0].indexLevel : 0;
 
   return (
     <div>
@@ -52,6 +55,17 @@ const IndexLevelChart: React.FC<IndexLevelChartProps> = ({ data, indexLevelDomai
               labelStyle={{ color: '#374151' }}
             />
             <Legend />
+            
+            {/* Reference line for starting simulation level */}
+            <ReferenceLine 
+              yAxisId="level"
+              y={startingLevel} 
+              stroke="#ef4444" 
+              strokeDasharray="5 5"
+              strokeWidth={2}
+              label={{ value: `Start: ${startingLevel.toFixed(2)}`, position: "insideTopRight" }}
+            />
+            
             <Line 
               yAxisId="level"
               type="monotone" 
