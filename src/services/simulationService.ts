@@ -398,7 +398,12 @@ export class SimulationService {
       }
     }
   };
-
+  private static buildCAHandlingBondDefault(){
+    return {
+        enableCaHandling: true,
+        corporateActionHandling: "BOND_DELETION_MAT_EXCHANGE_CALL"
+    };
+  }
   private static buildCAHandlingDefault(returnType: string) {
     let taxTypeCashDiv = 'USE_WITH_TAX';
     let taxTypeSpecialDiv = 'USE_WITH_TAX';
@@ -652,6 +657,9 @@ export class SimulationService {
       caHandlingConfig.globalDrTaxRate = parseFloat(advancedParams.globalDrTaxRate) || 0;
 
       payload.indexProperties.caHandlingConfiguration = caHandlingConfig;
+    }else{
+        const caHandlingConfig = this.buildCAHandlingBondDefault();
+        payload.indexProperties.caHandlingConfiguration = caHandlingConfig
     }
 
     // Add rebalancing adaptions for bond indices
