@@ -401,7 +401,7 @@ export class SimulationService {
   private static buildCAHandlingBondDefault(){
     return {
         enableCaHandling: true,
-        corporateActionHandling: "BOND_DELETION_MAT_EXCHANGE_CALL"
+        corporateActionHandling: "BOND_DELETION_MAT_CALL"
     };
   }
   private static buildCAHandlingDefault(returnType: string) {
