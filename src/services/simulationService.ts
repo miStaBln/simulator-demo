@@ -444,6 +444,62 @@ export class SimulationService {
     };
   }
 
+  static async runSimulation(
+    startDate: string,
+    endDate: string,
+    currency: string,
+    returnType: string,
+    divisor: string,
+    indexFamily: string,
+    identifierType: string,
+    referenceIndexId: string,
+    stocks: any[],
+    caHandlingOptions: any,
+    priceOverrides: any[],
+    initialLevel: string,
+    previousRebalancingIndexValue: string,
+    rebalancings: any[]
+  ): Promise<SimulationResult> {
+    try {
+      // Store the current index family for bond detection
+      SimulationService.currentIndexFamily = indexFamily;
+      
+      // For now, return dummy data
+      // TODO: Implement actual API call
+      SimulationService.simulationResult = SimulationService.DUMMY_SIMULATION_RESULT;
+      
+      return SimulationService.DUMMY_SIMULATION_RESULT;
+    } catch (error) {
+      console.error('Simulation failed:', error);
+      throw error;
+    }
+  }
+
+  static getTimeSeriesData(): TimeSeriesData[] {
+    if (!SimulationService.simulationResult) {
+      return [];
+    }
+
+    const timeSeriesData: TimeSeriesData[] = [];
+    
+    // Handle both old dummy format and new API format
+    const simulationData = SimulationService.simulationResult.simulations || SimulationService.simulationResult;
+    
+    Object.keys(simulationData).forEach(date => {
+      const dayData = simulationData[date];
+      if (dayData && dayData.closingIndexState) {
+        timeSeriesData.push({
+          date: date,
+          indexLevel: dayData.closingIndexState.indexStateEvaluationDto?.indexLevel || 0,
+          divisor: dayData.closingIndexState.composition?.additionalNumbers?.divisor || 0
+        });
+      }
+    });
+
+    // Sort by date
+    return timeSeriesData.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }
+
   static getResultsData(date: string, stateType: 'closing' | 'opening' = 'closing'): ResultsData[] {
     if (!SimulationService.simulationResult) {
       return [];
