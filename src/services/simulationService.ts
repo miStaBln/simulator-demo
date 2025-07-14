@@ -29,28 +29,28 @@ interface SimulationPayload {
     };
     caHandlingConfiguration?: {
       enableCaHandling: boolean;
-      cashDividendTaxHandling: string;
-      specialDividendTaxHandling: string;
-      considerStockDividend: boolean;
-      considerStockSplit: boolean;
-      considerRightsIssue: boolean;
-      considerRightsIssueToCashComponent: boolean;
-      considerCapitalDecrease: boolean;
-      cashDividendTax: number;
-      specialDividendTax: number;
+      cashDividendTaxHandling?: string;
+      specialDividendTaxHandling?: string;
+      considerStockDividend?: boolean;
+      considerStockSplit?: boolean;
+      considerRightsIssue?: boolean;
+      considerRightsIssueToCashComponent?: boolean;
+      considerCapitalDecrease?: boolean;
+      cashDividendTax?: number;
+      specialDividendTax?: number;
       corporateActionHandling: string;
-      useWeightNeutralRightsIssue: boolean;
-      useWeightNeutralCapitalDecrease: boolean;
-      franking: string;
-      pid: string;
-      reit: string;
-      returnOfCapital: string;
-      interestOnCapital: string;
-      nzInvestorType: string;
-      auInvestorType: string;
-      considerDividendFee: boolean;
-      drDividendTreatment: string;
-      globalDrTaxRate: number;
+      useWeightNeutralRightsIssue?: boolean;
+      useWeightNeutralCapitalDecrease?: boolean;
+      franking?: string;
+      pid?: string;
+      reit?: string;
+      returnOfCapital?: string;
+      interestOnCapital?: string;
+      nzInvestorType?: string;
+      auInvestorType?: string;
+      considerDividendFee?: boolean;
+      drDividendTreatment?: string;
+      globalDrTaxRate?: number;
     };
     taxRates: any[];
   };
@@ -400,10 +400,10 @@ export class SimulationService {
     }
   };
   
-  private static buildCAHandlingBondDefault(){
+  private static buildCAHandlingBondDefault() {
     return {
-        enableCaHandling: true,
-        corporateActionHandling: "BOND_DELETION_MAT_CALL"
+      enableCaHandling: true,
+      corporateActionHandling: "BOND_DELETION_MAT_CALL"
     };
   }
   
@@ -532,7 +532,7 @@ export class SimulationService {
           clusters: [{
             name: "default-cluster",
             constituents: stocks.map(stock => {
-              const baseConstituent = {
+              const baseConstituent: any = {
                 assetIdentifier: {
                   assetClass: isBondIndex ? "BOND" : "SHARE",
                   identifierType,
@@ -734,13 +734,13 @@ export class SimulationService {
         if (constituent.additionalNumbers?.weightingCapFactor) {
           result.weightingCapFactor = constituent.additionalNumbers.weightingCapFactor.toString();
         }
-        if (constituent.additionalNumbers?.baseMarketValue) {
-          result.baseMarketValue = constituent.additionalNumbers.baseMarketValue.toString();
+        if ((constituent.additionalNumbers as any)?.baseMarketValue) {
+          result.baseMarketValue = (constituent.additionalNumbers as any).baseMarketValue.toString();
         }
 
         // Add cash objects - restore this functionality
-        if (constituent.cashes && constituent.cashes.length > 0) {
-          result.cashes = constituent.cashes.map((cash: any) => ({
+        if ((constituent as any).cashes && (constituent as any).cashes.length > 0) {
+          result.cashes = (constituent as any).cashes.map((cash: any) => ({
             value: cash.value || 0,
             type: cash.type || '',
             date: cash.date || null
@@ -748,21 +748,21 @@ export class SimulationService {
         }
 
         // Add cash flows
-        if (constituent.cashFlows && constituent.cashFlows.length > 0) {
-          result.cashFlows = constituent.cashFlows.map((flow: any) => ({
+        if ((constituent as any).cashFlows && (constituent as any).cashFlows.length > 0) {
+          result.cashFlows = (constituent as any).cashFlows.map((flow: any) => ({
             value: flow.value?.value || 0,
             labels: flow.labels || []
           }));
         }
 
         // Add composition entered date
-        if (constituent.dates?.compositionEnteredAt?.date) {
-          result.compositionEnteredAt = constituent.dates.compositionEnteredAt.date;
+        if ((constituent as any).dates?.compositionEnteredAt?.date) {
+          result.compositionEnteredAt = (constituent as any).dates.compositionEnteredAt.date;
         }
 
         // Add composition left date
-        if (constituent.dates?.compositionLeftAt?.date) {
-          result.compositionLeftAt = constituent.dates.compositionLeftAt.date;
+        if ((constituent as any).dates?.compositionLeftAt?.date) {
+          result.compositionLeftAt = (constituent as any).dates.compositionLeftAt.date;
         }
       }
       
