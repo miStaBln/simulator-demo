@@ -851,11 +851,6 @@ export class SimulationService {
         if (constituent.dates?.compositionEnteredAt?.date) {
           result.compositionEnteredAt = constituent.dates.compositionEnteredAt.date;
         }
-
-        // Add composition left date
-        if (constituent.dates?.compositionLeftAt?.date) {
-          result.compositionLeftAt = constituent.dates.compositionLeftAt.date;
-        }
       }
       
       return result;

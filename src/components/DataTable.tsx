@@ -1,13 +1,7 @@
 
 import React, { useState } from 'react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Search, X, Download, Filter, Columns, Maximize2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface DataTableProps {
   title: string;
@@ -15,80 +9,156 @@ interface DataTableProps {
   isBondIndex?: boolean;
 }
 
-const DataTable: React.FC<DataTableProps> = ({ title, data, isBondIndex = false }) => {
-  const [showAll, setShowAll] = useState(false);
-  const displayData = showAll ? data : data.slice(0, 10);
+const DataTable = ({ title, data, isBondIndex = false }: DataTableProps) => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [rowsPerPage, setRowsPerPage] = useState(50);
+  
+  // Define headers based on index type
+  const equityHeaders = [
+    { key: 'ric', label: 'RIC' },
+    { key: 'cas', label: 'CAs' },
+    { key: 'quantity', label: 'Quantity (Units)' },
+    { key: 'price', label: 'Price' },
+    { key: 'currency', label: 'Currency' },
+    { key: 'fx', label: 'FX' },
+  ];
 
-  if (data.length === 0) {
-    return (
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
-        <h2 className="text-lg font-medium mb-4">{title}</h2>
-        <div className="text-center text-gray-500">
-          No data available
+  const bondHeaders = [
+    { key: 'ric', label: 'RIC' },
+    { key: 'quantity', label: 'Amount' },
+    { key: 'price', label: 'Price' },
+    { key: 'weightingCapFactor', label: 'Weighting Cap Factor' },
+    { key: 'baseMarketValue', label: 'Base Market Value' },
+    { key: 'cashFlows', label: 'Cash Flows' },
+    { key: 'compositionEnteredAt', label: 'Composition Entered At' },
+  ];
+
+  const headers = isBondIndex ? bondHeaders : equityHeaders;
+
+  const renderCellContent = (row: any, key: string) => {
+    if (key === 'cashFlows' && row.cashFlows) {
+      return (
+        <div className="text-xs">
+          {row.cashFlows.map((flow: any, index: number) => (
+            <div key={index} className="mb-1">
+              <div className="font-medium">{flow.labels?.join(', ') || 'N/A'}</div>
+              <div>{flow.value?.toLocaleString() || 'N/A'}</div>
+            </div>
+          ))}
         </div>
-      </div>
-    );
-  }
+      );
+    }
+    
+    if (key === 'baseMarketValue' && row.baseMarketValue) {
+      return parseFloat(row.baseMarketValue).toLocaleString();
+    }
+    
+    if (key === 'weightingCapFactor' && row.weightingCapFactor) {
+      return parseFloat(row.weightingCapFactor).toFixed(4);
+    }
+    
+    return row[key] || '';
+  };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-      <div className="px-6 py-4 border-b border-gray-200">
-        <h2 className="text-lg font-medium">{title}</h2>
-      </div>
-      
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>RIC</TableHead>
-              <TableHead>CAS</TableHead>
-              <TableHead>Quantity</TableHead>
-              <TableHead>Price</TableHead>
-              <TableHead>Currency</TableHead>
-              <TableHead>FX</TableHead>
-              {isBondIndex && (
-                <>
-                  <TableHead>Weighting Cap Factor</TableHead>
-                  <TableHead>Base Market Value</TableHead>
-                  <TableHead>Composition Entered At</TableHead>
-                  <TableHead>Composition Left At</TableHead>
-                </>
-              )}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {displayData.map((item, index) => (
-              <TableRow key={index}>
-                <TableCell className="font-medium">{item.ric}</TableCell>
-                <TableCell>{item.cas}</TableCell>
-                <TableCell>{item.quantity}</TableCell>
-                <TableCell>{item.price}</TableCell>
-                <TableCell>{item.currency}</TableCell>
-                <TableCell>{item.fx}</TableCell>
-                {isBondIndex && (
-                  <>
-                    <TableCell>{item.weightingCapFactor || '-'}</TableCell>
-                    <TableCell>{item.baseMarketValue || '-'}</TableCell>
-                    <TableCell>{item.compositionEnteredAt || '-'}</TableCell>
-                    <TableCell>{item.compositionLeftAt || '-'}</TableCell>
-                  </>
-                )}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-
-      {data.length > 10 && (
-        <div className="px-6 py-4 border-t border-gray-200 text-center">
-          <button
-            onClick={() => setShowAll(!showAll)}
-            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-          >
-            {showAll ? 'Show Less' : `Show All ${data.length} Results`}
+    <div className="bg-white rounded-md shadow-sm">
+      <div className="p-4">
+        <h2 className="text-lg font-medium mb-4">{title}</h2>
+        
+        <div className="flex items-center justify-between mb-4">
+          <button className="flex items-center px-3 py-1.5 text-green-500 text-sm border border-green-500 rounded hover:bg-green-50">
+            <Download className="h-4 w-4 mr-2" />
+            EXPORT
           </button>
+          
+          <div className="relative w-64">
+            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-8 pr-8 py-1.5 border rounded text-sm"
+            />
+            {searchQuery && (
+              <button 
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2 top-1/2 transform -translate-y-1/2"
+              >
+                <X className="h-4 w-4 text-gray-400" />
+              </button>
+            )}
+          </div>
+          
+          <div className="flex space-x-2">
+            <button className="p-1.5 border rounded hover:bg-gray-50">
+              <Filter className="h-4 w-4 text-gray-500" />
+            </button>
+            <button className="p-1.5 border rounded hover:bg-gray-50">
+              <Columns className="h-4 w-4 text-gray-500" />
+            </button>
+            <button className="p-1.5 border rounded hover:bg-gray-50">
+              <Maximize2 className="h-4 w-4 text-gray-500" />
+            </button>
+          </div>
         </div>
-      )}
+        
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead>
+              <tr className="bg-gray-50">
+                {headers.map((header) => (
+                  <th 
+                    key={header.key}
+                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    {header.label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {data.map((row, index) => (
+                <tr key={index} className="hover:bg-gray-50">
+                  {headers.map((header) => (
+                    <td key={header.key} className="px-4 py-3 text-sm">
+                      {renderCellContent(row, header.key)}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        
+        <div className="flex items-center justify-between mt-4">
+          <div className="flex items-center">
+            <span className="mr-2 text-sm">Rows per page</span>
+            <select 
+              value={rowsPerPage}
+              onChange={(e) => setRowsPerPage(Number(e.target.value))}
+              className="border rounded px-2 py-1 text-sm"
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+          </div>
+          
+          <div className="flex items-center space-x-2 text-sm">
+            <span>1-{Math.min(data.length, rowsPerPage)} of {data.length}</span>
+            <div className="flex">
+              <button className="p-1 border rounded-l hover:bg-gray-50">
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <button className="p-1 border border-l-0 rounded-r hover:bg-gray-50">
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
