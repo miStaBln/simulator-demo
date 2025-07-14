@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Search, X, Download, Filter, Columns, Maximize2 } from 'lucide-react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -31,6 +30,7 @@ const DataTable = ({ title, data, isBondIndex = false }: DataTableProps) => {
     { key: 'baseMarketValue', label: 'Base Market Value' },
     { key: 'cashFlows', label: 'Cash Flows' },
     { key: 'compositionEnteredAt', label: 'Composition Entered At' },
+    { key: 'compositionLeftAt', label: 'Composition Left At' },
   ];
 
   const headers = isBondIndex ? bondHeaders : equityHeaders;
@@ -55,6 +55,10 @@ const DataTable = ({ title, data, isBondIndex = false }: DataTableProps) => {
     
     if (key === 'weightingCapFactor' && row.weightingCapFactor) {
       return parseFloat(row.weightingCapFactor).toFixed(4);
+    }
+    
+    if (key === 'compositionLeftAt') {
+      return row.compositionLeftAt || 'N/A';
     }
     
     return row[key] || '';
