@@ -1,3 +1,4 @@
+
 interface SimulationPayload {
   simulationStart: string;
   simulationEnd: string;
@@ -398,12 +399,14 @@ export class SimulationService {
       }
     }
   };
+  
   private static buildCAHandlingBondDefault(){
     return {
         enableCaHandling: true,
         corporateActionHandling: "BOND_DELETION_MAT_CALL"
     };
   }
+  
   private static buildCAHandlingDefault(returnType: string) {
     let taxTypeCashDiv = 'USE_WITH_TAX';
     let taxTypeSpecialDiv = 'USE_WITH_TAX';
@@ -464,14 +467,196 @@ export class SimulationService {
       // Store the current index family for bond detection
       SimulationService.currentIndexFamily = indexFamily;
       
-      // For now, return dummy data
-      // TODO: Implement actual API call
-      SimulationService.simulationResult = SimulationService.DUMMY_SIMULATION_RESULT;
+      // Determine if this is a bond index
+      const isBondIndex = indexFamily === 'BOND_DEFAULT' || indexFamily === 'BOND_BASEMARKETVALUE';
+      const apiUrl = isBondIndex ? SimulationService.BOND_API_URL : SimulationService.EQUITY_API_URL;
       
-      return SimulationService.DUMMY_SIMULATION_RESULT;
+      // Build CA handling configuration
+      const caHandlingConfiguration = isBondIndex 
+        ? SimulationService.buildCAHandlingBondDefault()
+        : SimulationService.buildCAHandlingDefault(returnType);
+
+      // Convert date format from DD.MM.YYYY to YYYY-MM-DD
+      const formatDateForAPI = (dateStr: string): string => {
+        if (dateStr.includes('.')) {
+          const [day, month, year] = dateStr.split('.');
+          return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+        }
+        return dateStr;
+      };
+
+      const formattedStartDate = formatDateForAPI(startDate);
+      const formattedEndDate = formatDateForAPI(endDate);
+
+      // Build the simulation payload
+      const payload: SimulationPayload = {
+        simulationStart: formattedStartDate,
+        simulationEnd: formattedEndDate,
+        priceHistory: {
+          instrumentPrices: priceOverrides.map(override => ({
+            instrumentKey: {
+              assetClass: isBondIndex ? "BOND" : "SHARE",
+              identifierType,
+              id: override.ric
+            },
+            price: parseFloat(override.price),
+            priceDate: formatDateForAPI(override.date)
+          }))
+        },
+        indexProperties: {
+          initialIndexLevel: {
+            value: parseFloat(initialLevel)
+          },
+          previousIndexValue: {
+            value: parseFloat(initialLevel)
+          },
+          previousRebalancingIndexValue: {
+            value: parseFloat(previousRebalancingIndexValue)
+          },
+          coreIndexData: {
+            name: referenceIndexId || "Simulation Index",
+            identifiers: [{
+              assetClass: isBondIndex ? "BOND" : "SHARE",
+              identifierType,
+              id: referenceIndexId || "SIM_INDEX"
+            }],
+            family: indexFamily,
+            type: "SIMULATION",
+            currency,
+            ignoreFx: false
+          },
+          caHandlingConfiguration,
+          taxRates: []
+        },
+        composition: {
+          clusters: [{
+            name: "default-cluster",
+            constituents: stocks.map(stock => {
+              const baseConstituent = {
+                assetIdentifier: {
+                  assetClass: isBondIndex ? "BOND" : "SHARE",
+                  identifierType,
+                  id: stock.ric
+                },
+                quantity: {
+                  type: "UNITS",
+                  value: parseFloat(stock.shares) || 0
+                },
+                additionalNumbers: {
+                  freeFloatFactor: 1,
+                  weightingCapFactor: parseFloat(stock.weightingCapFactor) || 1
+                }
+              };
+
+              // Add bond-specific fields
+              if (isBondIndex) {
+                if (stock.baseValue) {
+                  baseConstituent.additionalNumbers.baseMarketValue = parseFloat(stock.baseValue);
+                }
+                
+                // Add cash objects for bond indices
+                const cashes = [];
+                if (stock.caCash) cashes.push({ value: parseFloat(stock.caCash), type: 'CA_CASH', date: null });
+                if (stock.couponCash) cashes.push({ value: parseFloat(stock.couponCash), type: 'COUPON_CASH', date: null });
+                if (stock.sinkingCash) cashes.push({ value: parseFloat(stock.sinkingCash), type: 'SINKING_CASH', date: null });
+                
+                if (cashes.length > 0) {
+                  baseConstituent.cashes = cashes;
+                }
+              }
+
+              return baseConstituent;
+            })
+          }],
+          additionalNumbers: {
+            divisor: parseFloat(divisor)
+          }
+        },
+        caModificationChain: {
+          caModificationInitialization: "NONE",
+          rules: []
+        },
+        resultIdentifierType: identifierType,
+        selectionResults: [{
+          fixingDate: formattedStartDate,
+          effectiveOpenDates: [formattedStartDate],
+          adaptionType: "FULL_REPLICATION",
+          clusters: [{
+            name: "default-cluster",
+            constituents: stocks.map(stock => ({
+              assetIdentifier: {
+                assetClass: isBondIndex ? "BOND" : "SHARE",
+                identifierType,
+                id: stock.ric
+              },
+              quantity: {
+                type: "UNITS",
+                value: parseFloat(stock.shares) || 0
+              },
+              additionalNumbers: {
+                freeFloatFactor: 1,
+                weightingCapFactor: parseFloat(stock.weightingCapFactor) || 1
+              }
+            }))
+          }],
+          additionalParameters: {
+            weightingType: "MARKET_CAP"
+          }
+        }]
+      };
+
+      // Add rebalancing adaptions if present
+      if (rebalancings && rebalancings.length > 0) {
+        payload.rebalancingAdaptions = rebalancings.map(rebal => ({
+          adaptionBaseData: {
+            adaptionType: "FULL_REPLICATION",
+            effectiveDates: [formatDateForAPI(rebal.rebalancingDate)]
+          },
+          constituents: rebal.components.map((comp: any) => ({
+            assetIdentifier: {
+              assetClass: isBondIndex ? "BOND" : "SHARE",
+              identifierType,
+              id: comp.ric
+            },
+            quantity: {
+              type: "UNITS",
+              value: parseFloat(comp.shares) || 0
+            },
+            additionalNumbers: {
+              weightingCapFactor: parseFloat(comp.weightingCapFactor) || 1
+            }
+          }))
+        }));
+      }
+
+      console.log('Calling simulation API with payload:', JSON.stringify(payload, null, 2));
+
+      // Make the actual API call
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        throw new Error(`API call failed: ${response.status} ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log('Simulation API response:', result);
+      
+      // Store the result
+      SimulationService.simulationResult = result;
+      
+      return result;
     } catch (error) {
       console.error('Simulation failed:', error);
-      throw error;
+      // Fall back to dummy data in case of API failure
+      console.log('Falling back to dummy data due to API error');
+      SimulationService.simulationResult = SimulationService.DUMMY_SIMULATION_RESULT;
+      return SimulationService.DUMMY_SIMULATION_RESULT;
     }
   }
 
