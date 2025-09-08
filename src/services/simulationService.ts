@@ -202,7 +202,7 @@ interface ResultsData {
 
 export class SimulationService {
   private static readonly EQUITY_API_URL = "http://test-32.gde.nbg.solactive.com:8274/index-simulator-equity/proxy/v3/simulateEquityIndexSimple";
-  private static readonly BOND_API_URL = "http://test-32.gde.nbg.solactive.com:8274/index-simulator-equity/proxy/v3/simulateBondIndexSimple";
+  private static readonly BOND_API_URL = "http://test-2.gde.nbg.solactive.com:8274/index-simulator-equity/proxy/v3/simulateBondIndexSimple";
   private static simulationResult: SimulationResult | null = null;
   private static currentIndexFamily: string | null = null;
 
@@ -589,15 +589,14 @@ export class SimulationService {
       priceHistory: {
         instrumentPrices: instrumentPrices
       },
+      previousRebalancingIndexValue: parseFloat(previousRebalancingIndexValue) || 100.0,
+
       indexProperties: {
         initialIndexLevel: {
           value: parseFloat(initialLevel) || 100.0
         },
         previousIndexValue: {
           value: parseFloat(initialLevel) || 100.0
-        },
-        previousRebalancingIndexValue: {
-          value: parseFloat(previousRebalancingIndexValue) || 100.0
         },
         coreIndexData: {
           name: "Simulation Index",
