@@ -99,13 +99,13 @@ const IndexTimeline: React.FC<IndexTimelineProps> = ({ indexData }) => {
     },
     {
       id: 'event3',
-      date: new Date(2025, 2, 15),
+      date: new Date(2024, 11, 15), // Changed to past date (December 15, 2024)
       type: 'selection-day',
       title: 'Selection Day',
       color: 'bg-gray-400',
       description: 'Annual Selection Day',
       rebalancingType: 'Annual Selection',
-      effectiveDate: '15.03.2025',
+      effectiveDate: '15.12.2024',
       instruments: [
         { ric: 'JPM.N', weightBefore: 0, weightAfter: 2.1, sharesBefore: 0, sharesAfter: 180, delta: 2.1, status: 'addition' },
         { ric: 'BAC.N', weightBefore: 1.9, weightAfter: 0, sharesBefore: 220, sharesAfter: 0, delta: -1.9, status: 'deletion' },
