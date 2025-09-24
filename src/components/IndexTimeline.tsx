@@ -1,11 +1,11 @@
-
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { IndexItem } from '@/contexts/StarredContext';
-import { ChevronDown, ChevronUp, Calendar, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 interface TimelineEvent {
   id: string;
@@ -14,9 +14,17 @@ interface TimelineEvent {
   title: string;
   color: string;
   description: string;
-  details?: {
-    [key: string]: string | number;
-  };
+  rebalancingType?: string;
+  effectiveDate?: string;
+  instruments?: Array<{
+    ric: string;
+    weightBefore: number;
+    weightAfter: number;
+    sharesBefore: number;
+    sharesAfter: number;
+    delta: number;
+    status: 'addition' | 'deletion' | 'modified';
+  }>;
 }
 
 interface IndexTimelineProps {
@@ -30,127 +38,113 @@ interface IndexTimelineProps {
 }
 
 const IndexTimeline: React.FC<IndexTimelineProps> = ({ indexData }) => {
-  const [openEventId, setOpenEventId] = useState<string | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(null);
   
-  // Generate timeline events based on index data
+  // Sample churn data
+  const churnData = [
+    { exchange: 'NASDAQ', churn: 12.5 },
+    { exchange: 'NYSE', churn: 8.3 },
+    { exchange: 'LSE', churn: 4.7 },
+    { exchange: 'TSE', churn: 3.2 },
+    { exchange: 'XETRA', churn: 6.1 },
+  ];
+
+  // Generate timeline events - today in the middle
+  const today = new Date();
   const events: TimelineEvent[] = [
+    // Past events (left side)
     {
       id: 'event1',
-      date: new Date(2024, 3, 1), // April 1, 2024 (past)
+      date: new Date(2024, 3, 1),
       type: 'rebalancing',
       title: 'Rebalancing',
-      color: 'bg-gray-300',
+      color: 'bg-gray-400',
       description: 'Quarterly Rebalancing',
-      details: {
-        'Added Components': 3,
-        'Removed Components': 2,
-        'Weight Change': '5.2%',
-        'Effective Date': '01.04.2024',
-      }
+      rebalancingType: 'Quarterly Rebalancing',
+      effectiveDate: '01.04.2024',
+      instruments: [
+        { ric: 'AAPL.OQ', weightBefore: 5.2, weightAfter: 0, sharesBefore: 1200, sharesAfter: 0, delta: -5.2, status: 'deletion' },
+        { ric: 'MSFT.OQ', weightBefore: 4.8, weightAfter: 5.5, sharesBefore: 800, sharesAfter: 900, delta: 0.7, status: 'modified' },
+        { ric: 'TSLA.OQ', weightBefore: 0, weightAfter: 3.2, sharesBefore: 0, sharesAfter: 650, delta: 3.2, status: 'addition' },
+      ]
     },
     {
       id: 'event2',
-      date: new Date(2024, 6, 1), // July 1, 2024 (past)
+      date: new Date(2024, 6, 1),
       type: 'rebalancing',
-      color: 'bg-gray-300',
       title: 'Rebalancing',
+      color: 'bg-gray-400',
       description: 'Quarterly Rebalancing',
-      details: {
-        'Added Components': 1,
-        'Removed Components': 1,
-        'Weight Change': '2.8%',
-        'Effective Date': '01.07.2024',
-      }
+      rebalancingType: 'Quarterly Rebalancing',
+      effectiveDate: '01.07.2024',
+      instruments: [
+        { ric: 'GOOGL.OQ', weightBefore: 3.8, weightAfter: 4.2, sharesBefore: 300, sharesAfter: 340, delta: 0.4, status: 'modified' },
+        { ric: 'NVDA.OQ', weightBefore: 0, weightAfter: 2.8, sharesBefore: 0, sharesAfter: 450, delta: 2.8, status: 'addition' },
+      ]
     },
     {
       id: 'event3',
-      date: new Date(2025, 0, 4), // January 4, 2025 (past)
+      date: new Date(2025, 2, 15),
       type: 'selection-day',
       title: 'Selection Day',
-      color: 'bg-blue-300',
+      color: 'bg-gray-400',
       description: 'Annual Selection Day',
-      details: {
-        'Selected Components': 20,
-        'Total Market Cap': '$1.2T',
-        'Selection Criteria': 'Market Cap and Liquidity',
-        'Effective Date': '04.01.2025',
-      }
+      rebalancingType: 'Annual Selection',
+      effectiveDate: '15.03.2025',
     },
+    // Today (middle)
     {
-      id: 'event4',
-      date: new Date(2025, 3, 1), // April 1, 2025 (past)
-      type: 'rebalancing',
-      title: 'Rebalancing',
-      color: 'bg-green-300',
-      description: 'Quarterly Rebalancing',
-      details: {
-        'Added Components': 2,
-        'Removed Components': 2,
-        'Weight Change': '4.3%',
-        'Effective Date': '01.04.2025',
-      }
-    },
-    {
-      id: 'event5',
-      date: new Date(), // Today
+      id: 'today',
+      date: today,
       type: 'today',
       title: 'Today',
       color: 'bg-black',
       description: 'Current Date',
-      details: {
-        'Index Value': 245.78,
-        'Daily Change': '+0.82%',
-        'Market Status': 'Open',
-        'Last Update': format(new Date(), 'dd.MM.yyyy HH:mm'),
-      }
     },
+    // Future events (right side)
     {
-      id: 'event6',
-      date: new Date(2025, 6, 1), // July 1, 2025 (future)
+      id: 'event4',
+      date: new Date(2025, 6, 1),
       type: 'rebalancing',
       title: 'Rebalancing',
-      color: 'bg-teal-300',
+      color: 'bg-green-500',  
       description: 'Quarterly Rebalancing',
-      details: {
-        'Estimated Components': 20,
-        'Projected Weight Change': '~3.0%',
-        'Effective Date': '01.07.2025',
-        'Selection Date': '25.06.2025',
-      }
+      rebalancingType: 'Quarterly Rebalancing',
+      effectiveDate: '01.07.2025',
+      instruments: [
+        { ric: 'META.OQ', weightBefore: 2.5, weightAfter: 3.1, sharesBefore: 200, sharesAfter: 250, delta: 0.6, status: 'modified' },
+        { ric: 'AMZN.OQ', weightBefore: 0, weightAfter: 4.5, sharesBefore: 0, sharesAfter: 320, delta: 4.5, status: 'addition' },
+      ]
     },
     {
-      id: 'event7',
-      date: new Date(2025, 9, 1), // October 1, 2025 (future)
+      id: 'event5',
+      date: new Date(2025, 9, 1),
       type: 'rebalancing',
       title: 'Rebalancing',
-      color: 'bg-teal-300',
+      color: 'bg-green-500',
       description: 'Quarterly Rebalancing',
-      details: {
-        'Estimated Components': 20,
-        'Projected Weight Change': '~2.5%',
-        'Effective Date': '01.10.2025',
-        'Selection Date': '24.09.2025',
-      }
+      rebalancingType: 'Quarterly Rebalancing',
+      effectiveDate: '01.10.2025',
+      instruments: [
+        { ric: 'NFLX.OQ', weightBefore: 1.2, weightAfter: 0, sharesBefore: 80, sharesAfter: 0, delta: -1.2, status: 'deletion' },
+        { ric: 'CRM.N', weightBefore: 1.8, weightAfter: 2.3, sharesBefore: 150, sharesAfter: 190, delta: 0.5, status: 'modified' },
+      ]
     },
   ];
 
   // Sort events by date
   const sortedEvents = [...events].sort((a, b) => a.date.getTime() - b.date.getTime());
   
-  // Find the index of today's event
-  const todayIndex = sortedEvents.findIndex(event => event.type === 'today');
-  
-  const toggleEvent = (eventId: string) => {
-    if (openEventId === eventId) {
-      setOpenEventId(null);
-    } else {
-      setOpenEventId(eventId);
-    }
-  };
-  
   const openEventDetails = (event: TimelineEvent) => {
     setSelectedEvent(event);
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'addition': return 'text-green-600';
+      case 'deletion': return 'text-red-600';
+      default: return 'text-gray-900';
+    }
   };
 
   return (
@@ -164,44 +158,41 @@ const IndexTimeline: React.FC<IndexTimelineProps> = ({ indexData }) => {
           
           {/* Timeline events */}
           <div className="flex justify-between relative">
-            {sortedEvents.map((event, index) => {
-              const isPast = event.date < new Date() && event.type !== 'today';
-              const isFuture = event.date > new Date();
-              
-              return (
+            {sortedEvents.map((event, index) => (
+              <div 
+                key={event.id} 
+                className="flex flex-col items-center"
+                style={{ zIndex: event.type === 'today' ? 3 : 1 }}
+              >
                 <div 
-                  key={event.id} 
-                  className="flex flex-col items-center"
-                  style={{ zIndex: index === todayIndex ? 3 : 1 }}
+                  className={`cursor-pointer transition-transform hover:scale-110 rounded-full h-12 w-12 flex items-center justify-center text-xs font-medium ${
+                    event.type === 'today' ? 'text-white z-10' : 'text-white'
+                  } ${event.color}`}
+                  onClick={() => openEventDetails(event)}
                 >
-                  <div 
-                    className={`cursor-pointer transition-transform hover:scale-110 rounded-full h-12 w-12 flex items-center justify-center text-xs font-medium ${event.type === 'today' ? 'text-white z-10' : ''} ${event.color}`}
-                    onClick={() => openEventDetails(event)}
-                  >
-                    {event.type === 'today' ? 'TODAY' : ''}
-                  </div>
-                  
-                  <div className={`w-0.5 h-${index % 2 === 0 ? 12 : 8} ${event.type === 'today' ? 'bg-black' : 'bg-gray-300'} mt-2`}></div>
-                  
-                  <div className={`text-xs ${index % 2 === 0 ? 'mt-0' : 'mt-4'}`}>
-                    {format(event.date, 'dd.MM.yyyy')}
-                  </div>
-                  
-                  <div className={`text-sm font-medium mt-1 ${isPast ? 'text-gray-500' : isFuture ? 'text-teal-600' : 'text-black'}`}>
-                    {event.title}
-                  </div>
-                  
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="text-xs mt-1 h-6 p-0"
-                    onClick={() => openEventDetails(event)}
-                  >
-                    Details
-                  </Button>
+                  {event.type === 'today' ? 'TODAY' : ''}
                 </div>
-              );
-            })}
+                
+                <div className={`w-0.5 h-${index % 2 === 0 ? 12 : 8} ${event.type === 'today' ? 'bg-black' : 'bg-gray-300'} mt-2`}></div>
+                
+                <div className={`text-xs ${index % 2 === 0 ? 'mt-0' : 'mt-4'}`}>
+                  {format(event.date, 'dd.MM.yyyy')}
+                </div>
+                
+                <div className={`text-sm font-medium mt-1 ${event.type === 'today' ? 'text-black' : ''}`}>
+                  {event.title}
+                </div>
+                
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-xs mt-1 h-6 p-0"
+                  onClick={() => openEventDetails(event)}
+                >
+                  Details
+                </Button>
+              </div>
+            ))}
           </div>
           
           {/* Connecting arrows between events */}
@@ -215,67 +206,100 @@ const IndexTimeline: React.FC<IndexTimelineProps> = ({ indexData }) => {
         </div>
         
         {/* Legend */}
-        <div className="flex justify-center space-x-6 mb-4">
+        <div className="flex justify-center space-x-6 mb-6">
           <div className="flex items-center">
-            <div className="w-3 h-3 rounded-full bg-gray-300 mr-2"></div>
-            <span className="text-xs">Past Rebalancing</span>
-          </div>
-          <div className="flex items-center">
-            <div className="w-3 h-3 rounded-full bg-blue-300 mr-2"></div>
-            <span className="text-xs">Selection Day</span>
+            <div className="w-3 h-3 rounded-full bg-gray-400 mr-2"></div>
+            <span className="text-xs">Past Events</span>
           </div>
           <div className="flex items-center">
             <div className="w-3 h-3 rounded-full bg-black mr-2"></div>
             <span className="text-xs">Today</span>
           </div>
           <div className="flex items-center">
-            <div className="w-3 h-3 rounded-full bg-teal-300 mr-2"></div>
-            <span className="text-xs">Future Rebalancing</span>
+            <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+            <span className="text-xs">Future Events</span>
           </div>
         </div>
         
-        {/* Event details dialog */}
-        <Dialog open={!!selectedEvent} onOpenChange={() => setSelectedEvent(null)}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{selectedEvent?.title}</DialogTitle>
-              <DialogDescription>{selectedEvent?.description}</DialogDescription>
-            </DialogHeader>
-            
-            <div className="py-4">
-              <div className="text-sm font-medium mb-2">{format(selectedEvent?.date || new Date(), 'MMMM d, yyyy')}</div>
-              
-              <div className="space-y-2">
-                {selectedEvent?.details && Object.entries(selectedEvent.details).map(([key, value]) => (
-                  <div key={key} className="grid grid-cols-2 text-sm">
-                    <span className="text-gray-600">{key}:</span>
-                    <span className="font-medium">{value}</span>
-                  </div>
-                ))}
-              </div>
-              
-              {selectedEvent?.type === 'rebalancing' && (
-                <div className="mt-4">
-                  <h4 className="text-sm font-medium mb-2">Affected Constituents</h4>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>TSLA.OQ</span>
-                      <span className="text-green-600">+0.5%</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>BLUE.OQ</span>
-                      <span className="text-red-600">-0.3%</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>VIV.N</span>
-                      <span className="text-green-600">+0.2%</span>
-                    </div>
-                  </div>
+        {/* Event details table */}
+        {selectedEvent && (
+          <div className="mt-8 space-y-6">
+            {/* Header section */}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <span className="text-sm font-medium text-gray-600">Rebalancing Type:</span>
+                  <div className="text-lg font-semibold">{selectedEvent.rebalancingType || 'N/A'}</div>
                 </div>
-              )}
+                <div>
+                  <span className="text-sm font-medium text-gray-600">Effective Date:</span>
+                  <div className="text-lg font-semibold">{selectedEvent.effectiveDate || format(selectedEvent.date, 'dd.MM.yyyy')}</div>
+                </div>
+              </div>
             </div>
-          </DialogContent>
-        </Dialog>
+
+            {/* Instruments table */}
+            {selectedEvent.instruments && selectedEvent.instruments.length > 0 && (
+              <div>
+                <h3 className="text-lg font-medium mb-4">Constituent Changes</h3>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>RIC</TableHead>
+                      <TableHead>Weight Before (%)</TableHead>
+                      <TableHead>Weight After (%)</TableHead>
+                      <TableHead>Shares Before</TableHead>
+                      <TableHead>Shares After</TableHead>
+                      <TableHead>Delta (%)</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {selectedEvent.instruments.map((instrument, index) => (
+                      <TableRow key={index} className={getStatusColor(instrument.status)}>
+                        <TableCell className="font-medium">{instrument.ric}</TableCell>
+                        <TableCell>{instrument.weightBefore.toFixed(2)}</TableCell>
+                        <TableCell>{instrument.weightAfter.toFixed(2)}</TableCell>
+                        <TableCell>{instrument.sharesBefore.toLocaleString()}</TableCell>
+                        <TableCell>{instrument.sharesAfter.toLocaleString()}</TableCell>
+                        <TableCell className={getStatusColor(instrument.status)}>
+                          {instrument.delta > 0 ? '+' : ''}{instrument.delta.toFixed(2)}
+                        </TableCell>
+                        <TableCell>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            instrument.status === 'addition' ? 'bg-green-100 text-green-800' :
+                            instrument.status === 'deletion' ? 'bg-red-100 text-red-800' :
+                            'bg-blue-100 text-blue-800'
+                          }`}>
+                            {instrument.status}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+
+            {/* Churn chart */}
+            {selectedEvent.instruments && selectedEvent.instruments.length > 0 && (
+              <div>
+                <h3 className="text-lg font-medium mb-4">Churn by Exchange</h3>
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={churnData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="exchange" />
+                      <YAxis />
+                      <Tooltip formatter={(value) => [`${value}%`, 'Churn']} />
+                      <Bar dataKey="churn" fill="hsl(var(--primary))" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
