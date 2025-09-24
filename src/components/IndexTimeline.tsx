@@ -56,13 +56,13 @@ const IndexTimeline: React.FC<IndexTimelineProps> = ({ indexData }) => {
   const [fromDate, setFromDate] = useState<Date | undefined>(dateRange.from);
   const [toDate, setToDate] = useState<Date | undefined>(dateRange.to);
   
-  // Sample churn data
-  const churnData = [
-    { exchange: 'NASDAQ', churn: 12.5 },
-    { exchange: 'NYSE', churn: 8.3 },
-    { exchange: 'LSE', churn: 4.7 },
-    { exchange: 'TSE', churn: 3.2 },
-    { exchange: 'XETRA', churn: 6.1 },
+  // Sample Total Absolute Delta data
+  const deltaData = [
+    { exchange: 'NASDAQ', delta: 12.5 },
+    { exchange: 'NYSE', delta: 8.3 },
+    { exchange: 'LSE', delta: 4.7 },
+    { exchange: 'TSE', delta: 3.2 },
+    { exchange: 'XETRA', delta: 6.1 },
   ];
 
   // Generate timeline events - today in the middle
@@ -175,7 +175,7 @@ const IndexTimeline: React.FC<IndexTimelineProps> = ({ indexData }) => {
     }
   };
 
-  const calculateTotalChurn = (instruments: Array<{delta: number}>) => {
+  const calculateTotalDelta = (instruments: Array<{delta: number}>) => {
     return instruments.reduce((total, instrument) => total + Math.abs(instrument.delta), 0);
   };
 
@@ -329,8 +329,8 @@ const IndexTimeline: React.FC<IndexTimelineProps> = ({ indexData }) => {
                   </div>
                   {selectedEvent.instruments && (
                     <div className="col-span-2">
-                      <span className="text-sm font-medium text-gray-600">Total Churn:</span>
-                      <div className="text-lg font-semibold text-primary">{calculateTotalChurn(selectedEvent.instruments).toFixed(2)}%</div>
+                      <span className="text-sm font-medium text-gray-600">Total Absolute Delta:</span>
+                      <div className="text-lg font-semibold text-primary">{calculateTotalDelta(selectedEvent.instruments).toFixed(2)}%</div>
                     </div>
                   )}
                 </div>
@@ -338,14 +338,14 @@ const IndexTimeline: React.FC<IndexTimelineProps> = ({ indexData }) => {
                 {/* Small chart */}
                 {selectedEvent.instruments && selectedEvent.instruments.length > 0 && (
                   <div className="w-80 h-48 ml-6">
-                    <h4 className="text-sm font-medium mb-2">Churn by Exchange</h4>
+                    <h4 className="text-sm font-medium mb-2">Total Absolute Delta by Exchange</h4>
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={churnData}>
+                      <BarChart data={deltaData}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="exchange" fontSize={10} />
                         <YAxis fontSize={10} />
-                        <Tooltip formatter={(value) => [`${value}%`, 'Churn']} />
-                        <Bar dataKey="churn" fill="hsl(var(--primary))" />
+                        <Tooltip formatter={(value) => [`${value}%`, 'Total Absolute Delta']} />
+                        <Bar dataKey="delta" fill="hsl(var(--primary))" />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
