@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
-import { format } from 'date-fns';
+import { format, subMonths, addMonths } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { IndexItem } from '@/contexts/StarredContext';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, CalendarIcon } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { cn } from '@/lib/utils';
 
 interface TimelineEvent {
   id: string;
@@ -40,6 +43,19 @@ interface IndexTimelineProps {
 const IndexTimeline: React.FC<IndexTimelineProps> = ({ indexData }) => {
   const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(null);
   
+  // Date range state - default to 6 months past and 1 month future
+  const today = new Date();
+  const [dateRange, setDateRange] = useState<{
+    from: Date;
+    to: Date;
+  }>({
+    from: subMonths(today, 6),
+    to: addMonths(today, 1)
+  });
+  
+  const [fromDate, setFromDate] = useState<Date | undefined>(dateRange.from);
+  const [toDate, setToDate] = useState<Date | undefined>(dateRange.to);
+  
   // Sample churn data
   const churnData = [
     { exchange: 'NASDAQ', churn: 12.5 },
@@ -50,7 +66,6 @@ const IndexTimeline: React.FC<IndexTimelineProps> = ({ indexData }) => {
   ];
 
   // Generate timeline events - today in the middle
-  const today = new Date();
   const events: TimelineEvent[] = [
     // Past events (left side)
     {
@@ -137,8 +152,16 @@ const IndexTimeline: React.FC<IndexTimelineProps> = ({ indexData }) => {
     },
   ];
 
-  // Sort events by date
-  const sortedEvents = [...events].sort((a, b) => a.date.getTime() - b.date.getTime());
+  // Sort events by date and filter by date range
+  const sortedEvents = [...events]
+    .filter(event => event.date >= dateRange.from && event.date <= dateRange.to)
+    .sort((a, b) => a.date.getTime() - b.date.getTime());
+  
+  const updateDateRange = () => {
+    if (fromDate && toDate) {
+      setDateRange({ from: fromDate, to: toDate });
+    }
+  };
   
   const openEventDetails = (event: TimelineEvent) => {
     setSelectedEvent(event);
@@ -159,7 +182,66 @@ const IndexTimeline: React.FC<IndexTimelineProps> = ({ indexData }) => {
   return (
     <Card>
       <CardContent className="pt-6">
-        <h2 className="text-xl font-medium mb-8">Index Timeline</h2>
+        <div className="flex justify-between items-center mb-8">
+          <h2 className="text-xl font-medium">Index Timeline</h2>
+          
+          {/* Date Range Picker */}
+          <div className="flex items-center space-x-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-[140px] justify-start text-left font-normal",
+                    !fromDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {fromDate ? format(fromDate, "dd/MM/yyyy") : <span>From date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={fromDate}
+                  onSelect={setFromDate}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
+            
+            <span className="text-sm text-gray-500">to</span>
+            
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-[140px] justify-start text-left font-normal",
+                    !toDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {toDate ? format(toDate, "dd/MM/yyyy") : <span>To date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={toDate}
+                  onSelect={setToDate}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
+            
+            <Button onClick={updateDateRange} size="sm">
+              Apply
+            </Button>
+          </div>
+        </div>
         
         <div className="relative mb-16">
           {/* Timeline line */}
