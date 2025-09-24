@@ -91,6 +91,11 @@ const IndexTimeline: React.FC<IndexTimelineProps> = ({ indexData }) => {
       description: 'Annual Selection Day',
       rebalancingType: 'Annual Selection',
       effectiveDate: '15.03.2025',
+      instruments: [
+        { ric: 'JPM.N', weightBefore: 0, weightAfter: 2.1, sharesBefore: 0, sharesAfter: 180, delta: 2.1, status: 'addition' },
+        { ric: 'BAC.N', weightBefore: 1.9, weightAfter: 0, sharesBefore: 220, sharesAfter: 0, delta: -1.9, status: 'deletion' },
+        { ric: 'WFC.N', weightBefore: 2.3, weightAfter: 2.8, sharesBefore: 280, sharesAfter: 340, delta: 0.5, status: 'modified' },
+      ]
     },
     // Today (middle)
     {
@@ -145,6 +150,10 @@ const IndexTimeline: React.FC<IndexTimelineProps> = ({ indexData }) => {
       case 'deletion': return 'text-red-600';
       default: return 'text-gray-900';
     }
+  };
+
+  const calculateTotalChurn = (instruments: Array<{delta: number}>) => {
+    return instruments.reduce((total, instrument) => total + Math.abs(instrument.delta), 0);
   };
 
   return (
@@ -224,17 +233,41 @@ const IndexTimeline: React.FC<IndexTimelineProps> = ({ indexData }) => {
         {/* Event details table */}
         {selectedEvent && (
           <div className="mt-8 space-y-6">
-            {/* Header section */}
+            {/* Header section with chart */}
             <div className="bg-gray-50 p-4 rounded-lg">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <span className="text-sm font-medium text-gray-600">Rebalancing Type:</span>
-                  <div className="text-lg font-semibold">{selectedEvent.rebalancingType || 'N/A'}</div>
+              <div className="flex justify-between items-start">
+                <div className="grid grid-cols-2 gap-4 flex-1">
+                  <div>
+                    <span className="text-sm font-medium text-gray-600">Rebalancing Type:</span>
+                    <div className="text-lg font-semibold">{selectedEvent.rebalancingType || 'N/A'}</div>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-600">Effective Date:</span>
+                    <div className="text-lg font-semibold">{selectedEvent.effectiveDate || format(selectedEvent.date, 'dd.MM.yyyy')}</div>
+                  </div>
+                  {selectedEvent.instruments && (
+                    <div className="col-span-2">
+                      <span className="text-sm font-medium text-gray-600">Total Churn:</span>
+                      <div className="text-lg font-semibold text-primary">{calculateTotalChurn(selectedEvent.instruments).toFixed(2)}%</div>
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <span className="text-sm font-medium text-gray-600">Effective Date:</span>
-                  <div className="text-lg font-semibold">{selectedEvent.effectiveDate || format(selectedEvent.date, 'dd.MM.yyyy')}</div>
-                </div>
+                
+                {/* Small chart */}
+                {selectedEvent.instruments && selectedEvent.instruments.length > 0 && (
+                  <div className="w-80 h-48 ml-6">
+                    <h4 className="text-sm font-medium mb-2">Churn by Exchange</h4>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={churnData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="exchange" fontSize={10} />
+                        <YAxis fontSize={10} />
+                        <Tooltip formatter={(value) => [`${value}%`, 'Churn']} />
+                        <Bar dataKey="churn" fill="hsl(var(--primary))" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -278,24 +311,6 @@ const IndexTimeline: React.FC<IndexTimelineProps> = ({ indexData }) => {
                     ))}
                   </TableBody>
                 </Table>
-              </div>
-            )}
-
-            {/* Churn chart */}
-            {selectedEvent.instruments && selectedEvent.instruments.length > 0 && (
-              <div>
-                <h3 className="text-lg font-medium mb-4">Churn by Exchange</h3>
-                <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={churnData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="exchange" />
-                      <YAxis />
-                      <Tooltip formatter={(value) => [`${value}%`, 'Churn']} />
-                      <Bar dataKey="churn" fill="hsl(var(--primary))" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
               </div>
             )}
           </div>
