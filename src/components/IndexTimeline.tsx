@@ -256,9 +256,14 @@ const IndexTimeline: React.FC<IndexTimelineProps> = ({ indexData }) => {
                 style={{ zIndex: event.type === 'today' ? 3 : 1 }}
               >
                 <div 
-                  className={`cursor-pointer transition-transform hover:scale-110 rounded-full h-12 w-12 flex items-center justify-center text-xs font-medium ${
+                  className={`cursor-pointer transition-all duration-300 hover:scale-110 rounded-full flex items-center justify-center text-xs font-medium ${
                     event.type === 'today' ? 'text-white z-10' : 'text-white'
-                  } ${event.color}`}
+                  } ${
+                    selectedEvent?.id === event.id ? 'h-16 w-16 scale-110' : 'h-12 w-12'
+                  } ${
+                    event.date < today && event.type !== 'today' ? 'bg-gray-400' : 
+                    event.type === 'today' ? 'bg-black' : 'bg-green-500'
+                  }`}
                   onClick={() => openEventDetails(event)}
                 >
                   {event.type === 'today' ? 'TODAY' : ''}
