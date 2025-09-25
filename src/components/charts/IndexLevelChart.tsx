@@ -8,11 +8,14 @@ interface IndexLevelChartProps {
   data: TimeSeriesItem[];
   indexLevelDomain: [number, number];
   divisorDomain: [number, number];
+  hasReferenceData?: boolean;
+  maxDeviation?: number;
 }
 
-const IndexLevelChart: React.FC<IndexLevelChartProps> = ({ data, indexLevelDomain, divisorDomain }) => {
+const IndexLevelChart: React.FC<IndexLevelChartProps> = ({ data, indexLevelDomain, divisorDomain, hasReferenceData, maxDeviation }) => {
   const isBondIndex = SimulationService.isBondIndex();
-  const chartTitle = isBondIndex ? "Index Level Over Time" : "Index Level and Divisor Over Time";
+  const baseTitle = isBondIndex ? "Index Level Over Time" : "Index Level and Divisor Over Time";
+  const chartTitle = hasReferenceData ? `${baseTitle} - Comparison with Reference Index` : baseTitle;
   
   // Get the starting simulation level (first data point)
   const startingLevel = data.length > 0 ? data[0].indexLevel : 0;
@@ -20,6 +23,13 @@ const IndexLevelChart: React.FC<IndexLevelChartProps> = ({ data, indexLevelDomai
   return (
     <div>
       <h2 className="text-xl font-semibold mb-4">{chartTitle}</h2>
+      {hasReferenceData && maxDeviation && (
+        <div className="mb-2 p-2 bg-blue-50 rounded-md">
+          <p className="text-sm text-blue-700">
+            <strong>Max Level Deviation:</strong> {maxDeviation.toFixed(4)} ({((maxDeviation / startingLevel) * 100).toFixed(2)}%)
+          </p>
+        </div>
+      )}
       <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
         <ResponsiveContainer width="100%" height={400}>
           <LineChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
@@ -48,10 +58,15 @@ const IndexLevelChart: React.FC<IndexLevelChartProps> = ({ data, indexLevelDomai
               />
             )}
             <Tooltip 
-              formatter={(value: number, name: string) => [
-                name === 'indexLevel' ? value.toFixed(6) : value.toLocaleString(),
-                name === 'indexLevel' ? 'Index Level' : 'Divisor'
-              ]}
+              formatter={(value: number, name: string) => {
+                const formatValue = name.includes('Level') ? value.toFixed(6) : value.toLocaleString();
+                let displayName = name;
+                if (name === 'indexLevel') displayName = 'Simulated Index Level';
+                else if (name === 'referenceIndexLevel') displayName = 'Reference Index Level';
+                else if (name === 'divisor') displayName = 'Simulated Divisor';
+                else if (name === 'referenceDivisor') displayName = 'Reference Divisor';
+                return [formatValue, displayName];
+              }}
               labelStyle={{ color: '#374151' }}
             />
             <Legend />
@@ -72,9 +87,21 @@ const IndexLevelChart: React.FC<IndexLevelChartProps> = ({ data, indexLevelDomai
               dataKey="indexLevel" 
               stroke="#3b82f6" 
               strokeWidth={2}
-              name="Index Level"
+              name="indexLevel"
               dot={false}
             />
+            {hasReferenceData && (
+              <Line 
+                yAxisId="level"
+                type="monotone" 
+                dataKey="referenceIndexLevel" 
+                stroke="#10b981" 
+                strokeWidth={2}
+                name="referenceIndexLevel"
+                dot={false}
+                strokeDasharray="5 5"
+              />
+            )}
             {!isBondIndex && (
               <Line 
                 yAxisId="divisor"
@@ -82,8 +109,20 @@ const IndexLevelChart: React.FC<IndexLevelChartProps> = ({ data, indexLevelDomai
                 dataKey="divisor" 
                 stroke="#ef4444" 
                 strokeWidth={2}
-                name="Divisor"
+                name="divisor"
                 dot={false}
+              />
+            )}
+            {!isBondIndex && hasReferenceData && (
+              <Line 
+                yAxisId="divisor"
+                type="monotone" 
+                dataKey="referenceDivisor" 
+                stroke="#f59e0b" 
+                strokeWidth={2}
+                name="referenceDivisor"
+                dot={false}
+                strokeDasharray="5 5"
               />
             )}
           </LineChart>

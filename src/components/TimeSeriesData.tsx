@@ -32,9 +32,28 @@ const TimeSeriesData = () => {
   const histogramData = createHistogramData(dailyReturnsData);
   const stats = calculateStats(dailyReturnsData);
 
-  // Calculate Y-axis domains
-  const indexLevelDomain = calculateYAxisDomain(timeSeriesData.map(d => d.indexLevel));
-  const divisorDomain = calculateYAxisDomain(timeSeriesData.map(d => d.divisor));
+  // Check if we have reference data
+  const hasReferenceData = timeSeriesData.some(d => d.referenceIndexLevel !== undefined);
+  
+  // Calculate max deviation if reference data exists
+  const maxDeviation = hasReferenceData ? Math.max(
+    ...timeSeriesData
+      .filter(d => d.referenceIndexLevel !== undefined)
+      .map(d => Math.abs(d.indexLevel - d.referenceIndexLevel!))
+  ) : undefined;
+
+  // Calculate Y-axis domains including reference data
+  const allIndexLevels = timeSeriesData.flatMap(d => [
+    d.indexLevel,
+    ...(d.referenceIndexLevel ? [d.referenceIndexLevel] : [])
+  ]);
+  const allDivisors = timeSeriesData.flatMap(d => [
+    d.divisor,
+    ...(d.referenceDivisor ? [d.referenceDivisor] : [])
+  ]);
+  
+  const indexLevelDomain = calculateYAxisDomain(allIndexLevels);
+  const divisorDomain = calculateYAxisDomain(allDivisors);
   const dailyReturnsDomain = calculateYAxisDomain(dailyReturnsData.map(d => d.dailyReturn));
   const volatilityDomain = calculateYAxisDomain(rollingVolatilityData.map(d => d.volatility));
   const underwaterDomain = calculateYAxisDomain(underwaterData.map(d => d.drawdown));
@@ -66,6 +85,8 @@ const TimeSeriesData = () => {
             data={timeSeriesData}
             indexLevelDomain={indexLevelDomain}
             divisorDomain={divisorDomain}
+            hasReferenceData={hasReferenceData}
+            maxDeviation={maxDeviation}
           />
         )}
 

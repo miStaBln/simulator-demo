@@ -3,6 +3,8 @@ export interface TimeSeriesItem {
   date: string;
   indexLevel: number;
   divisor: number;
+  referenceIndexLevel?: number;
+  referenceDivisor?: number;
 }
 
 export interface DailyReturn {

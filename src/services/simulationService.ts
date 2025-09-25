@@ -189,6 +189,8 @@ interface TimeSeriesData {
   date: string;
   indexLevel: number;
   divisor: number;
+  referenceIndexLevel?: number;
+  referenceDivisor?: number;
 }
 
 interface ResultsData {
@@ -759,6 +761,7 @@ export class SimulationService {
 
     // Handle both old dummy format and new API format
     const simulationData = SimulationService.simulationResult.simulations || SimulationService.simulationResult;
+    const referenceData = SimulationService.simulationResult.referencedIndexTimeSeries;
     
     return Object.entries(simulationData)
       .map(([date, data]) => {
@@ -775,11 +778,20 @@ export class SimulationService {
           return null;
         }
         
-        return {
+        // Get reference data for this date if available
+        const referenceEntry = referenceData?.[date];
+        const referenceIndexLevel = referenceEntry?.closingIndexState?.indexStateEvaluationDto?.indexLevel;
+        const referenceDivisor = referenceEntry?.closingIndexState?.composition?.additionalNumbers?.divisor;
+        
+        const result: TimeSeriesData = {
           date: SimulationService.formatDateForDisplay(date),
           indexLevel,
-          divisor
+          divisor,
+          referenceIndexLevel,
+          referenceDivisor
         };
+        
+        return result;
       })
       .filter((item): item is TimeSeriesData => item !== null)
       .sort((a, b) => new Date(a.date.split('/').reverse().join('-')).getTime() - new Date(b.date.split('/').reverse().join('-')).getTime());
