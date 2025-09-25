@@ -526,8 +526,8 @@ const SimulationData = ({
           globalDrTaxRate
         },
         priceOverrides,
-        initialLevel,
-        previousRebalancingIndexValue,
+        parseFloat(initialLevel) || 1000,
+        parseFloat(previousRebalancingIndexValue) || 100,
         rebalancings // Pass rebalancings to the simulation service
       );
       

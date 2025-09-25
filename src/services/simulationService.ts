@@ -26,61 +26,8 @@ interface SimulationPayload {
       currency: string;
       ignoreFx: boolean;
     };
-    caHandlingConfiguration?: {
-      enableCaHandling: boolean;
-      cashDividendTaxHandling: string;
-      specialDividendTaxHandling: string;
-      considerStockDividend: boolean;
-      considerStockSplit: boolean;
-      considerRightsIssue: boolean;
-      considerRightsIssueToCashComponent: boolean;
-      considerCapitalDecrease: boolean;
-      cashDividendTax: number;
-      specialDividendTax: number;
-      corporateActionHandling: string;
-      useWeightNeutralRightsIssue: boolean;
-      useWeightNeutralCapitalDecrease: boolean;
-      franking: string;
-      pid: string;
-      reit: string;
-      returnOfCapital: string;
-      interestOnCapital: string;
-      nzInvestorType: string;
-      auInvestorType: string;
-      considerDividendFee: boolean;
-      drDividendTreatment: string;
-      globalDrTaxRate: number;
-    };
+    caHandlingConfiguration?: any;
   };
-  composition: {
-    clusters: Array<{
-      name: string;
-      constituents: Array<{
-        assetIdentifier: {
-          assetClass: string;
-          identifierType: string;
-          id: string;
-        };
-        quantity: {
-          type: string;
-          value: number;
-        };
-        additionalNumbers: {
-          freeFloatFactor: number;
-          weightingCapFactor: number;
-        };
-      }>;
-    }>;
-    additionalNumbers: {
-      divisor: number;
-    };
-  };
-  caModificationChain?: {
-    caModificationInitialization: string;
-    rules: any[];
-  };
-  resultIdentifierType?: string;
-  selectionResults?: any[];
   composition?: {
     clusters: Array<{
       name: string;
@@ -126,6 +73,12 @@ interface SimulationPayload {
       divisor: number;
     };
   };
+  caModificationChain?: {
+    caModificationInitialization: string;
+    rules: any[];
+  };
+  resultIdentifierType?: string;
+  selectionResults?: any[];
   rebalancingAdaptions?: any[];
 }
 
@@ -588,10 +541,31 @@ export class SimulationService {
     }
   };
 
-  private static buildCAHandlingBondDefault(){
+  private static buildCAHandlingBondDefault() {
     return {
-        enableCaHandling: true,
-        corporateActionHandling: "BOND_DELETION_MAT_CALL"
+      enableCaHandling: true,
+      corporateActionHandling: "BOND_DELETION_MAT_CALL",
+      cashDividendTaxHandling: 'USE_WITH_TAX',
+      specialDividendTaxHandling: 'USE_WITH_TAX',
+      considerStockDividend: true,
+      considerStockSplit: true,
+      considerRightsIssue: true,
+      considerRightsIssueToCashComponent: false,
+      considerCapitalDecrease: true,
+      cashDividendTax: 0,
+      specialDividendTax: 0,
+      useWeightNeutralRightsIssue: false,
+      useWeightNeutralCapitalDecrease: false,
+      franking: "NO_ADJUSTMENT",
+      pid: "NO_ADJUSTMENT",
+      reit: "NO_ADJUSTMENT",
+      returnOfCapital: "NO_ADJUSTMENT",
+      interestOnCapital: "NO_ADJUSTMENT",
+      nzInvestorType: "LOCAL_NO_IMPUTATION",
+      auInvestorType: "LOCAL_NO_IMPUTATION",
+      considerDividendFee: false,
+      drDividendTreatment: 'DEFAULT',
+      globalDrTaxRate: 0
     };
   }
 
@@ -886,7 +860,7 @@ export class SimulationService {
     const referenceData = SimulationService.simulationResult.referencedIndexTimeSeries;
     
     return Object.entries(simulationData)
-      .map(([date, data]) => {
+      .map(([date, data]: [string, any]) => {
         // Skip entries where closingIndexState is null or undefined
         if (!data.closingIndexState || !data.closingIndexState.indexStateEvaluationDto) {
           return null;
