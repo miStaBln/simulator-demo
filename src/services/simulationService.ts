@@ -51,138 +51,88 @@ interface SimulationPayload {
       drDividendTreatment: string;
       globalDrTaxRate: number;
     };
-    taxRates: any[];
   };
   composition: {
     clusters: Array<{
       name: string;
-      constituents: Array<any>;
+      constituents: Array<{
+        assetIdentifier: {
+          assetClass: string;
+          identifierType: string;
+          id: string;
+        };
+        quantity: {
+          type: string;
+          value: number;
+        };
+        additionalNumbers: {
+          freeFloatFactor: number;
+          weightingCapFactor: number;
+        };
+      }>;
     }>;
-    additionalNumbers?: {
+    additionalNumbers: {
       divisor: number;
     };
   };
-  caModificationChain: {
+  caModificationChain?: {
     caModificationInitialization: string;
     rules: any[];
   };
-  resultIdentifierType: string;
-  selectionResults: Array<{
-    fixingDate: string;
-    effectiveOpenDates: string[];
-    adaptionType: string;
+  resultIdentifierType?: string;
+  selectionResults?: any[];
+  composition?: {
     clusters: Array<{
       name: string;
-      constituents: Array<any>;
+      constituents: Array<{
+        assetIdentifier: {
+          assetClass: string;
+          identifierType: string;
+          id: string;
+        };
+        quantity: {
+          type: string;
+          value: number;
+        };
+        additionalNumbers: {
+          freeFloatFactor: number;
+          weightingCapFactor: number;
+        };
+      }>;
     }>;
-    additionalParameters: {
-      weightingType: string;
+    additionalNumbers: {
+      divisor: number;
     };
-  }>;
-  rebalancingAdaptions?: Array<{
-    adaptionBaseData: {
-      adaptionType: string;
-      effectiveDates: string[];
-    };
-    constituents: Array<{
-      assetIdentifier: {
-        assetClass: string;
-        identifierType: string;
-        id: string;
-      };
-      quantity: {
-        type: string;
-        value: number;
-      };
-      additionalNumbers: {
-        weightingCapFactor: number;
-      };
+  };
+  bondComposition?: {
+    clusters: Array<{
+      name: string;
+      constituents: Array<{
+        assetIdentifier: {
+          assetClass: string;
+          identifierType: string;
+          id: string;
+        };
+        quantity: {
+          type: string;
+          value: number;
+        };
+        additionalNumbers: {
+          weightingCapFactor: number;
+        };
+      }>;
     }>;
-  }>;
+    additionalNumbers: {
+      divisor: number;
+    };
+  };
+  rebalancingAdaptions?: any[];
 }
 
 interface SimulationResult {
-  [date: string]: {
-    simulationDate: string;
-    closingIndexState: {
-      composition: {
-        clusters: Array<{
-          name: string;
-          constituents: Array<{
-            assetIdentifier: {
-              assetClass: string;
-              identifierType: string;
-              id: string;
-            };
-            quantity: {
-              type: string;
-              value: number;
-            };
-            additionalNumbers: {
-              freeFloatFactor: number;
-              weightingCapFactor: number;
-            };
-          }>;
-        }>;
-        additionalNumbers: {
-          divisor: number;
-        };
-      };
-      indexStateEvaluationDto: {
-        indexLevel: number;
-        clusters: Array<{
-          name: string;
-          prices: Array<{
-            instrumentKey: {
-              assetClass: string;
-              identifierType: string;
-              id: string;
-            };
-            price: number;
-          }>;
-        }>;
-      };
-    };
-    openingIndexState: {
-      composition: {
-        clusters: Array<{
-          name: string;
-          constituents: Array<{
-            assetIdentifier: {
-              assetClass: string;
-              identifierType: string;
-              id: string;
-            };
-            quantity: {
-              type: string;
-              value: number;
-            };
-            additionalNumbers: {
-              freeFloatFactor: number;
-              weightingCapFactor: number;
-            };
-          }>;
-        }>;
-        additionalNumbers: {
-          divisor: number;
-        };
-      };
-      indexStateEvaluationDto: {
-        indexLevel: number;
-        clusters: Array<{
-          name: string;
-          prices: Array<{
-            instrumentKey: {
-              assetClass: string;
-              identifierType: string;
-              id: string;
-            };
-            price: number;
-          }>;
-        }>;
-      };
-    };
-  };
+  [key: string]: any;
+  simulations?: any;
+  referencedIndexTimeSeries?: any;
 }
 
 interface TimeSeriesData {
@@ -200,15 +150,17 @@ interface ResultsData {
   price: string;
   currency: string;
   fx: string;
+  [key: string]: any;
 }
 
 export class SimulationService {
-  private static readonly EQUITY_API_URL = "http://test-32.gde.nbg.solactive.com:8274/index-simulator-equity/proxy/v3/simulateEquityIndexSimple";
-  private static readonly BOND_API_URL = "http://test-2.gde.nbg.solactive.com:8274/index-simulator-equity/proxy/v3/simulateBondIndexSimple";
   private static simulationResult: SimulationResult | null = null;
   private static currentIndexFamily: string | null = null;
+  
+  private static readonly EQUITY_API_URL = 'http://test-32.gde.nbg.solactive.com:8274/index-simulator-equity/proxy/v3/simulateEquityIndexSimple';
+  private static readonly BOND_API_URL = 'http://test-32.gde.nbg.solactive.com:8274/index-simulator-bond/proxy/v3/simulateBondIndex';
 
-  // Updated dummy data to match the new structure
+  // Updated dummy data to match the new structure with reference index comparison
   private static readonly DUMMY_SIMULATION_RESULT: SimulationResult = {
     "2025-04-11": {
       "simulationDate": "2025-04-11",
@@ -271,7 +223,7 @@ export class SimulationService {
           }
         },
         "indexStateEvaluationDto": {
-          "indexLevel": 58.748000000000005,
+          "indexLevel": 1000.0,
           "clusters": [
             {
               "name": "NONE",
@@ -304,8 +256,11 @@ export class SimulationService {
             }
           ]
         }
-      },
-      "openingIndexState": {
+      }
+    },
+    "2025-04-12": {
+      "simulationDate": "2025-04-12",
+      "closingIndexState": {
         "composition": {
           "clusters": [
             {
@@ -360,52 +315,286 @@ export class SimulationService {
             }
           ],
           "additionalNumbers": {
-            "divisor": 100000
+            "divisor": 99800
           }
         },
         "indexStateEvaluationDto": {
-          "indexLevel": 58.748000000000005,
+          "indexLevel": 1025.3
+        }
+      }
+    },
+    "2025-04-13": {
+      "simulationDate": "2025-04-13",
+      "closingIndexState": {
+        "composition": {
           "clusters": [
             {
-              "name": "NONE",
-              "prices": [
+              "name": "1a91c2f7-deca-4d33-9383-87bec8049b8d",
+              "constituents": [
                 {
-                  "instrumentKey": {
-                    "assetClass": "SHARE",
-                    "identifierType": "RIC",
-                    "id": "AAPL.OQ"
-                  },
-                  "price": 198.15
-                },
-                {
-                  "instrumentKey": {
+                  "assetIdentifier": {
                     "assetClass": "SHARE",
                     "identifierType": "RIC",
                     "id": "MSFT.OQ"
                   },
-                  "price": 388.45
+                  "quantity": {
+                    "type": "UNITS",
+                    "value": 8000
+                  },
+                  "additionalNumbers": {
+                    "freeFloatFactor": 1,
+                    "weightingCapFactor": 1
+                  }
                 },
                 {
-                  "instrumentKey": {
+                  "assetIdentifier": {
                     "assetClass": "SHARE",
                     "identifierType": "RIC",
                     "id": "GOOGL.OQ"
                   },
-                  "price": 157.14
+                  "quantity": {
+                    "type": "UNITS",
+                    "value": 5000
+                  },
+                  "additionalNumbers": {
+                    "freeFloatFactor": 1,
+                    "weightingCapFactor": 1
+                  }
+                },
+                {
+                  "assetIdentifier": {
+                    "assetClass": "SHARE",
+                    "identifierType": "RIC",
+                    "id": "AAPL.OQ"
+                  },
+                  "quantity": {
+                    "type": "UNITS",
+                    "value": 10000
+                  },
+                  "additionalNumbers": {
+                    "freeFloatFactor": 1,
+                    "weightingCapFactor": 1
+                  }
                 }
               ]
             }
-          ]
+          ],
+          "additionalNumbers": {
+            "divisor": 98950
+          }
+        },
+        "indexStateEvaluationDto": {
+          "indexLevel": 1018.7
+        }
+      }
+    },
+    "2025-04-14": {
+      "simulationDate": "2025-04-14",
+      "closingIndexState": {
+        "composition": {
+          "clusters": [
+            {
+              "name": "1a91c2f7-deca-4d33-9383-87bec8049b8d",
+              "constituents": [
+                {
+                  "assetIdentifier": {
+                    "assetClass": "SHARE",
+                    "identifierType": "RIC",
+                    "id": "MSFT.OQ"
+                  },
+                  "quantity": {
+                    "type": "UNITS",
+                    "value": 8000
+                  },
+                  "additionalNumbers": {
+                    "freeFloatFactor": 1,
+                    "weightingCapFactor": 1
+                  }
+                },
+                {
+                  "assetIdentifier": {
+                    "assetClass": "SHARE",
+                    "identifierType": "RIC",
+                    "id": "GOOGL.OQ"
+                  },
+                  "quantity": {
+                    "type": "UNITS",
+                    "value": 5000
+                  },
+                  "additionalNumbers": {
+                    "freeFloatFactor": 1,
+                    "weightingCapFactor": 1
+                  }
+                },
+                {
+                  "assetIdentifier": {
+                    "assetClass": "SHARE",
+                    "identifierType": "RIC",
+                    "id": "AAPL.OQ"
+                  },
+                  "quantity": {
+                    "type": "UNITS",
+                    "value": 10000
+                  },
+                  "additionalNumbers": {
+                    "freeFloatFactor": 1,
+                    "weightingCapFactor": 1
+                  }
+                }
+              ]
+            }
+          ],
+          "additionalNumbers": {
+            "divisor": 101200
+          }
+        },
+        "indexStateEvaluationDto": {
+          "indexLevel": 1042.8
+        }
+      }
+    },
+    "2025-04-15": {
+      "simulationDate": "2025-04-15",
+      "closingIndexState": {
+        "composition": {
+          "clusters": [
+            {
+              "name": "1a91c2f7-deca-4d33-9383-87bec8049b8d",
+              "constituents": [
+                {
+                  "assetIdentifier": {
+                    "assetClass": "SHARE",
+                    "identifierType": "RIC",
+                    "id": "MSFT.OQ"
+                  },
+                  "quantity": {
+                    "type": "UNITS",
+                    "value": 8000
+                  },
+                  "additionalNumbers": {
+                    "freeFloatFactor": 1,
+                    "weightingCapFactor": 1
+                  }
+                },
+                {
+                  "assetIdentifier": {
+                    "assetClass": "SHARE",
+                    "identifierType": "RIC",
+                    "id": "GOOGL.OQ"
+                  },
+                  "quantity": {
+                    "type": "UNITS",
+                    "value": 5000
+                  },
+                  "additionalNumbers": {
+                    "freeFloatFactor": 1,
+                    "weightingCapFactor": 1
+                  }
+                },
+                {
+                  "assetIdentifier": {
+                    "assetClass": "SHARE",
+                    "identifierType": "RIC",
+                    "id": "AAPL.OQ"
+                  },
+                  "quantity": {
+                    "type": "UNITS",
+                    "value": 10000
+                  },
+                  "additionalNumbers": {
+                    "freeFloatFactor": 1,
+                    "weightingCapFactor": 1
+                  }
+                }
+              ]
+            }
+          ],
+          "additionalNumbers": {
+            "divisor": 100750
+          }
+        },
+        "indexStateEvaluationDto": {
+          "indexLevel": 1038.2
+        }
+      }
+    },
+    // Reference index time series data showing slight deviations from simulated index
+    referencedIndexTimeSeries: {
+      "2025-04-11": {
+        "simulationDate": "2025-04-11",
+        "closingIndexState": {
+          "composition": {
+            "additionalNumbers": {
+              "divisor": 100000
+            }
+          },
+          "indexStateEvaluationDto": {
+            "indexLevel": 1000.0
+          }
+        }
+      },
+      "2025-04-12": {
+        "simulationDate": "2025-04-12",
+        "closingIndexState": {
+          "composition": {
+            "additionalNumbers": {
+              "divisor": 99750
+            }
+          },
+          "indexStateEvaluationDto": {
+            "indexLevel": 1023.1
+          }
+        }
+      },
+      "2025-04-13": {
+        "simulationDate": "2025-04-13",
+        "closingIndexState": {
+          "composition": {
+            "additionalNumbers": {
+              "divisor": 99100
+            }
+          },
+          "indexStateEvaluationDto": {
+            "indexLevel": 1015.2
+          }
+        }
+      },
+      "2025-04-14": {
+        "simulationDate": "2025-04-14",
+        "closingIndexState": {
+          "composition": {
+            "additionalNumbers": {
+              "divisor": 101050
+            }
+          },
+          "indexStateEvaluationDto": {
+            "indexLevel": 1040.5
+          }
+        }
+      },
+      "2025-04-15": {
+        "simulationDate": "2025-04-15",
+        "closingIndexState": {
+          "composition": {
+            "additionalNumbers": {
+              "divisor": 100600
+            }
+          },
+          "indexStateEvaluationDto": {
+            "indexLevel": 1035.7
+          }
         }
       }
     }
   };
+
   private static buildCAHandlingBondDefault(){
     return {
         enableCaHandling: true,
         corporateActionHandling: "BOND_DELETION_MAT_CALL"
     };
   }
+
   private static buildCAHandlingDefault(returnType: string) {
     let taxTypeCashDiv = 'USE_WITH_TAX';
     let taxTypeSpecialDiv = 'USE_WITH_TAX';
@@ -455,174 +644,53 @@ export class SimulationService {
     indexFamily: string,
     identifierType: string,
     referenceIndexId: string,
-    stocks: Array<{ ric: string; shares: string; weight: string; baseValue?: string; weightingCapFactor?: string; caCash?: string; couponCash?: string; sinkingCash?: string }>,
-    advancedParams: {
-      cashDividendTaxHandling: string;
-      specialDividendTaxHandling: string;
-      considerStockDividend: boolean;
-      considerStockSplit: boolean;
-      considerRightsIssue: boolean;
-      considerDividendFee: boolean;
-      drDividendTreatment: string;
-      globalDrTaxRate: string;
-    },
-    priceOverrides: Array<{ric: string, date: string, price: string}> = [],
-    initialLevel: string = '100.0',
-    previousRebalancingIndexValue: string = '100.0',
-    rebalancings: Array<{
-      id: string;
-      selectionDate: string;
-      rebalancingDate: string;
-      components: Array<{ ric: string; shares: string; weight: string; weightingCapFactor?: string }>;
-    }> = []
-  ) {
-    // Convert date format from DD.MM.YYYY to YYYY-MM-DD
-    const formatDate = (dateStr: string) => {
-      const [day, month, year] = dateStr.split('.');
-      return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-    };
-
-    // Map return type to API format for bond indices
-    const getIndexType = (returnType: string, isBondIndex: boolean) => {
-      if (isBondIndex) {
-        // For bond indices, use the return type directly
-        return returnType; // "PERFORMANCE" or "PRICE"
-      }
-      // For equity indices, always use PERFORMANCE
-      return 'PERFORMANCE';
-    };
-
-    // Determine if this is a bond index
+    stocks: any[],
+    advancedParams: any,
+    priceOverrides: any[],
+    initialLevel: number,
+    previousRebalancingIndexValue: number,
+    rebalancings: any[]
+  ): Promise<SimulationResult> {
     const isBondIndex = indexFamily === 'BOND_DEFAULT' || indexFamily === 'BOND_BASEMARKETVALUE';
+    console.log(`Starting ${isBondIndex ? 'Bond' : 'Equity'} simulation with parameters:`, {
+      startDate,
+      endDate,
+      currency,
+      returnType,
+      divisor,
+      indexFamily,
+      identifierType,
+      referenceIndexId,
+      stocksCount: stocks.length,
+      advancedParams,
+      priceOverridesCount: priceOverrides.length,
+      initialLevel,
+      previousRebalancingIndexValue,
+      rebalancingsCount: rebalancings.length
+    });
 
-    // Create constituents from stocks data
-    const constituents = stocks
-      .filter(stock => stock.ric && (stock.shares || stock.weight))
-      .map((stock, index) => {
-        if (isBondIndex) {
-          const constituent: any = {
-            assetIdentifier: {
-              assetClass: "BOND",
-              identifierType: identifierType,
-              id: stock.ric
-            },
-            quantity: {
-              type: "AMOUNT",
-              value: parseFloat(stock.shares || stock.weight || '1')
-            },
-            additionalNumbers: {
-              freeFloatFactor: 1,
-              weightingCapFactor: parseFloat(stock.weightingCapFactor || '1'),
-              baseValue: parseFloat(stock.baseValue || '0')
-            },
-            dates: {
-              compositionEnteredAt: {
-                date: null
-              }
-            }
-          };
-
-          // Add cashes to individual constituent if present
-          const cashes = [];
-          if (stock.caCash && parseFloat(stock.caCash) !== 0) {
-            cashes.push({
-              value: parseFloat(stock.caCash),
-              date: null,
-              type: 'CA_CASH'
-            });
-          }
-          if (stock.couponCash && parseFloat(stock.couponCash) !== 0) {
-            cashes.push({
-              value: parseFloat(stock.couponCash),
-              date: null,
-              type: 'COUPON_CASH'
-            });
-          }
-          if (stock.sinkingCash && parseFloat(stock.sinkingCash) !== 0) {
-            cashes.push({
-              value: parseFloat(stock.sinkingCash),
-              date: null,
-              type: 'SINKING_CASH'
-            });
-          }
-          
-          if (cashes.length > 0) {
-            constituent.cashes = cashes;
-          }
-
-          return constituent;
-        } else {
-          return {
-            assetIdentifier: {
-              assetClass: "SHARE",
-              identifierType: identifierType,
-              id: stock.ric
-            },
-            quantity: {
-              type: "UNITS",
-              value: parseFloat(stock.shares || stock.weight || '1')
-            },
-            additionalNumbers: {
-              freeFloatFactor: 1,
-              weightingCapFactor: parseFloat(stock.weightingCapFactor || '1')
-            }
-          };
-        }
-      });
-
-    // Map price overrides to API format with nested date structure
-    const instrumentPrices = priceOverrides
-      .filter(override => override.ric && override.date && override.price)
-      .map(override => ({
-        instrumentKey: {
-          assetClass: isBondIndex ? "BOND" : "SHARE",
-          identifierType: identifierType,
-          id: override.ric
-        },
-        date: {
-          date: formatDate(override.date)
-        },
-        price: parseFloat(override.price)
-      }));
-
-    const payload: any = {
-      simulationStart: formatDate(startDate),
-      simulationEnd: formatDate(endDate),
+    const payload: SimulationPayload = {
+      simulationStart: startDate,
+      simulationEnd: endDate,
       priceHistory: {
-        instrumentPrices: instrumentPrices
+        instrumentPrices: priceOverrides
       },
-      previousRebalancingIndexValue: parseFloat(previousRebalancingIndexValue) || 100.0,
-
       indexProperties: {
-        initialIndexLevel: {
-          value: parseFloat(initialLevel) || 100.0
-        },
-        previousIndexValue: {
-          value: parseFloat(initialLevel) || 100.0
-        },
+        initialIndexLevel: { value: initialLevel },
+        previousIndexValue: { value: initialLevel },
+        previousRebalancingIndexValue: { value: previousRebalancingIndexValue },
         coreIndexData: {
           name: "Simulation Index",
-          identifiers: [
-            {
-              assetClass: "INDEX",
-              identifierType: identifierType,
-              id: ".SIMULATE"
-            }
-          ],
+          identifiers: [{
+            assetClass: "INDEX",
+            identifierType: "RIC",
+            id: ".SIMULATE"
+          }],
           family: indexFamily,
-          type: getIndexType(returnType, isBondIndex),
+          type: returnType,
           currency: currency,
           ignoreFx: false
         },
-        taxRates: []
-      },
-      composition: {
-        clusters: [
-          {
-            name: "NONE",
-            constituents: constituents
-          }
-        ]
       },
       caModificationChain: {
         caModificationInitialization: "FULL",
@@ -632,61 +700,115 @@ export class SimulationService {
       selectionResults: []
     };
 
-    // Add divisor only for non-bond indices
-    if (!isBondIndex) {
-      payload.composition.additionalNumbers = {
-        divisor: parseFloat(divisor) || 1
-      };
-    }
-
-    // Add CA handling configuration only for non-bond indices
-    if (!isBondIndex) {
-      const caHandlingConfig = this.buildCAHandlingDefault(returnType);
-
-      // Override with advanced parameters if they are not default values
-      if (advancedParams.cashDividendTaxHandling !== 'None') {
-        caHandlingConfig.cashDividendTaxHandling = advancedParams.cashDividendTaxHandling;
-      }
-      if (advancedParams.specialDividendTaxHandling !== 'None') {
-        caHandlingConfig.specialDividendTaxHandling = advancedParams.specialDividendTaxHandling;
-      }
-      caHandlingConfig.considerStockDividend = advancedParams.considerStockDividend;
-      caHandlingConfig.considerStockSplit = advancedParams.considerStockSplit;
-      caHandlingConfig.considerRightsIssue = advancedParams.considerRightsIssue;
-      caHandlingConfig.considerDividendFee = advancedParams.considerDividendFee;
-      caHandlingConfig.drDividendTreatment = advancedParams.drDividendTreatment;
-      caHandlingConfig.globalDrTaxRate = parseFloat(advancedParams.globalDrTaxRate) || 0;
-
-      payload.indexProperties.caHandlingConfiguration = caHandlingConfig;
-    }else{
-        const caHandlingConfig = this.buildCAHandlingBondDefault();
-        payload.indexProperties.caHandlingConfiguration = caHandlingConfig
-    }
-
-    // Add rebalancing adaptions for bond indices
-    if (isBondIndex && rebalancings.length > 0) {
-      const rebalancingAdaptions = rebalancings.map(rebalancing => ({
-        adaptionBaseData: {
-          adaptionType: "DEFAULT_AMOUNTS",
-          effectiveDates: [formatDate(rebalancing.rebalancingDate)]
-        },
-        constituents: rebalancing.components
-          .filter(component => component.ric && (component.shares || component.weight))
-          .map(component => ({
+    if (isBondIndex) {
+      payload.indexProperties.caHandlingConfiguration = SimulationService.buildCAHandlingBondDefault();
+      
+      payload.bondComposition = {
+        clusters: [{
+          name: "NONE",
+          constituents: stocks.map(stock => ({
             assetIdentifier: {
-              assetClass: "BOND",
+              assetClass: stock.assetClass || "BOND",
               identifierType: identifierType,
-              id: component.ric
+              id: stock.ric
             },
             quantity: {
               type: "AMOUNT",
-              value: parseFloat(component.shares || component.weight || '1')
+              value: parseFloat(stock.shares || stock.weight || '1')
             },
             additionalNumbers: {
-              weightingCapFactor: parseFloat(component.weightingCapFactor || '1')
+              weightingCapFactor: parseFloat(stock.weightingCapFactor || '1')
             }
           }))
+        }],
+        additionalNumbers: {
+          divisor: parseFloat(divisor)
+        }
+      };
+    } else {
+      payload.indexProperties.caHandlingConfiguration = SimulationService.buildCAHandlingDefault(returnType);
+      
+      payload.composition = {
+        clusters: [{
+          name: "NONE",
+          constituents: stocks.map(stock => ({
+            assetIdentifier: {
+              assetClass: stock.assetClass || "SHARE",
+              identifierType: identifierType,
+              id: stock.ric
+            },
+            quantity: {
+              type: "UNITS",
+              value: parseFloat(stock.shares || stock.weight || '1')
+            },
+            additionalNumbers: {
+              freeFloatFactor: parseFloat(stock.freeFloatFactor || '1'),
+              weightingCapFactor: parseFloat(stock.weightingCapFactor || '1')
+            }
+          }))
+        }],
+        additionalNumbers: {
+          divisor: parseFloat(divisor)
+        }
+      };
+    }
+
+    // Handle rebalancings
+    if (rebalancings && rebalancings.length > 0) {
+      const rebalancingAdaptions: any[] = rebalancings.map(rebalancing => ({
+        rebalancingId: rebalancing.id,
+        rebalancingDate: rebalancing.date,
+        rebalancingType: rebalancing.type || "FULL_REBALANCING",
+        rebalancingId2: rebalancing.id2 || ""
       }));
+
+      // Add composition for each rebalancing based on index type
+      rebalancingAdaptions.forEach((rebalancing, index) => {
+        const rebalancingData = rebalancings[index];
+        
+        if (isBondIndex) {
+          rebalancing.bondComposition = {
+            clusters: [{
+              name: "NONE",
+              constituents: rebalancingData.components?.map((component: any) => ({
+                assetIdentifier: {
+                  assetClass: component.assetClass || "BOND",
+                  identifierType: identifierType,
+                  id: component.ric
+                },
+                quantity: {
+                  type: "AMOUNT",
+                  value: parseFloat(component.shares || component.weight || '1')
+                },
+                additionalNumbers: {
+                  weightingCapFactor: parseFloat(component.weightingCapFactor || '1')
+                }
+              })) || []
+            }]
+          };
+        } else {
+          rebalancing.composition = {
+            clusters: [{
+              name: "NONE",
+              constituents: rebalancingData.components?.map((component: any) => ({
+                assetIdentifier: {
+                  assetClass: component.assetClass || "SHARE",
+                  identifierType: identifierType,
+                  id: component.ric
+                },
+                quantity: {
+                  type: "UNITS",
+                  value: parseFloat(component.shares || component.weight || '1')
+                },
+                additionalNumbers: {
+                  freeFloatFactor: parseFloat(component.freeFloatFactor || '1'),
+                  weightingCapFactor: parseFloat(component.weightingCapFactor || '1')
+                }
+              })) || []
+            }]
+          };
+        }
+      });
 
       payload.rebalancingAdaptions = rebalancingAdaptions;
     }
