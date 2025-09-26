@@ -27,7 +27,7 @@ export function SimulationSidebar({
 
   return (
     <Sidebar
-      className={isCollapsed ? "w-16" : "w-96"}
+      className={isCollapsed ? "w-16" : "w-1/3 min-w-[500px] max-w-[700px]"}
       collapsible="icon"
       side="left"
     >
