@@ -1,13 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import TabNavigation from '@/components/TabNavigation';
-import SimulationData from '@/components/SimulationData';
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
+import { SimulationSidebar } from '@/components/simulator/SimulationSidebar';
+import ResultsTabNavigation from '@/components/simulator/ResultsTabNavigation';
 import SimulationResult from '@/components/SimulationResult';
 import TimeSeriesData from '@/components/TimeSeriesData';
 import ProximityIndexData from '@/components/ProximityIndexData';
 import { toast } from '@/hooks/use-toast';
-import { SimulationService } from '@/services/simulationService';
 
 const initialSimulationState = {
   stocks: [],
@@ -18,24 +18,18 @@ const initialSimulationState = {
 const Index = () => {
   const [searchParams] = useSearchParams();
   const tabFromUrl = searchParams.get('tab');
-  const [activeTab, setActiveTab] = useState(tabFromUrl || 'simulation-data');
+  const [activeTab, setActiveTab] = useState(tabFromUrl || 'results');
   const [simulationState, setSimulationState] = useState(initialSimulationState);
   const [shouldResetSimulation, setShouldResetSimulation] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (tabFromUrl) {
-      // Only allow navigation to other tabs if simulation is complete
-      if (tabFromUrl !== 'simulation-data' && !simulationState.complete) {
-        navigate('/simulator?tab=simulation-data');
-        toast({
-          title: "Simulation Required",
-          description: "Please run a simulation first to view results",
-          variant: "destructive",
-        });
-      } else {
-        setActiveTab(tabFromUrl);
-      }
+    if (tabFromUrl && simulationState.complete) {
+      setActiveTab(tabFromUrl);
+    } else if (tabFromUrl && !simulationState.complete) {
+      // If trying to access results without simulation, stay on results but show placeholder
+      setActiveTab('results');
+      navigate('/simulator?tab=results');
     }
   }, [tabFromUrl, simulationState.complete]);
 
@@ -66,31 +60,47 @@ const Index = () => {
   };
 
   return (
-    <div className="flex flex-col h-full">
-      <TabNavigation 
-        activeTab={activeTab} 
-        onTabChange={handleTabChange} 
-        simulationComplete={simulationState.complete}
-        onRefresh={handleRefresh}
-      />
-      <div className="flex-1 overflow-auto">
-        {activeTab === 'simulation-data' && (
-          <SimulationData 
-            onSimulationComplete={handleSimulationComplete}
-            shouldReset={shouldResetSimulation}
-            onResetComplete={handleResetComplete}
-          />
-        )}
-        {activeTab === 'results' && simulationState.complete && <SimulationResult />}
-        {activeTab === 'time-series' && simulationState.complete && <TimeSeriesData />}
-        {activeTab === 'proximity' && simulationState.complete && (
-          <ProximityIndexData 
-            simulationComplete={simulationState.complete} 
-            stocks={simulationState.stocks} 
-          />
-        )}
+    <SidebarProvider defaultOpen={true}>
+      <div className="flex min-h-screen w-full">
+        <SimulationSidebar
+          onSimulationComplete={handleSimulationComplete}
+          shouldReset={shouldResetSimulation}
+          onResetComplete={handleResetComplete}
+          onRefresh={handleRefresh}
+        />
+        
+        <SidebarInset className="flex-1">
+          <div className="flex flex-col h-full">
+            <ResultsTabNavigation
+              activeTab={activeTab}
+              onTabChange={handleTabChange}
+              simulationComplete={simulationState.complete}
+            />
+            
+            <div className="flex-1 overflow-auto">
+              {activeTab === 'results' && simulationState.complete && (
+                <div className="p-6">
+                  <SimulationResult />
+                </div>
+              )}
+              {activeTab === 'time-series' && simulationState.complete && (
+                <div className="p-6">
+                  <TimeSeriesData />
+                </div>
+              )}
+              {activeTab === 'proximity' && simulationState.complete && (
+                <div className="p-6">
+                  <ProximityIndexData 
+                    simulationComplete={simulationState.complete} 
+                    stocks={simulationState.stocks} 
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        </SidebarInset>
       </div>
-    </div>
+    </SidebarProvider>
   );
 };
 
