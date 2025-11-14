@@ -86,10 +86,7 @@ const Index = () => {
             
             <div className="flex-1 w-full overflow-visible p-6">
               {activeTab === 'results' && hasSimulationData() && (
-                <>
-                  {console.log('[Index] ✅✅✅ Rendering SimulationResult NOW')}
-                  <SimulationResult />
-                </>
+                <SimulationResult />
               )}
               {activeTab === 'results' && !hasSimulationData() && (
                 <div className="p-6 text-center text-muted-foreground">
