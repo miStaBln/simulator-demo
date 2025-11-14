@@ -89,20 +89,10 @@ const TimeSeriesData = () => {
 
   return (
     <div className="p-6 bg-background">
-      {/* Debug indicator */}
-      <div className="mb-4 p-4 bg-yellow-200 border-2 border-yellow-600 rounded text-black">
-        <p className="font-bold">DEBUG: Component is rendering!</p>
-        <p>Data points: {timeSeriesData.length}</p>
-        <p>KeyFigures exists: {keyFigures ? 'YES' : 'NO'}</p>
-        <p>Charts to render: IndexLevel, DailyReturns({dailyReturnsData.length}), Volatility({rollingVolatilityData.length}), Underwater({underwaterData.length}), Histogram({histogramData.length})</p>
-      </div>
-
       <h1 className="text-2xl font-bold mb-6 text-foreground">Time Series Data</h1>
       
       {/* Key Figures Section */}
-      <div className="mb-4 p-2 bg-green-200 border border-green-600 rounded text-black">
-        <p>About to render KeyFigures: {keyFigures ? 'YES' : 'NO'}</p>
-      </div>
+
       {keyFigures && <KeyFigures keyFigures={keyFigures} />}
 
       {/* Charts Section */}
