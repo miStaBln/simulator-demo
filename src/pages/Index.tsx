@@ -76,49 +76,19 @@ const Index = () => {
           onRefresh={handleRefresh}
         />
         
-        <SidebarInset style={{ 
-          flex: 1, 
-          display: 'flex', 
-          flexDirection: 'column',
-          width: '100%',
-          overflow: 'visible',
-          position: 'relative'
-        }}>
-          <div style={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            height: '100%',
-            width: '100%',
-            overflow: 'visible'
-          }}>
+        <SidebarInset className="flex-1 overflow-visible">
+          <div className="flex flex-col h-full w-full overflow-visible">
             <ResultsTabNavigation
               activeTab={activeTab}
               onTabChange={handleTabChange}
               simulationComplete={hasSimulationData()}
             />
             
-            <div style={{ 
-              flex: 1, 
-              overflow: 'auto', 
-              width: '100%', 
-              display: 'block',
-              position: 'relative'
-            }}>
-              
+            <div className="flex-1 w-full overflow-visible p-6">
               {activeTab === 'results' && hasSimulationData() && (
                 <>
-                  {console.log('[Index] Rendering SimulationResult component NOW')}
-                  <div style={{ 
-                    width: '100%', 
-                    minHeight: '100vh', 
-                    display: 'block', 
-                    position: 'relative',
-                    padding: '20px',
-                    background: '#f0f0f0',
-                    overflow: 'visible'
-                  }}>
-                    <SimulationResult />
-                  </div>
+                  {console.log('[Index] ✅✅✅ Rendering SimulationResult NOW')}
+                  <SimulationResult />
                 </>
               )}
               {activeTab === 'results' && !hasSimulationData() && (
