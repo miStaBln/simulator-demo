@@ -683,7 +683,11 @@ export class SimulationService {
             additionalNumbers: {
               freeFloatFactor: parseFloat(stock.freeFloatFactor || '1'),
               weightingCapFactor: parseFloat(stock.weightingCapFactor || '1')
-            }
+            },dates: {
+                                        compositionEnteredAt: {
+                                          date: null
+                                        }
+                                      }
           }))
         }],
         additionalNumbers: {
@@ -709,12 +713,7 @@ export class SimulationService {
             additionalNumbers: {
               freeFloatFactor: parseFloat(stock.freeFloatFactor || '1'),
               weightingCapFactor: parseFloat(stock.weightingCapFactor || '1')
-            },
-            dates: {
-                          compositionEnteredAt: {
-                            date: null
-                          }
-                        }
+            }
           }))
         }],
         additionalNumbers: {
