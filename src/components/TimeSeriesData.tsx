@@ -23,6 +23,9 @@ const TimeSeriesData = () => {
   const [showAll, setShowAll] = useState(false);
   const timeSeriesData = SimulationService.getTimeSeriesData();
   
+  console.log('TimeSeriesData component - received data:', timeSeriesData);
+  console.log('TimeSeriesData component - data length:', timeSeriesData.length);
+  
   // Calculate all derived data
   const dailyReturnsData = calculateDailyReturns(timeSeriesData);
   const rollingVolatilityData = calculateRollingVolatility(dailyReturnsData);
@@ -61,6 +64,7 @@ const TimeSeriesData = () => {
   const displayData = showAll ? timeSeriesData : timeSeriesData.slice(0, 10);
 
   if (timeSeriesData.length === 0) {
+    console.log('TimeSeriesData component - No data, showing empty message');
     return (
       <div className="p-6">
         <div className="text-center text-gray-500">
@@ -70,6 +74,7 @@ const TimeSeriesData = () => {
     );
   }
 
+  console.log('TimeSeriesData component - Rendering with data');
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6">Time Series Data</h1>

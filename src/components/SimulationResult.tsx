@@ -19,10 +19,12 @@ const SimulationResult = () => {
   useEffect(() => {
     // Get available simulation dates
     const dates = SimulationService.getAvailableDates();
+    console.log('SimulationResult - available dates:', dates);
     const formattedDates = dates.map(date => {
       const [year, month, day] = date.split('-');
       return `${day}.${month}.${year}`;
     });
+    console.log('SimulationResult - formatted dates:', formattedDates);
     setAvailableDates(formattedDates);
     
     // Set initial date if available
@@ -49,16 +51,21 @@ const SimulationResult = () => {
     };
 
     const apiDate = formatDateForAPI(selectedDate);
+    console.log('SimulationResult - fetching data for date:', apiDate);
     const dayData = SimulationService.getSimulationForDate(apiDate);
+    console.log('SimulationResult - received dayData:', dayData);
     
     if (dayData) {
       // Extract closing state data
       const closingResults = SimulationService.getResultsData(apiDate, 'closing');
+      console.log('SimulationResult - closingResults:', closingResults);
 
       // Support both old (indexStateEvaluationDto) and new (evaluation) field names
       const closingEvaluation = dayData.closingIndexState?.evaluation || dayData.closingIndexState?.indexStateEvaluationDto;
+      console.log('SimulationResult - closingEvaluation:', closingEvaluation);
       const closingIndexLevel = closingEvaluation?.indexLevel || 0;
       const closingDivisorValue = dayData.closingIndexState?.composition?.additionalNumbers?.divisor || 0;
+      console.log('SimulationResult - closingIndexLevel:', closingIndexLevel, 'closingDivisor:', closingDivisorValue);
       
       setClosingData(closingResults);
       setClosingLevel(closingIndexLevel);
