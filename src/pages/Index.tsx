@@ -24,6 +24,10 @@ const Index = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.log('Index - State changed:', { activeTab, simulationComplete: simulationState.complete });
+  }, [activeTab, simulationState.complete]);
+
+  useEffect(() => {
     if (tabFromUrl && simulationState.complete) {
       setActiveTab(tabFromUrl);
     } else if (tabFromUrl && !simulationState.complete) {
@@ -39,6 +43,7 @@ const Index = () => {
   };
 
   const handleSimulationComplete = (isComplete: boolean, stocks: any[], selectedIdx: string = '') => {
+    console.log('Index - handleSimulationComplete called:', { isComplete, stocks, selectedIdx });
     setSimulationState({
       complete: isComplete,
       stocks,
@@ -83,9 +88,19 @@ const Index = () => {
                   <SimulationResult />
                 </div>
               )}
+              {activeTab === 'results' && !simulationState.complete && (
+                <div className="p-6 text-center text-muted-foreground">
+                  Please run a simulation first to view results.
+                </div>
+              )}
               {activeTab === 'time-series' && simulationState.complete && (
                 <div className="p-6">
                   <TimeSeriesData />
+                </div>
+              )}
+              {activeTab === 'time-series' && !simulationState.complete && (
+                <div className="p-6 text-center text-muted-foreground">
+                  Please run a simulation first to view time series data.
                 </div>
               )}
               {activeTab === 'proximity' && simulationState.complete && (
