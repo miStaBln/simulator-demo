@@ -877,7 +877,7 @@ export class SimulationService {
     
     const result = simulationData
       .map((data: any) => {
-        const date = data.simulationDate;
+        const date = data.closingDate || data.simulationDate;
         
         // Skip entries where closingIndexState is null or undefined
         if (!data.closingIndexState) {
@@ -931,7 +931,9 @@ export class SimulationService {
     
     if (Array.isArray(SimulationService.simulationResult.simulations)) {
       // New API format: simulations is an array
-      dayData = SimulationService.simulationResult.simulations.find((sim: any) => sim.simulationDate === date);
+      dayData = SimulationService.simulationResult.simulations.find((sim: any) => 
+        (sim.closingDate || sim.simulationDate) === date
+      );
     } else if (SimulationService.simulationResult.simulations) {
       // Old format: simulations is an object keyed by date
       dayData = SimulationService.simulationResult.simulations[date];
@@ -1030,7 +1032,7 @@ export class SimulationService {
     if (Array.isArray(SimulationService.simulationResult.simulations)) {
       // New API format: extract dates from array
       return SimulationService.simulationResult.simulations
-        .map((sim: any) => sim.simulationDate)
+        .map((sim: any) => sim.closingDate || sim.simulationDate)
         .filter(Boolean)
         .sort();
     } else if (SimulationService.simulationResult.simulations) {
@@ -1052,7 +1054,9 @@ export class SimulationService {
     // Handle new API format with simulations array or old dummy format
     if (Array.isArray(SimulationService.simulationResult.simulations)) {
       // New API format: find in array
-      return SimulationService.simulationResult.simulations.find((sim: any) => sim.simulationDate === date);
+      return SimulationService.simulationResult.simulations.find((sim: any) => 
+        (sim.closingDate || sim.simulationDate) === date
+      );
     } else if (SimulationService.simulationResult.simulations) {
       // Old format: access by key
       return SimulationService.simulationResult.simulations[date];
