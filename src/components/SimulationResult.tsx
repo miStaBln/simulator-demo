@@ -145,18 +145,37 @@ const SimulationResult = () => {
   };
 
   return (
-    <div style={{ 
-      padding: '40px',
-      background: '#ffeb3b',
-      minHeight: '800px',
-      border: '10px solid #ff0000',
-      position: 'relative',
-      zIndex: 9999,
-      width: '100%',
-      display: 'block',
-      margin: '20px',
-      boxShadow: '0 0 50px rgba(255,0,0,0.8)'
-    }}>
+    <>
+      {/* ABSOLUTE DEBUG OVERLAY - Should be visible no matter what */}
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 999999,
+        background: 'red',
+        color: 'white',
+        padding: '20px',
+        fontSize: '20px',
+        fontWeight: 'bold',
+        textAlign: 'center',
+        pointerEvents: 'none'
+      }}>
+        🚨 SIMULATION RESULT IS HERE 🚨 | Dates: {availableDates.length} | Data: {closingData.length} items
+      </div>
+      
+      <div style={{ 
+        padding: '40px',
+        background: '#ffeb3b',
+        minHeight: '800px',
+        border: '10px solid #ff0000',
+        position: 'relative',
+        zIndex: 1,
+        width: '100%',
+        display: 'block',
+        margin: '20px',
+        boxShadow: '0 0 50px rgba(255,0,0,0.8)'
+      }}>
       <div style={{
         background: '#00ff00',
         padding: '30px',
@@ -346,6 +365,7 @@ const SimulationResult = () => {
         </div>
       )}
     </div>
+    </>
   );
 };
 
