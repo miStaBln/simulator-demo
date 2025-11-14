@@ -85,6 +85,22 @@ const Index = () => {
             />
             
             <div className="flex-1 overflow-auto">
+              {/* Global debug indicator */}
+              <div style={{
+                position: 'fixed',
+                top: '100px',
+                right: '20px',
+                zIndex: 9999,
+                background: 'red',
+                color: 'white',
+                padding: '20px',
+                border: '5px solid black',
+                fontSize: '20px',
+                fontWeight: 'bold'
+              }}>
+                DEBUG: Tab={activeTab}, HasData={hasSimulationData() ? 'YES' : 'NO'}
+              </div>
+              
               {activeTab === 'results' && hasSimulationData() && (
                 <div className="p-6">
                   <SimulationResult />

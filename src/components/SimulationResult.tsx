@@ -143,18 +143,26 @@ const SimulationResult = () => {
   };
 
   return (
-    <div className="p-6 bg-background">
-      {/* Debug indicator */}
-      <div className="mb-4 p-4 bg-yellow-200 border-2 border-yellow-600 rounded text-black">
-        <p className="font-bold">DEBUG: SimulationResult Component is rendering!</p>
+    <div className="p-6" style={{ minHeight: '100vh', background: '#f0f0f0' }}>
+      {/* Very visible debug indicator */}
+      <div style={{
+        background: '#FF0000',
+        color: '#FFFFFF',
+        padding: '30px',
+        border: '10px solid #000000',
+        marginBottom: '20px',
+        fontSize: '24px',
+        fontWeight: 'bold',
+        boxShadow: '0 0 50px rgba(0,0,0,0.5)'
+      }}>
+        <p>🔴 DEBUG: SimulationResult Component is HERE!</p>
         <p>Available dates: {availableDates.length}</p>
         <p>Selected date: {selectedDate}</p>
         <p>Closing data: {closingData.length} items</p>
-        <p>Opening data: {openingData.length} items</p>
-        <p>Is Bond Index: {isBondIndex ? 'YES' : 'NO'}</p>
+        <p>Closing Level: {closingLevel}</p>
       </div>
 
-      <h1 className="text-xl font-medium mb-4 text-foreground">Simulation Result</h1>
+      <h1 className="text-xl font-medium mb-4" style={{ color: '#000000', background: '#FFFF00', padding: '10px' }}>Simulation Result</h1>
       
       {/* Date Navigation */}
       <div className="flex items-center gap-4 mb-6">
