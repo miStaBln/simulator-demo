@@ -847,7 +847,10 @@ export class SimulationService {
   }
 
   static getTimeSeriesData(): TimeSeriesData[] {
+    console.log('getTimeSeriesData - simulationResult:', SimulationService.simulationResult);
+    
     if (!SimulationService.simulationResult) {
+      console.log('getTimeSeriesData - No simulation result');
       return [];
     }
 
@@ -857,12 +860,14 @@ export class SimulationService {
     if (Array.isArray(SimulationService.simulationResult.simulations)) {
       // New API format: simulations is an array
       simulationData = SimulationService.simulationResult.simulations;
+      console.log('getTimeSeriesData - Array format, count:', simulationData.length);
     } else if (SimulationService.simulationResult.simulations) {
       // Old format: simulations is an object keyed by date
       simulationData = Object.entries(SimulationService.simulationResult.simulations).map(([date, data]) => ({
         ...(data as any),
         simulationDate: date
       }));
+      console.log('getTimeSeriesData - Object format, count:', simulationData.length);
     } else {
       // Fallback to treating the whole result as the old format
       simulationData = Object.entries(SimulationService.simulationResult)
@@ -871,6 +876,7 @@ export class SimulationService {
           ...(data as any),
           simulationDate: date
         }));
+      console.log('getTimeSeriesData - Fallback format, count:', simulationData.length);
     }
     
     const referenceData = SimulationService.simulationResult.referencedIndexTimeSeries;
@@ -1020,43 +1026,61 @@ export class SimulationService {
   }
 
   static getAvailableDates(): string[] {
+    console.log('getAvailableDates - simulationResult:', SimulationService.simulationResult);
+    
     if (!SimulationService.simulationResult) {
+      console.log('getAvailableDates - No simulation result');
       return [];
     }
 
     // Handle new API format with simulations array or old dummy format
     if (Array.isArray(SimulationService.simulationResult.simulations)) {
       // New API format: extract dates from array
-      return SimulationService.simulationResult.simulations
+      const dates = SimulationService.simulationResult.simulations
         .map((sim: any) => sim.simulationDate)
         .filter(Boolean)
         .sort();
+      console.log('getAvailableDates - Array format, dates:', dates);
+      return dates;
     } else if (SimulationService.simulationResult.simulations) {
       // Old format: simulations is an object keyed by date
-      return Object.keys(SimulationService.simulationResult.simulations).sort();
+      const dates = Object.keys(SimulationService.simulationResult.simulations).sort();
+      console.log('getAvailableDates - Object format, dates:', dates);
+      return dates;
     } else {
       // Fallback to treating the whole result as the old format
-      return Object.keys(SimulationService.simulationResult)
+      const dates = Object.keys(SimulationService.simulationResult)
         .filter(key => key !== 'referencedIndexTimeSeries')
         .sort();
+      console.log('getAvailableDates - Fallback format, dates:', dates);
+      return dates;
     }
   }
 
   static getSimulationForDate(date: string): any {
+    console.log('getSimulationForDate - looking for date:', date);
+    
     if (!SimulationService.simulationResult) {
+      console.log('getSimulationForDate - No simulation result');
       return null;
     }
 
     // Handle new API format with simulations array or old dummy format
     if (Array.isArray(SimulationService.simulationResult.simulations)) {
       // New API format: find in array
-      return SimulationService.simulationResult.simulations.find((sim: any) => sim.simulationDate === date);
+      const result = SimulationService.simulationResult.simulations.find((sim: any) => sim.simulationDate === date);
+      console.log('getSimulationForDate - Array format, found:', result);
+      return result;
     } else if (SimulationService.simulationResult.simulations) {
       // Old format: access by key
-      return SimulationService.simulationResult.simulations[date];
+      const result = SimulationService.simulationResult.simulations[date];
+      console.log('getSimulationForDate - Object format, found:', result);
+      return result;
     } else {
       // Fallback to treating the whole result as the old format
-      return SimulationService.simulationResult[date];
+      const result = SimulationService.simulationResult[date];
+      console.log('getSimulationForDate - Fallback format, found:', result);
+      return result;
     }
   }
 
