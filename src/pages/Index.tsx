@@ -8,6 +8,7 @@ import SimulationResult from '@/components/SimulationResult';
 import TimeSeriesData from '@/components/TimeSeriesData';
 import ProximityIndexData from '@/components/ProximityIndexData';
 import { toast } from '@/hooks/use-toast';
+import { SimulationService } from '@/services/simulationService';
 
 const initialSimulationState = {
   stocks: [],
@@ -23,19 +24,17 @@ const Index = () => {
   const [shouldResetSimulation, setShouldResetSimulation] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    console.log('Index - State changed:', { activeTab, simulationComplete: simulationState.complete });
-  }, [activeTab, simulationState.complete]);
+  // Check if simulation data exists
+  const hasSimulationData = () => {
+    const dates = SimulationService.getAvailableDates();
+    return dates.length > 0;
+  };
 
   useEffect(() => {
-    if (tabFromUrl && simulationState.complete) {
+    if (tabFromUrl) {
       setActiveTab(tabFromUrl);
-    } else if (tabFromUrl && !simulationState.complete) {
-      // If trying to access results without simulation, stay on results but show placeholder
-      setActiveTab('results');
-      navigate('/simulator?tab=results');
     }
-  }, [tabFromUrl, simulationState.complete]);
+  }, [tabFromUrl]);
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
@@ -43,7 +42,6 @@ const Index = () => {
   };
 
   const handleSimulationComplete = (isComplete: boolean, stocks: any[], selectedIdx: string = '') => {
-    console.log('Index - handleSimulationComplete called:', { isComplete, stocks, selectedIdx });
     setSimulationState({
       complete: isComplete,
       stocks,
@@ -54,6 +52,7 @@ const Index = () => {
   const handleRefresh = () => {
     setSimulationState(initialSimulationState);
     setShouldResetSimulation(true);
+    SimulationService.clearResults();
     toast({
       title: "Simulation Reset",
       description: "All simulation data has been reset",
@@ -79,34 +78,34 @@ const Index = () => {
             <ResultsTabNavigation
               activeTab={activeTab}
               onTabChange={handleTabChange}
-              simulationComplete={simulationState.complete}
+              simulationComplete={hasSimulationData()}
             />
             
             <div className="flex-1 overflow-auto">
-              {activeTab === 'results' && simulationState.complete && (
+              {activeTab === 'results' && hasSimulationData() && (
                 <div className="p-6">
                   <SimulationResult />
                 </div>
               )}
-              {activeTab === 'results' && !simulationState.complete && (
+              {activeTab === 'results' && !hasSimulationData() && (
                 <div className="p-6 text-center text-muted-foreground">
                   Please run a simulation first to view results.
                 </div>
               )}
-              {activeTab === 'time-series' && simulationState.complete && (
+              {activeTab === 'time-series' && hasSimulationData() && (
                 <div className="p-6">
                   <TimeSeriesData />
                 </div>
               )}
-              {activeTab === 'time-series' && !simulationState.complete && (
+              {activeTab === 'time-series' && !hasSimulationData() && (
                 <div className="p-6 text-center text-muted-foreground">
                   Please run a simulation first to view time series data.
                 </div>
               )}
-              {activeTab === 'proximity' && simulationState.complete && (
+              {activeTab === 'proximity' && hasSimulationData() && (
                 <div className="p-6">
                   <ProximityIndexData 
-                    simulationComplete={simulationState.complete} 
+                    simulationComplete={hasSimulationData()} 
                     stocks={simulationState.stocks} 
                   />
                 </div>
