@@ -851,18 +851,47 @@ export class SimulationService {
       return [];
     }
 
-    // Handle both old dummy format and new API format
-    const simulationData = SimulationService.simulationResult.simulations || SimulationService.simulationResult;
+    // Handle new API format with simulations array or old dummy format
+    let simulationData: any[];
+    
+    if (Array.isArray(SimulationService.simulationResult.simulations)) {
+      // New API format: simulations is an array
+      simulationData = SimulationService.simulationResult.simulations;
+    } else if (SimulationService.simulationResult.simulations) {
+      // Old format: simulations is an object keyed by date
+      simulationData = Object.entries(SimulationService.simulationResult.simulations).map(([date, data]) => ({
+        ...(data as any),
+        simulationDate: date
+      }));
+    } else {
+      // Fallback to treating the whole result as the old format
+      simulationData = Object.entries(SimulationService.simulationResult)
+        .filter(([key]) => key !== 'referencedIndexTimeSeries')
+        .map(([date, data]) => ({
+          ...(data as any),
+          simulationDate: date
+        }));
+    }
+    
     const referenceData = SimulationService.simulationResult.referencedIndexTimeSeries;
     
-    return Object.entries(simulationData)
-      .map(([date, data]: [string, any]) => {
+    return simulationData
+      .map((data: any) => {
+        const date = data.simulationDate;
+        
         // Skip entries where closingIndexState is null or undefined
-        if (!data.closingIndexState || !data.closingIndexState.indexStateEvaluationDto) {
+        if (!data.closingIndexState) {
           return null;
         }
         
-        const indexLevel = data.closingIndexState.indexStateEvaluationDto.indexLevel;
+        // Support both old (indexStateEvaluationDto) and new (evaluation) field names
+        const evaluationData = data.closingIndexState.evaluation || data.closingIndexState.indexStateEvaluationDto;
+        
+        if (!evaluationData) {
+          return null;
+        }
+        
+        const indexLevel = evaluationData.indexLevel;
         const divisor = data.closingIndexState.composition?.additionalNumbers?.divisor || 1.0;
         
         // Skip if essential data is missing or zero
@@ -872,7 +901,8 @@ export class SimulationService {
         
         // Get reference data for this date if available
         const referenceEntry = referenceData?.[date];
-        const referenceIndexLevel = referenceEntry?.closingIndexState?.indexStateEvaluationDto?.indexLevel;
+        const referenceEvaluation = referenceEntry?.closingIndexState?.evaluation || referenceEntry?.closingIndexState?.indexStateEvaluationDto;
+        const referenceIndexLevel = referenceEvaluation?.indexLevel;
         const referenceDivisor = referenceEntry?.closingIndexState?.composition?.additionalNumbers?.divisor;
         
         const result: TimeSeriesData = {
@@ -894,17 +924,31 @@ export class SimulationService {
       return [];
     }
 
-    // Handle both old dummy format and new API format
-    const simulationData = SimulationService.simulationResult.simulations || SimulationService.simulationResult;
-    if (!simulationData[date]) {
+    // Handle new API format with simulations array or old dummy format
+    let dayData: any;
+    
+    if (Array.isArray(SimulationService.simulationResult.simulations)) {
+      // New API format: simulations is an array
+      dayData = SimulationService.simulationResult.simulations.find((sim: any) => sim.simulationDate === date);
+    } else if (SimulationService.simulationResult.simulations) {
+      // Old format: simulations is an object keyed by date
+      dayData = SimulationService.simulationResult.simulations[date];
+    } else {
+      // Fallback to treating the whole result as the old format
+      dayData = SimulationService.simulationResult[date];
+    }
+    
+    if (!dayData) {
       return [];
     }
 
-    const dayData = simulationData[date];
     const state = stateType === 'closing' ? dayData.closingIndexState : dayData.openingIndexState;
     
+    // Support both old (indexStateEvaluationDto) and new (evaluation) field names
+    const evaluationData = state?.evaluation || state?.indexStateEvaluationDto;
+    
     // Return empty array if state is null or missing required data
-    if (!state || !state.composition || !state.indexStateEvaluationDto) {
+    if (!state || !state.composition || !evaluationData) {
       return [];
     }
     
@@ -912,7 +956,7 @@ export class SimulationService {
     const constituents = state.composition.clusters?.flatMap(cluster => cluster.constituents) || [];
     
     // Get prices from evaluation data
-    const prices = state.indexStateEvaluationDto.clusters?.flatMap(cluster => cluster.prices) || [];
+    const prices = evaluationData.clusters?.flatMap(cluster => cluster.prices) || [];
     
     // Combine quantity and price data
     return constituents.map(constituent => {
