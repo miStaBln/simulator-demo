@@ -848,8 +848,12 @@ export class SimulationService {
 
   static getTimeSeriesData(): TimeSeriesData[] {
     if (!SimulationService.simulationResult) {
+      console.log('[getTimeSeriesData] No simulation result available');
       return [];
     }
+
+    console.log('[getTimeSeriesData] Full simulation result:', SimulationService.simulationResult);
+    console.log('[getTimeSeriesData] Simulations field type:', Array.isArray(SimulationService.simulationResult.simulations) ? 'array' : typeof SimulationService.simulationResult.simulations);
 
     // Handle new API format with simulations array or old dummy format
     let simulationData: any[];
@@ -857,6 +861,7 @@ export class SimulationService {
     if (Array.isArray(SimulationService.simulationResult.simulations)) {
       // New API format: simulations is an array
       simulationData = SimulationService.simulationResult.simulations;
+      console.log('[getTimeSeriesData] Using array format, count:', simulationData.length);
     } else if (SimulationService.simulationResult.simulations) {
       // Old format: simulations is an object keyed by date
       simulationData = Object.entries(SimulationService.simulationResult.simulations).map(([date, data]) => ({
@@ -876,11 +881,17 @@ export class SimulationService {
     const referenceData = SimulationService.simulationResult.referencedIndexTimeSeries;
     
     const result = simulationData
-      .map((data: any) => {
+      .map((data: any, index: number) => {
         const date = data.closingDate || data.simulationDate;
+        console.log(`[getTimeSeriesData] Processing simulation ${index}:`, {
+          date,
+          hasClosingIndexState: !!data.closingIndexState,
+          closingIndexState: data.closingIndexState
+        });
         
         // Skip entries where closingIndexState is null or undefined
         if (!data.closingIndexState) {
+          console.log(`[getTimeSeriesData] Skipping ${date}: no closingIndexState`);
           return null;
         }
         
@@ -888,14 +899,18 @@ export class SimulationService {
         const evaluationData = data.closingIndexState.evaluation || data.closingIndexState.indexStateEvaluationDto;
         
         if (!evaluationData) {
+          console.log(`[getTimeSeriesData] Skipping ${date}: no evaluation data`);
           return null;
         }
         
         const indexLevel = evaluationData.indexLevel;
         const divisor = data.closingIndexState.composition?.additionalNumbers?.divisor || 1.0;
         
+        console.log(`[getTimeSeriesData] ${date} values:`, { indexLevel, divisor });
+        
         // Skip if essential data is missing or zero
         if (!indexLevel || !divisor) {
+          console.log(`[getTimeSeriesData] Skipping ${date}: missing essential data`);
           return null;
         }
         
@@ -917,6 +932,9 @@ export class SimulationService {
       })
       .filter((item): item is TimeSeriesData => item !== null)
       .sort((a, b) => new Date(a.date.split('/').reverse().join('-')).getTime() - new Date(b.date.split('/').reverse().join('-')).getTime());
+    
+    console.log('Final time series result:', result);
+    console.log('Number of valid entries:', result.length);
     
     return result;
   }
@@ -1025,16 +1043,19 @@ export class SimulationService {
 
   static getAvailableDates(): string[] {
     if (!SimulationService.simulationResult) {
+      console.log('[getAvailableDates] No simulation result');
       return [];
     }
 
     // Handle new API format with simulations array or old dummy format
     if (Array.isArray(SimulationService.simulationResult.simulations)) {
       // New API format: extract dates from array
-      return SimulationService.simulationResult.simulations
+      const dates = SimulationService.simulationResult.simulations
         .map((sim: any) => sim.closingDate || sim.simulationDate)
         .filter(Boolean)
         .sort();
+      console.log('[getAvailableDates] Extracted dates:', dates);
+      return dates;
     } else if (SimulationService.simulationResult.simulations) {
       // Old format: simulations is an object keyed by date
       return Object.keys(SimulationService.simulationResult.simulations).sort();
