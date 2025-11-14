@@ -297,22 +297,31 @@ const SimulationResult = () => {
                 </tr>
               </thead>
               <tbody>
-                {closingData.map((item, index) => (
-                  <tr key={index} style={{ borderBottom: '1px solid #ddd' }}>
-                    <td style={{ padding: '12px', border: '1px solid #ddd', color: '#000' }}>
-                      {item.instrumentId || 'N/A'}
-                    </td>
-                    <td style={{ padding: '12px', textAlign: 'right', border: '1px solid #ddd', color: '#000' }}>
-                      {item.quantity?.toLocaleString() || 'N/A'}
-                    </td>
-                    <td style={{ padding: '12px', textAlign: 'right', border: '1px solid #ddd', color: '#000' }}>
-                      {item.price?.toFixed(4) || 'N/A'}
-                    </td>
-                    <td style={{ padding: '12px', textAlign: 'right', border: '1px solid #ddd', color: '#000' }}>
-                      {item.marketValue?.toFixed(2) || 'N/A'}
-                    </td>
-                  </tr>
-                ))}
+                {closingData.map((item, index) => {
+                  // Parse string values to numbers for display
+                  const quantity = typeof item.quantity === 'string' ? parseFloat(item.quantity) : item.quantity;
+                  const price = typeof item.price === 'string' ? parseFloat(item.price) : item.price;
+                  const marketValue = typeof item.marketValue === 'string' ? parseFloat(item.marketValue) : item.marketValue;
+                  
+                  return (
+                    <tr key={index} style={{ borderBottom: '1px solid #ddd' }}>
+                      <td style={{ padding: '12px', border: '1px solid #ddd', color: '#000' }}>
+                        {item.instrumentId || item.ric || 'N/A'}
+                      </td>
+                      <td style={{ padding: '12px', textAlign: 'right', border: '1px solid #ddd', color: '#000' }}>
+                        {!isNaN(quantity) ? quantity.toLocaleString() : 'N/A'}
+                      </td>
+                      <td style={{ padding: '12px', textAlign: 'right', border: '1px solid #ddd', color: '#000' }}>
+                        {!isNaN(price) ? price.toFixed(4) : 'N/A'}
+                      </td>
+                      <td style={{ padding: '12px', textAlign: 'right', border: '1px solid #ddd', color: '#000' }}>
+                        {!isNaN(marketValue) ? marketValue.toFixed(2) : (
+                          !isNaN(quantity) && !isNaN(price) ? (quantity * price).toFixed(2) : 'N/A'
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
