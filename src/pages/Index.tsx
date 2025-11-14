@@ -27,8 +27,11 @@ const Index = () => {
   // Check if simulation data exists
   const hasSimulationData = () => {
     const dates = SimulationService.getAvailableDates();
+    console.log('[Index] hasSimulationData check, dates:', dates, 'length:', dates.length);
     return dates.length > 0;
   };
+
+  console.log('[Index] Rendering, activeTab:', activeTab, 'hasSimulationData:', hasSimulationData());
 
   useEffect(() => {
     if (tabFromUrl) {
