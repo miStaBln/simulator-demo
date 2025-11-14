@@ -84,25 +84,11 @@ const Index = () => {
               simulationComplete={hasSimulationData()}
             />
             
-            <div className="flex-1 overflow-auto">
-              {/* Global debug indicator */}
-              <div style={{
-                position: 'fixed',
-                top: '100px',
-                right: '20px',
-                zIndex: 9999,
-                background: 'red',
-                color: 'white',
-                padding: '20px',
-                border: '5px solid black',
-                fontSize: '20px',
-                fontWeight: 'bold'
-              }}>
-                DEBUG: Tab={activeTab}, HasData={hasSimulationData() ? 'YES' : 'NO'}
-              </div>
+            <div style={{ flex: 1, overflow: 'auto', width: '100%', display: 'block' }}>
+              {/* Remove debug indicator after confirming visibility */}
               
               {activeTab === 'results' && hasSimulationData() && (
-                <div className="p-6">
+                <div style={{ width: '100%', minHeight: '100vh', display: 'block', position: 'relative' }}>
                   <SimulationResult />
                 </div>
               )}

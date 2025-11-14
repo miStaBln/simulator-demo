@@ -147,33 +147,32 @@ const SimulationResult = () => {
       padding: '20px',
       background: '#ffffff',
       minHeight: '500px',
-      border: '3px solid #000000'
+      border: '3px solid #000000',
+      position: 'relative',
+      zIndex: 1,
+      width: '100%',
+      display: 'block'
     }}>
-      {/* Very visible debug indicator */}
+      {/* Data loaded - showing {availableDates.length} dates, selected: {selectedDate} */}
       <div style={{
-        background: '#00FF00',
-        color: '#000000',
-        padding: '20px',
-        border: '5px solid #FF0000',
+        background: '#f5f5f5',
+        padding: '10px',
         marginBottom: '20px',
-        fontSize: '18px',
-        fontWeight: 'bold'
+        border: '1px solid #ccc',
+        borderRadius: '4px'
       }}>
-        <p>✅ SimulationResult IS RENDERING</p>
-        <p>Dates available: {availableDates.length}</p>
-        <p>Selected: {selectedDate}</p>
-        <p>Data items: {closingData.length}</p>
-        <p>Level: {closingLevel}</p>
-        <p>Divisor: {closingDivisor}</p>
+        <p style={{ margin: 0, fontSize: '14px', color: '#666' }}>
+          ✓ Loaded {availableDates.length} simulation dates | Currently viewing: {selectedDate}
+        </p>
       </div>
 
       <h1 style={{ 
-        fontSize: '24px',
+        fontSize: '28px',
         fontWeight: 'bold',
-        marginBottom: '20px',
-        color: '#000000',
-        background: '#FFEB3B',
-        padding: '10px'
+        marginBottom: '24px',
+        color: '#1a1a1a',
+        borderBottom: '3px solid #333',
+        paddingBottom: '12px'
       }}>
         Simulation Result - {selectedDate}
       </h1>
