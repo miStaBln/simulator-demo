@@ -76,21 +76,50 @@ const Index = () => {
           onRefresh={handleRefresh}
         />
         
-        <SidebarInset className="flex-1">
-          <div className="flex flex-col h-full">
+        <SidebarInset style={{ 
+          flex: 1, 
+          display: 'flex', 
+          flexDirection: 'column',
+          width: '100%',
+          overflow: 'visible',
+          position: 'relative'
+        }}>
+          <div style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            height: '100%',
+            width: '100%',
+            overflow: 'visible'
+          }}>
             <ResultsTabNavigation
               activeTab={activeTab}
               onTabChange={handleTabChange}
               simulationComplete={hasSimulationData()}
             />
             
-            <div style={{ flex: 1, overflow: 'auto', width: '100%', display: 'block' }}>
-              {/* Remove debug indicator after confirming visibility */}
+            <div style={{ 
+              flex: 1, 
+              overflow: 'auto', 
+              width: '100%', 
+              display: 'block',
+              position: 'relative'
+            }}>
               
               {activeTab === 'results' && hasSimulationData() && (
-                <div style={{ width: '100%', minHeight: '100vh', display: 'block', position: 'relative' }}>
-                  <SimulationResult />
-                </div>
+                <>
+                  {console.log('[Index] Rendering SimulationResult component NOW')}
+                  <div style={{ 
+                    width: '100%', 
+                    minHeight: '100vh', 
+                    display: 'block', 
+                    position: 'relative',
+                    padding: '20px',
+                    background: '#f0f0f0',
+                    overflow: 'visible'
+                  }}>
+                    <SimulationResult />
+                  </div>
+                </>
               )}
               {activeTab === 'results' && !hasSimulationData() && (
                 <div className="p-6 text-center text-muted-foreground">

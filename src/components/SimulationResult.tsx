@@ -5,6 +5,8 @@ import DataTable from './DataTable';
 import { SimulationService } from '@/services/simulationService';
 
 const SimulationResult = () => {
+  console.log('[SimulationResult] ⭐⭐⭐ COMPONENT FUNCTION CALLED ⭐⭐⭐');
+  
   const [selectedDate, setSelectedDate] = useState('11.04.2025');
   const [availableDates, setAvailableDates] = useState<string[]>([]);
   const [currentDateIndex, setCurrentDateIndex] = useState(0);
@@ -144,26 +146,29 @@ const SimulationResult = () => {
 
   return (
     <div style={{ 
-      padding: '20px',
-      background: '#ffffff',
-      minHeight: '500px',
-      border: '3px solid #000000',
+      padding: '40px',
+      background: '#ffeb3b',
+      minHeight: '800px',
+      border: '10px solid #ff0000',
       position: 'relative',
-      zIndex: 1,
+      zIndex: 9999,
       width: '100%',
-      display: 'block'
+      display: 'block',
+      margin: '20px',
+      boxShadow: '0 0 50px rgba(255,0,0,0.8)'
     }}>
-      {/* Data loaded - showing {availableDates.length} dates, selected: {selectedDate} */}
       <div style={{
-        background: '#f5f5f5',
-        padding: '10px',
-        marginBottom: '20px',
-        border: '1px solid #ccc',
-        borderRadius: '4px'
+        background: '#00ff00',
+        padding: '30px',
+        border: '5px solid #0000ff',
+        marginBottom: '30px',
+        fontSize: '24px',
+        fontWeight: 'bold',
+        color: '#000'
       }}>
-        <p style={{ margin: 0, fontSize: '14px', color: '#666' }}>
-          ✓ Loaded {availableDates.length} simulation dates | Currently viewing: {selectedDate}
-        </p>
+        🎯 SIMULATION RESULT IS RENDERING 🎯
+        <br/>
+        Dates: {availableDates.length} | Selected: {selectedDate} | Data: {closingData.length} items
       </div>
 
       <h1 style={{ 
