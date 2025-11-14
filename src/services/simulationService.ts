@@ -1019,6 +1019,47 @@ export class SimulationService {
     return `${day}/${month}/${year}`;
   }
 
+  static getAvailableDates(): string[] {
+    if (!SimulationService.simulationResult) {
+      return [];
+    }
+
+    // Handle new API format with simulations array or old dummy format
+    if (Array.isArray(SimulationService.simulationResult.simulations)) {
+      // New API format: extract dates from array
+      return SimulationService.simulationResult.simulations
+        .map((sim: any) => sim.simulationDate)
+        .filter(Boolean)
+        .sort();
+    } else if (SimulationService.simulationResult.simulations) {
+      // Old format: simulations is an object keyed by date
+      return Object.keys(SimulationService.simulationResult.simulations).sort();
+    } else {
+      // Fallback to treating the whole result as the old format
+      return Object.keys(SimulationService.simulationResult)
+        .filter(key => key !== 'referencedIndexTimeSeries')
+        .sort();
+    }
+  }
+
+  static getSimulationForDate(date: string): any {
+    if (!SimulationService.simulationResult) {
+      return null;
+    }
+
+    // Handle new API format with simulations array or old dummy format
+    if (Array.isArray(SimulationService.simulationResult.simulations)) {
+      // New API format: find in array
+      return SimulationService.simulationResult.simulations.find((sim: any) => sim.simulationDate === date);
+    } else if (SimulationService.simulationResult.simulations) {
+      // Old format: access by key
+      return SimulationService.simulationResult.simulations[date];
+    } else {
+      // Fallback to treating the whole result as the old format
+      return SimulationService.simulationResult[date];
+    }
+  }
+
   static clearResults(): void {
     SimulationService.simulationResult = null;
     SimulationService.currentIndexFamily = null;

@@ -18,30 +18,25 @@ const SimulationResult = () => {
   
   useEffect(() => {
     // Get available simulation dates
-    const simulationResult = SimulationService.getSimulationResult();
-    if (simulationResult) {
-      // Handle both old dummy format and new API format
-      const simulationData = simulationResult.simulations || simulationResult;
-      const dates = Object.keys(simulationData).sort();
-      const formattedDates = dates.map(date => {
-        const [year, month, day] = date.split('-');
-        return `${day}.${month}.${year}`;
-      });
-      setAvailableDates(formattedDates);
-      
-      // Set initial date if available
-      if (formattedDates.length > 0) {
-        setSelectedDate(formattedDates[0]);
-        setCurrentDateIndex(0);
-      }
+    const dates = SimulationService.getAvailableDates();
+    const formattedDates = dates.map(date => {
+      const [year, month, day] = date.split('-');
+      return `${day}.${month}.${year}`;
+    });
+    setAvailableDates(formattedDates);
+    
+    // Set initial date if available
+    if (formattedDates.length > 0) {
+      setSelectedDate(formattedDates[0]);
+      setCurrentDateIndex(0);
+    }
 
-      // Check if this is a bond index by looking at the first constituent
-      if (dates.length > 0) {
-        const firstDayData = simulationData[dates[0]];
-        if (firstDayData?.closingIndexState?.composition?.clusters?.[0]?.constituents?.[0]) {
-          const firstConstituent = firstDayData.closingIndexState.composition.clusters[0].constituents[0];
-          setIsBondIndex(firstConstituent.assetIdentifier?.assetClass === 'BOND');
-        }
+    // Check if this is a bond index by looking at the first constituent
+    if (dates.length > 0) {
+      const firstDayData = SimulationService.getSimulationForDate(dates[0]);
+      if (firstDayData?.closingIndexState?.composition?.clusters?.[0]?.constituents?.[0]) {
+        const firstConstituent = firstDayData.closingIndexState.composition.clusters[0].constituents[0];
+        setIsBondIndex(firstConstituent.assetIdentifier?.assetClass === 'BOND');
       }
     }
   }, []);
@@ -54,42 +49,39 @@ const SimulationResult = () => {
     };
 
     const apiDate = formatDateForAPI(selectedDate);
-    const simulationResult = SimulationService.getSimulationResult();
+    const dayData = SimulationService.getSimulationForDate(apiDate);
     
-    if (simulationResult) {
-      // Handle both old dummy format and new API format
-      const simulationData = simulationResult.simulations || simulationResult;
+    if (dayData) {
+      // Extract closing state data
+      const closingResults = SimulationService.getResultsData(apiDate, 'closing');
+
+      // Support both old (indexStateEvaluationDto) and new (evaluation) field names
+      const closingEvaluation = dayData.closingIndexState?.evaluation || dayData.closingIndexState?.indexStateEvaluationDto;
+      const closingIndexLevel = closingEvaluation?.indexLevel || 0;
+      const closingDivisorValue = dayData.closingIndexState?.composition?.additionalNumbers?.divisor || 0;
       
-      if (simulationData[apiDate]) {
-        const dayData = simulationData[apiDate];
-        // Extract closing state data
-        const closingResults = SimulationService.getResultsData(apiDate, 'closing');
+      setClosingData(closingResults);
+      setClosingLevel(closingIndexLevel);
+      setClosingDivisor(closingDivisorValue);
 
-        const closingIndexLevel = dayData.closingIndexState?.indexStateEvaluationDto?.indexLevel || 0;
-        const closingDivisorValue = dayData.closingIndexState?.composition?.additionalNumbers?.divisor || 0;
+      // Only extract opening data for non-bond indices
+      if (!isBondIndex) {
+        const openingResults = SimulationService.getResultsData(apiDate, 'opening');
+        const openingEvaluation = dayData.openingIndexState?.evaluation || dayData.openingIndexState?.indexStateEvaluationDto;
+        const openingIndexLevel = openingEvaluation?.indexLevel || 0;
+        const openingDivisorValue = dayData.openingIndexState?.composition?.additionalNumbers?.divisor || 0;
         
-        setClosingData(closingResults);
-        setClosingLevel(closingIndexLevel);
-        setClosingDivisor(closingDivisorValue);
-
-        // Only extract opening data for non-bond indices
-        if (!isBondIndex) {
-          const openingResults = SimulationService.getResultsData(apiDate, 'opening');
-          const openingIndexLevel = dayData.openingIndexState?.indexStateEvaluationDto?.indexLevel || 0;
-          const openingDivisorValue = dayData.openingIndexState?.composition?.additionalNumbers?.divisor || 0;
-          
-          setOpeningData(openingResults);
-          setOpeningLevel(openingIndexLevel);
-          setOpeningDivisor(openingDivisorValue);
-        }
-      } else {
-        setClosingData([]);
-        setOpeningData([]);
-        setClosingLevel(0);
-        setOpeningLevel(0);
-        setClosingDivisor(0);
-        setOpeningDivisor(0);
+        setOpeningData(openingResults);
+        setOpeningLevel(openingIndexLevel);
+        setOpeningDivisor(openingDivisorValue);
       }
+    } else {
+      setClosingData([]);
+      setOpeningData([]);
+      setClosingLevel(0);
+      setOpeningLevel(0);
+      setClosingDivisor(0);
+      setOpeningDivisor(0);
     }
   }, [selectedDate, isBondIndex]);
 
