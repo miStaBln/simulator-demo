@@ -554,7 +554,6 @@ const SimulationData = ({
       setLoading(false);
       setSimulationComplete(true);
       
-      console.log('SimulationData - Simulation completed, calling onSimulationComplete with:', { stocks, selectedIndex });
       // Notify parent component about simulation completion
       if (onSimulationComplete) {
         onSimulationComplete(true, stocks, selectedIndex);
@@ -564,8 +563,6 @@ const SimulationData = ({
         title: "Simulation complete",
         description: "Real simulation API returned successfully",
       });
-      
-      console.log('Simulation completed with result:', result);
     } catch (error) {
       setLoading(false);
       console.error('Simulation failed:', error);
