@@ -16,32 +16,52 @@ const SimulationResult = () => {
   const [openingDivisor, setOpeningDivisor] = useState<number>(0);
   const [isBondIndex, setIsBondIndex] = useState<boolean>(false);
   
+  console.log('[SimulationResult] Component rendering', {
+    selectedDate,
+    availableDates: availableDates.length,
+    closingData: closingData.length,
+    openingData: openingData.length,
+    closingLevel,
+    isBondIndex
+  });
+  
   useEffect(() => {
     // Get available simulation dates
     const dates = SimulationService.getAvailableDates();
+    console.log('[SimulationResult] Available dates from service:', dates);
+    
     const formattedDates = dates.map(date => {
       const [year, month, day] = date.split('-');
       return `${day}.${month}.${year}`;
     });
+    console.log('[SimulationResult] Formatted dates:', formattedDates);
+    
     setAvailableDates(formattedDates);
     
     // Set initial date if available
     if (formattedDates.length > 0) {
       setSelectedDate(formattedDates[0]);
       setCurrentDateIndex(0);
+      console.log('[SimulationResult] Set initial date:', formattedDates[0]);
     }
 
     // Check if this is a bond index by looking at the first constituent
     if (dates.length > 0) {
       const firstDayData = SimulationService.getSimulationForDate(dates[0]);
+      console.log('[SimulationResult] First day data:', firstDayData);
+      
       if (firstDayData?.closingIndexState?.composition?.clusters?.[0]?.constituents?.[0]) {
         const firstConstituent = firstDayData.closingIndexState.composition.clusters[0].constituents[0];
-        setIsBondIndex(firstConstituent.assetIdentifier?.assetClass === 'BOND');
+        const isBond = firstConstituent.assetIdentifier?.assetClass === 'BOND';
+        console.log('[SimulationResult] Is bond index:', isBond);
+        setIsBondIndex(isBond);
       }
     }
   }, []);
 
   useEffect(() => {
+    console.log('[SimulationResult useEffect] Triggered with selectedDate:', selectedDate);
+    
     // Convert date format from DD.MM.YYYY to YYYY-MM-DD for API
     const formatDateForAPI = (dateStr: string) => {
       const [day, month, year] = dateStr.split('.');
@@ -49,16 +69,26 @@ const SimulationResult = () => {
     };
 
     const apiDate = formatDateForAPI(selectedDate);
+    console.log('[SimulationResult useEffect] Formatted API date:', apiDate);
+    
     const dayData = SimulationService.getSimulationForDate(apiDate);
+    console.log('[SimulationResult useEffect] Day data:', dayData);
     
     if (dayData) {
       // Extract closing state data
       const closingResults = SimulationService.getResultsData(apiDate, 'closing');
+      console.log('[SimulationResult useEffect] Closing results:', closingResults);
 
       // Support both old (indexStateEvaluationDto) and new (evaluation) field names
       const closingEvaluation = dayData.closingIndexState?.evaluation || dayData.closingIndexState?.indexStateEvaluationDto;
       const closingIndexLevel = closingEvaluation?.indexLevel || 0;
       const closingDivisorValue = dayData.closingIndexState?.composition?.additionalNumbers?.divisor || 0;
+      
+      console.log('[SimulationResult useEffect] Setting closing data:', {
+        closingIndexLevel,
+        closingDivisorValue,
+        closingResultsCount: closingResults.length
+      });
       
       setClosingData(closingResults);
       setClosingLevel(closingIndexLevel);
@@ -71,11 +101,18 @@ const SimulationResult = () => {
         const openingIndexLevel = openingEvaluation?.indexLevel || 0;
         const openingDivisorValue = dayData.openingIndexState?.composition?.additionalNumbers?.divisor || 0;
         
+        console.log('[SimulationResult useEffect] Setting opening data:', {
+          openingIndexLevel,
+          openingDivisorValue,
+          openingResultsCount: openingResults.length
+        });
+        
         setOpeningData(openingResults);
         setOpeningLevel(openingIndexLevel);
         setOpeningDivisor(openingDivisorValue);
       }
     } else {
+      console.log('[SimulationResult useEffect] No day data found, clearing state');
       setClosingData([]);
       setOpeningData([]);
       setClosingLevel(0);
@@ -106,8 +143,18 @@ const SimulationResult = () => {
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-xl font-medium mb-4">Simulation Result</h1>
+    <div className="p-6 bg-background">
+      {/* Debug indicator */}
+      <div className="mb-4 p-4 bg-yellow-200 border-2 border-yellow-600 rounded text-black">
+        <p className="font-bold">DEBUG: SimulationResult Component is rendering!</p>
+        <p>Available dates: {availableDates.length}</p>
+        <p>Selected date: {selectedDate}</p>
+        <p>Closing data: {closingData.length} items</p>
+        <p>Opening data: {openingData.length} items</p>
+        <p>Is Bond Index: {isBondIndex ? 'YES' : 'NO'}</p>
+      </div>
+
+      <h1 className="text-xl font-medium mb-4 text-foreground">Simulation Result</h1>
       
       {/* Date Navigation */}
       <div className="flex items-center gap-4 mb-6">
