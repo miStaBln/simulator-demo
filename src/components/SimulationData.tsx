@@ -68,6 +68,15 @@ const SimulationData = ({
 }: SimulationDataProps) => {
   const navigate = useNavigate();
   
+  // Convert DD.MM.YYYY to YYYY-MM-DD
+  const convertDateFormat = (date: string): string => {
+    if (!date) return '';
+    const parts = date.split('.');
+    if (parts.length !== 3) return date;
+    const [day, month, year] = parts;
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+  };
+  
   // Initialize with stored values or defaults
   const [startDate, setStartDate] = useState(() => 
     localStorage.getItem('sim_startDate') || '11.04.2025'
@@ -505,9 +514,20 @@ const SimulationData = ({
     });
     
     try {
+      // Convert dates to API format (YYYY-MM-DD)
+      const convertedPriceOverrides = priceOverrides.map(override => ({
+        ...override,
+        date: convertDateFormat(override.date)
+      }));
+      
+      const convertedRebalancings = rebalancings.map(rebalancing => ({
+        ...rebalancing,
+        date: convertDateFormat(rebalancing.date)
+      }));
+      
       const result = await SimulationService.runSimulation(
-        startDate,
-        endDate,
+        convertDateFormat(startDate),
+        convertDateFormat(endDate),
         currency,
         returnType,
         divisor,
@@ -525,10 +545,10 @@ const SimulationData = ({
           drDividendTreatment,
           globalDrTaxRate
         },
-        priceOverrides,
+        convertedPriceOverrides,
         parseFloat(initialLevel) || 1000,
         parseFloat(previousRebalancingIndexValue) || 100,
-        rebalancings // Pass rebalancings to the simulation service
+        convertedRebalancings
       );
       
       setLoading(false);
