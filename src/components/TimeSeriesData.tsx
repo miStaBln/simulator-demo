@@ -23,6 +23,10 @@ const TimeSeriesData = () => {
   const [showAll, setShowAll] = useState(false);
   const timeSeriesData = SimulationService.getTimeSeriesData();
   
+  console.log('[TimeSeriesData] Component rendering');
+  console.log('[TimeSeriesData] timeSeriesData:', timeSeriesData);
+  console.log('[TimeSeriesData] timeSeriesData.length:', timeSeriesData.length);
+  
   // Calculate all derived data
   const dailyReturnsData = calculateDailyReturns(timeSeriesData);
   const rollingVolatilityData = calculateRollingVolatility(dailyReturnsData);
@@ -31,6 +35,16 @@ const TimeSeriesData = () => {
   const keyFigures = calculateKeyFigures(timeSeriesData, maxDrawdown);
   const histogramData = createHistogramData(dailyReturnsData);
   const stats = calculateStats(dailyReturnsData);
+  
+  console.log('[TimeSeriesData] Calculated data:', {
+    dailyReturnsData: dailyReturnsData.length,
+    rollingVolatilityData: rollingVolatilityData.length,
+    underwaterData: underwaterData.length,
+    maxDrawdown,
+    keyFigures,
+    histogramData: histogramData.length,
+    stats
+  });
 
   // Check if we have reference data
   const hasReferenceData = timeSeriesData.some(d => d.referenceIndexLevel !== undefined);
@@ -61,6 +75,7 @@ const TimeSeriesData = () => {
   const displayData = showAll ? timeSeriesData : timeSeriesData.slice(0, 10);
 
   if (timeSeriesData.length === 0) {
+    console.log('[TimeSeriesData] No data, showing empty message');
     return (
       <div className="p-6">
         <div className="text-center text-gray-500">
@@ -69,6 +84,8 @@ const TimeSeriesData = () => {
       </div>
     );
   }
+
+  console.log('[TimeSeriesData] Rendering charts and tables');
 
   return (
     <div className="p-6">
