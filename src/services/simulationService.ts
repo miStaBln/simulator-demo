@@ -65,6 +65,7 @@ interface SimulationPayload {
           value: number;
         };
         additionalNumbers: {
+          freeFloatFactor: number;
           weightingCapFactor: number;
         };
       }>;
@@ -626,7 +627,17 @@ export class SimulationService {
       simulationStart: startDate,
       simulationEnd: endDate,
       priceHistory: {
-        instrumentPrices: priceOverrides
+        instrumentPrices: priceOverrides.map(override => ({
+          instrumentKey: {
+            assetClass: "SHARE",
+            identifierType: identifierType,
+            id: override.ric
+          },
+          date: {
+            date: override.date
+          },
+          price: parseFloat(override.price)
+        }))
       },
       indexProperties: {
         initialIndexLevel: { value: initialLevel },
@@ -670,6 +681,7 @@ export class SimulationService {
               value: parseFloat(stock.shares || stock.weight || '1')
             },
             additionalNumbers: {
+              freeFloatFactor: parseFloat(stock.freeFloatFactor || '1'),
               weightingCapFactor: parseFloat(stock.weightingCapFactor || '1')
             }
           }))
@@ -739,6 +751,7 @@ export class SimulationService {
                   value: parseFloat(component.shares || component.weight || '1')
                 },
                 additionalNumbers: {
+                  freeFloatFactor: parseFloat(component.freeFloatFactor || '1'),
                   weightingCapFactor: parseFloat(component.weightingCapFactor || '1')
                 }
               })) || []
