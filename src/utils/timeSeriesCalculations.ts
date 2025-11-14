@@ -145,34 +145,52 @@ export const calculateYAxisDomain = (data: number[], padding: number = 0.05): [n
 export const createHistogramData = (dailyReturnsData: DailyReturn[]): HistogramBin[] => {
   if (dailyReturnsData.length === 0) return [];
   
-  const returns = dailyReturnsData.map(d => d.dailyReturn);
+  // Filter out NaN and invalid values
+  const returns = dailyReturnsData
+    .map(d => d.dailyReturn)
+    .filter(r => !isNaN(r) && isFinite(r));
+  
+  if (returns.length === 0) return [];
+  
   const min = Math.min(...returns);
   const max = Math.max(...returns);
+  
+  // Handle case where all values are the same
+  if (min === max) {
+    return [{
+      range: `${(min * 100).toFixed(2)}%`,
+      count: returns.length,
+      percentage: 100,
+      midpoint: min
+    }];
+  }
+  
   const numBins = 15;
   const binWidth = (max - min) / numBins;
   
-  const bins = Array.from({ length: numBins }, (_, i) => ({
-    binStart: min + i * binWidth,
-    binEnd: min + (i + 1) * binWidth,
-    count: 0,
-    percentage: 0
-  }));
+  const bins = Array.from({ length: numBins }, (_, i) => {
+    const binStart = min + i * binWidth;
+    const binEnd = min + (i + 1) * binWidth;
+    return {
+      range: `${(binStart * 100).toFixed(2)}% - ${(binEnd * 100).toFixed(2)}%`,
+      count: 0,
+      percentage: 0,
+      midpoint: (binStart + binEnd) / 2
+    };
+  });
   
   returns.forEach(returnValue => {
     const binIndex = Math.min(Math.floor((returnValue - min) / binWidth), numBins - 1);
-    bins[binIndex].count++;
+    if (binIndex >= 0 && binIndex < numBins) {
+      bins[binIndex].count++;
+    }
   });
   
   bins.forEach(bin => {
     bin.percentage = (bin.count / returns.length) * 100;
   });
   
-  return bins.map(bin => ({
-    range: `${bin.binStart.toFixed(1)}%`,
-    count: bin.count,
-    percentage: bin.percentage,
-    midpoint: (bin.binStart + bin.binEnd) / 2
-  }));
+  return bins;
 };
 
 export const calculateStats = (dailyReturnsData: DailyReturn[]): Stats => {
