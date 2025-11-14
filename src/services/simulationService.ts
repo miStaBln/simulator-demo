@@ -881,27 +881,33 @@ export class SimulationService {
     
     const referenceData = SimulationService.simulationResult.referencedIndexTimeSeries;
     
-    return simulationData
+    const result = simulationData
       .map((data: any) => {
         const date = data.simulationDate;
+        console.log('Processing data for date:', date, 'data:', data);
         
         // Skip entries where closingIndexState is null or undefined
         if (!data.closingIndexState) {
+          console.log('Skipping - no closingIndexState');
           return null;
         }
         
         // Support both old (indexStateEvaluationDto) and new (evaluation) field names
         const evaluationData = data.closingIndexState.evaluation || data.closingIndexState.indexStateEvaluationDto;
+        console.log('Evaluation data:', evaluationData);
         
         if (!evaluationData) {
+          console.log('Skipping - no evaluation data');
           return null;
         }
         
         const indexLevel = evaluationData.indexLevel;
         const divisor = data.closingIndexState.composition?.additionalNumbers?.divisor || 1.0;
+        console.log('Extracted - indexLevel:', indexLevel, 'divisor:', divisor);
         
         // Skip if essential data is missing or zero
         if (!indexLevel || !divisor) {
+          console.log('Skipping - missing essential data');
           return null;
         }
         
@@ -911,18 +917,22 @@ export class SimulationService {
         const referenceIndexLevel = referenceEvaluation?.indexLevel;
         const referenceDivisor = referenceEntry?.closingIndexState?.composition?.additionalNumbers?.divisor;
         
-        const result: TimeSeriesData = {
+        const resultItem: TimeSeriesData = {
           date: SimulationService.formatDateForDisplay(date),
           indexLevel,
           divisor,
           referenceIndexLevel,
           referenceDivisor
         };
+        console.log('Created result item:', resultItem);
         
-        return result;
+        return resultItem;
       })
       .filter((item): item is TimeSeriesData => item !== null)
       .sort((a, b) => new Date(a.date.split('/').reverse().join('-')).getTime() - new Date(b.date.split('/').reverse().join('-')).getTime());
+    
+    console.log('getTimeSeriesData - final result:', result);
+    return result;
   }
 
   static getResultsData(date: string, stateType: 'closing' | 'opening' = 'closing'): ResultsData[] {
