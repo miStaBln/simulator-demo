@@ -111,7 +111,7 @@ export class SimulationService {
   private static currentIndexFamily: string | null = null;
   
   private static readonly EQUITY_API_URL = 'http://test-32.gde.nbg.solactive.com:8274/index-simulator-equity/proxy/v3/simulateEquityIndexSimple';
-  private static readonly BOND_API_URL = 'http://test-32.gde.nbg.solactive.com:8274/index-simulator-bond/proxy/v3/simulateBondIndex';
+  private static readonly BOND_API_URL = 'http://test-32.gde.nbg.solactive.com:8274/index-simulator-equity/proxy/v3/bond/simulateIndex';
 
   // Updated dummy data to match the new structure with reference index comparison
   private static readonly DUMMY_SIMULATION_RESULT: SimulationResult = {
@@ -544,28 +544,7 @@ export class SimulationService {
   private static buildCAHandlingBondDefault() {
     return {
       enableCaHandling: true,
-      corporateActionHandling: "BOND_DELETION_MAT_CALL",
-      cashDividendTaxHandling: 'USE_WITH_TAX',
-      specialDividendTaxHandling: 'USE_WITH_TAX',
-      considerStockDividend: true,
-      considerStockSplit: true,
-      considerRightsIssue: true,
-      considerRightsIssueToCashComponent: false,
-      considerCapitalDecrease: true,
-      cashDividendTax: 0,
-      specialDividendTax: 0,
-      useWeightNeutralRightsIssue: false,
-      useWeightNeutralCapitalDecrease: false,
-      franking: "NO_ADJUSTMENT",
-      pid: "NO_ADJUSTMENT",
-      reit: "NO_ADJUSTMENT",
-      returnOfCapital: "NO_ADJUSTMENT",
-      interestOnCapital: "NO_ADJUSTMENT",
-      nzInvestorType: "LOCAL_NO_IMPUTATION",
-      auInvestorType: "LOCAL_NO_IMPUTATION",
-      considerDividendFee: false,
-      drDividendTreatment: 'DEFAULT',
-      globalDrTaxRate: 0
+      corporateActionHandling: "BOND_DELETION_MAT_CALL"
     };
   }
 
@@ -677,7 +656,7 @@ export class SimulationService {
     if (isBondIndex) {
       payload.indexProperties.caHandlingConfiguration = SimulationService.buildCAHandlingBondDefault();
       
-      payload.bondComposition = {
+      payload.composition = {
         clusters: [{
           name: "NONE",
           constituents: stocks.map(stock => ({
@@ -718,7 +697,12 @@ export class SimulationService {
             additionalNumbers: {
               freeFloatFactor: parseFloat(stock.freeFloatFactor || '1'),
               weightingCapFactor: parseFloat(stock.weightingCapFactor || '1')
-            }
+            },
+            dates: {
+                          compositionEnteredAt: {
+                            date: null
+                          }
+                        }
           }))
         }],
         additionalNumbers: {
