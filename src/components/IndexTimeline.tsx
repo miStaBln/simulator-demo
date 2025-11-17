@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
-import { format, subMonths, addMonths } from 'date-fns';
+import { format, subMonths, addMonths, subDays } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { IndexItem } from '@/contexts/StarredContext';
-import { ArrowRight, CalendarIcon } from 'lucide-react';
+import { ArrowRight, CalendarIcon, PlayCircle } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
+import { useNavigate } from 'react-router-dom';
+import { toast } from '@/hooks/use-toast';
 
 interface TimelineEvent {
   id: string;
@@ -42,6 +44,7 @@ interface IndexTimelineProps {
 
 const IndexTimeline: React.FC<IndexTimelineProps> = ({ indexData }) => {
   const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(null);
+  const navigate = useNavigate();
   
   // Date range state - default to 6 months past and 1 month future
   const today = new Date();
@@ -177,6 +180,53 @@ const IndexTimeline: React.FC<IndexTimelineProps> = ({ indexData }) => {
 
   const calculateTotalDelta = (instruments: Array<{delta: number}>) => {
     return instruments.reduce((total, instrument) => total + Math.abs(instrument.delta), 0);
+  };
+
+  const handleReplay = (event: TimelineEvent) => {
+    if (!event.effectiveDate || !event.instruments) {
+      toast({
+        title: "Cannot replay",
+        description: "This event doesn't have enough data to replay.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Parse effective date (DD.MM.YYYY) and get one day before
+    const [day, month, year] = event.effectiveDate.split('.');
+    const effectiveDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    const startDate = subDays(effectiveDate, 1);
+    const startDateStr = format(startDate, 'dd.MM.yyyy');
+    const effectiveDateStr = event.effectiveDate;
+
+    // Store data in localStorage for the simulator
+    localStorage.setItem('sim_startDate', startDateStr);
+    localStorage.setItem('sim_endDate', effectiveDateStr);
+    localStorage.setItem('sim_inputMethod', 'existing');
+    localStorage.setItem('sim_selectedIndex', indexData.id || indexData.name);
+    localStorage.setItem('sim_indexDate', startDateStr);
+    
+    // Store rebalancing data from the event
+    const rebalancingData = [{
+      id: '1',
+      selectionDate: startDateStr,
+      rebalancingDate: effectiveDateStr,
+      components: event.instruments.map(inst => ({
+        ric: inst.ric,
+        shares: inst.sharesAfter.toString(),
+        weight: inst.weightAfter.toString(),
+        wcf: '1'
+      }))
+    }];
+    localStorage.setItem('sim_rebalancings', JSON.stringify(rebalancingData));
+
+    toast({
+      title: "Navigating to simulator",
+      description: `Replaying ${event.rebalancingType || 'event'} from ${event.effectiveDate}`,
+    });
+
+    // Navigate to simulator
+    navigate('/simulator');
   };
 
   return (
@@ -322,7 +372,7 @@ const IndexTimeline: React.FC<IndexTimelineProps> = ({ indexData }) => {
           <div className="mt-8 space-y-6">
             {/* Header section with chart */}
             <div className="bg-gray-50 p-4 rounded-lg">
-              <div className="flex justify-between items-start">
+              <div className="flex justify-between items-start mb-4">
                 <div className="grid grid-cols-2 gap-4 flex-1">
                   <div>
                     <span className="text-sm font-medium text-gray-600">Rebalancing Type:</span>
@@ -340,22 +390,34 @@ const IndexTimeline: React.FC<IndexTimelineProps> = ({ indexData }) => {
                   )}
                 </div>
                 
-                {/* Small chart */}
-                {selectedEvent.instruments && selectedEvent.instruments.length > 0 && (
-                  <div className="w-80 h-48 ml-6">
-                    <h4 className="text-sm font-medium mb-2">Total Absolute Delta by Exchange</h4>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={deltaData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="exchange" fontSize={10} />
-                        <YAxis fontSize={10} />
-                        <Tooltip formatter={(value) => [`${value}%`, 'Total Absolute Delta']} />
-                        <Bar dataKey="delta" fill="hsl(var(--primary))" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
+                {/* Re:play Button - Only show for past events with instruments */}
+                {selectedEvent.type !== 'today' && selectedEvent.date < new Date() && selectedEvent.instruments && (
+                  <Button 
+                    onClick={() => handleReplay(selectedEvent)}
+                    className="ml-4"
+                    variant="default"
+                  >
+                    <PlayCircle className="mr-2 h-4 w-4" />
+                    Re:play
+                  </Button>
                 )}
               </div>
+              
+              {/* Small chart */}
+              {selectedEvent.instruments && selectedEvent.instruments.length > 0 && (
+                <div className="w-full h-48">
+                  <h4 className="text-sm font-medium mb-2">Total Absolute Delta by Exchange</h4>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={deltaData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="exchange" fontSize={10} />
+                      <YAxis fontSize={10} />
+                      <Tooltip formatter={(value) => [`${value}%`, 'Total Absolute Delta']} />
+                      <Bar dataKey="delta" fill="hsl(var(--primary))" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
             </div>
 
             {/* Instruments table */}
