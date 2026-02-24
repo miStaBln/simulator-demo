@@ -46,7 +46,7 @@ const SideLayout = ({ children }: SideLayoutProps) => {
       icon: LayoutDashboard,
     },
     {
-      title: "Simulator",
+      title: "Simulate / Backtest",
       path: "/simulator",
       icon: BarChart2,
     },
