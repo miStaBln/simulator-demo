@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Package, BarChart2, Star, LayoutDashboard, Calendar, Bell, LayoutGrid } from 'lucide-react';
+import { Package, BarChart2, Star, LayoutDashboard, Calendar, Bell, LayoutGrid, ClipboardList } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -50,6 +50,11 @@ const SideLayout = ({ children }: SideLayoutProps) => {
       title: 'Simulator',
       path: '/simulator',
       icon: BarChart2,
+    },
+    {
+      title: 'Manage',
+      path: '/manage',
+      icon: ClipboardList,
     },
     {
       title: 'Events',
