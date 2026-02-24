@@ -19,6 +19,7 @@ import ChatBot from "./components/ChatBot";
 import DashboardEditor from "./components/dashboards/DashboardEditor";
 import WhatsNewModal from "./components/WhatsNewModal";
 import CorporateEvents from "./pages/CorporateEvents";
+import Manage from "./pages/Manage";
 
 const queryClient = new QueryClient();
 
@@ -73,6 +74,13 @@ const App = () => (
               <ProtectedRoute>
                 <SideLayout>
                   <CorporateEvents />
+                </SideLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/manage" element={
+              <ProtectedRoute>
+                <SideLayout>
+                  <Manage />
                 </SideLayout>
               </ProtectedRoute>
             } />
