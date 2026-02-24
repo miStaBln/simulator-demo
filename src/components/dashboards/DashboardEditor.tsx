@@ -18,7 +18,7 @@ import { toast } from '@/hooks/use-toast';
 import DashboardWindow from './DashboardWindow';
 import StarredIndicesWidget from './StarredIndicesWidget';
 import UpcomingEventsWidget from './UpcomingEventsWidget';
-import { IndexEventsWidget } from '@/pages/Events';
+import { IndexEventsWidget } from '@/pages/Manage';
 import { useStarred } from '@/contexts/StarredContext';
 import { DndContext, DragOverlay, useSensor, useSensors, PointerSensor } from '@dnd-kit/core';
 import { SortableContext, useSortable, arrayMove, rectSortingStrategy } from '@dnd-kit/sortable';
