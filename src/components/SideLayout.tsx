@@ -30,7 +30,7 @@ const SideLayout = ({ children }: SideLayoutProps) => {
       icon: LayoutGrid,
     },
     {
-      title: "Index Inventory",
+      title: "Index Inventory / Report",
       path: "/inventory",
       icon: Package,
     },
