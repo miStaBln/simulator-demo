@@ -10,8 +10,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import {
-  ChevronLeft, ChevronRight, CalendarDays, Filter as FilterIcon,
+  ChevronLeft, ChevronRight, CalendarDays, Filter as FilterIcon, ChevronsUpDown, Check,
   Bell, Activity, Clock, Search, Filter, ChevronDown, ChevronRight as ChevronRightIcon,
   AlertCircle, Calendar,
 } from 'lucide-react';
@@ -44,23 +46,44 @@ const allIndices = [
 ];
 
 const mockEvents: LifecycleEvent[] = [
+  // Past events
   { id: 'e1', date: new Date('2025-11-15'), type: 'REBALANCING', indexId: 'idx-1', indexName: 'Global Tech Leaders', ticker: 'GTECH', description: 'Quarterly rebalancing' },
   { id: 'e2', date: new Date('2025-11-20'), type: 'CORPORATE_ACTION', indexId: 'idx-2', indexName: 'European Momentum', ticker: 'EUMOM', description: 'Cash dividend — SAP' },
   { id: 'e3', date: new Date('2025-12-01'), type: 'SELECTION', indexId: 'idx-3', indexName: 'Sustainable Energy', ticker: 'SENRG', description: 'Annual selection' },
   { id: 'e4', date: new Date('2025-12-10'), type: 'REBALANCING', indexId: 'idx-5', indexName: 'Healthcare Innovation', ticker: 'HLTHIN', description: 'Semi-annual rebalancing' },
+  { id: 'e18', date: new Date('2025-12-15'), type: 'CORPORATE_ACTION', indexId: 'idx-4', indexName: 'Financial Services', ticker: 'FINSERV', description: 'Special dividend — JPM' },
+  { id: 'e19', date: new Date('2025-12-22'), type: 'SELECTION', indexId: 'idx-6', indexName: 'Consumer Staples', ticker: 'CSTAPLE', description: 'Year-end selection' },
   { id: 'e5', date: new Date('2026-01-08'), type: 'CORPORATE_ACTION', indexId: 'idx-1', indexName: 'Global Tech Leaders', ticker: 'GTECH', description: 'Stock split — AAPL' },
   { id: 'e6', date: new Date('2026-01-15'), type: 'SELECTION', indexId: 'idx-4', indexName: 'Financial Services', ticker: 'FINSERV', description: 'Quarterly selection' },
   { id: 'e7', date: new Date('2026-01-22'), type: 'REBALANCING', indexId: 'idx-6', indexName: 'Consumer Staples', ticker: 'CSTAPLE', description: 'Quarterly rebalancing' },
-  { id: 'e8', date: new Date('2026-02-05'), type: 'CORPORATE_ACTION', indexId: 'idx-3', indexName: 'Sustainable Energy', ticker: 'SENRG', description: 'Rights issue — ENPH' },
+  { id: 'e20', date: new Date('2026-01-28'), type: 'CORPORATE_ACTION', indexId: 'idx-3', indexName: 'Sustainable Energy', ticker: 'SENRG', description: 'Name change — FSLR' },
+  // Feb 2026 — dense with all types
+  { id: 'e8', date: new Date('2026-02-02'), type: 'CORPORATE_ACTION', indexId: 'idx-3', indexName: 'Sustainable Energy', ticker: 'SENRG', description: 'Rights issue — ENPH' },
+  { id: 'e21', date: new Date('2026-02-02'), type: 'SELECTION', indexId: 'idx-6', indexName: 'Consumer Staples', ticker: 'CSTAPLE', description: 'Quarterly selection' },
+  { id: 'e22', date: new Date('2026-02-04'), type: 'REBALANCING', indexId: 'idx-3', indexName: 'Sustainable Energy', ticker: 'SENRG', description: 'Post-selection rebalancing' },
+  { id: 'e23', date: new Date('2026-02-06'), type: 'CORPORATE_ACTION', indexId: 'idx-1', indexName: 'Global Tech Leaders', ticker: 'GTECH', description: 'Cash dividend — MSFT' },
+  { id: 'e24', date: new Date('2026-02-09'), type: 'SELECTION', indexId: 'idx-2', indexName: 'European Momentum', ticker: 'EUMOM', description: 'Special selection review' },
+  { id: 'e25', date: new Date('2026-02-10'), type: 'REBALANCING', indexId: 'idx-5', indexName: 'Healthcare Innovation', ticker: 'HLTHIN', description: 'Quarterly rebalancing' },
+  { id: 'e26', date: new Date('2026-02-12'), type: 'CORPORATE_ACTION', indexId: 'idx-4', indexName: 'Financial Services', ticker: 'FINSERV', description: 'Spin-off — GS' },
   { id: 'e9', date: new Date('2026-02-14'), type: 'SELECTION', indexId: 'idx-1', indexName: 'Global Tech Leaders', ticker: 'GTECH', description: 'Quarterly selection' },
+  { id: 'e27', date: new Date('2026-02-16'), type: 'REBALANCING', indexId: 'idx-1', indexName: 'Global Tech Leaders', ticker: 'GTECH', description: 'Post-selection rebalancing' },
+  { id: 'e28', date: new Date('2026-02-17'), type: 'CORPORATE_ACTION', indexId: 'idx-6', indexName: 'Consumer Staples', ticker: 'CSTAPLE', description: 'Cash dividend — PG' },
+  { id: 'e29', date: new Date('2026-02-18'), type: 'SELECTION', indexId: 'idx-5', indexName: 'Healthcare Innovation', ticker: 'HLTHIN', description: 'Ad-hoc addition review' },
   { id: 'e10', date: new Date('2026-02-20'), type: 'REBALANCING', indexId: 'idx-2', indexName: 'European Momentum', ticker: 'EUMOM', description: 'Quarterly rebalancing' },
+  { id: 'e30', date: new Date('2026-02-20'), type: 'CORPORATE_ACTION', indexId: 'idx-2', indexName: 'European Momentum', ticker: 'EUMOM', description: 'Share buyback — ASML' },
   { id: 'e11', date: new Date('2026-02-24'), type: 'CORPORATE_ACTION', indexId: 'idx-5', indexName: 'Healthcare Innovation', ticker: 'HLTHIN', description: 'Cash dividend — JNJ' },
-  { id: 'e12', date: new Date('2026-02-27'), type: 'REBALANCING', indexId: 'idx-4', indexName: 'Financial Services', ticker: 'FINSERV', description: 'Quarterly rebalancing' },
+  { id: 'e31', date: new Date('2026-02-24'), type: 'SELECTION', indexId: 'idx-4', indexName: 'Financial Services', ticker: 'FINSERV', description: 'Quarterly selection' },
+  { id: 'e32', date: new Date('2026-02-25'), type: 'REBALANCING', indexId: 'idx-6', indexName: 'Consumer Staples', ticker: 'CSTAPLE', description: 'Quarterly rebalancing' },
+  { id: 'e12', date: new Date('2026-02-27'), type: 'REBALANCING', indexId: 'idx-4', indexName: 'Financial Services', ticker: 'FINSERV', description: 'Post-selection rebalancing' },
+  // Future
   { id: 'e13', date: new Date('2026-03-05'), type: 'SELECTION', indexId: 'idx-2', indexName: 'European Momentum', ticker: 'EUMOM', description: 'Annual selection' },
   { id: 'e14', date: new Date('2026-03-12'), type: 'REBALANCING', indexId: 'idx-1', indexName: 'Global Tech Leaders', ticker: 'GTECH', description: 'Quarterly rebalancing' },
   { id: 'e15', date: new Date('2026-03-18'), type: 'CORPORATE_ACTION', indexId: 'idx-6', indexName: 'Consumer Staples', ticker: 'CSTAPLE', description: 'Merger — KO' },
+  { id: 'e33', date: new Date('2026-03-20'), type: 'SELECTION', indexId: 'idx-3', indexName: 'Sustainable Energy', ticker: 'SENRG', description: 'Quarterly selection' },
+  { id: 'e34', date: new Date('2026-03-25'), type: 'REBALANCING', indexId: 'idx-4', indexName: 'Financial Services', ticker: 'FINSERV', description: 'Quarterly rebalancing' },
   { id: 'e16', date: new Date('2026-04-01'), type: 'SELECTION', indexId: 'idx-5', indexName: 'Healthcare Innovation', ticker: 'HLTHIN', description: 'Quarterly selection' },
   { id: 'e17', date: new Date('2026-04-10'), type: 'REBALANCING', indexId: 'idx-3', indexName: 'Sustainable Energy', ticker: 'SENRG', description: 'Quarterly rebalancing' },
+  { id: 'e35', date: new Date('2026-04-15'), type: 'CORPORATE_ACTION', indexId: 'idx-2', indexName: 'European Momentum', ticker: 'EUMOM', description: 'Cash dividend — LVMH' },
 ];
 
 const eventTypeConfig: Record<EventType, { label: string; bgClass: string; textClass: string }> = {
@@ -374,6 +397,7 @@ const Manage: React.FC = () => {
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [activeTypes, setActiveTypes] = useState<Set<EventType>>(new Set(['REBALANCING', 'SELECTION', 'CORPORATE_ACTION']));
   const [indexFilter, setIndexFilter] = useState<'starred' | 'administered'>('starred');
+  const [indexPickerOpen, setIndexPickerOpen] = useState(false);
 
   const toggleType = (type: EventType) => {
     setActiveTypes(prev => {
@@ -436,14 +460,46 @@ const Manage: React.FC = () => {
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center gap-2">
               <FilterIcon className="h-4 w-4 text-muted-foreground" />
-              <Select value={selectedIndex} onValueChange={setSelectedIndex}>
-                <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="starred">⭐ Starred Indices {starredIndices.length > 0 ? `(${starredIndices.length})` : '(all)'}</SelectItem>
-                  <SelectItem value="all">All Indices</SelectItem>
-                  {allIndices.map(idx => (<SelectItem key={idx.id} value={idx.id}>{idx.ticker} — {idx.name}</SelectItem>))}
-                </SelectContent>
-              </Select>
+              <Popover open={indexPickerOpen} onOpenChange={setIndexPickerOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" role="combobox" aria-expanded={indexPickerOpen} className="w-64 justify-between font-normal">
+                    {selectedIndex === 'starred'
+                      ? `⭐ Starred Indices ${starredIndices.length > 0 ? `(${starredIndices.length})` : '(all)'}`
+                      : selectedIndex === 'all'
+                        ? 'All Indices'
+                        : (() => { const idx = allIndices.find(i => i.id === selectedIndex); return idx ? `${idx.ticker} — ${idx.name}` : 'Select index'; })()
+                    }
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-64 p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Search index by name or ticker..." />
+                    <CommandList>
+                      <CommandEmpty>No index found.</CommandEmpty>
+                      <CommandGroup heading="Quick filters">
+                        <CommandItem value="starred" onSelect={() => { setSelectedIndex('starred'); setIndexPickerOpen(false); }}>
+                          <Check className={cn('mr-2 h-4 w-4', selectedIndex === 'starred' ? 'opacity-100' : 'opacity-0')} />
+                          ⭐ Starred Indices
+                        </CommandItem>
+                        <CommandItem value="all" onSelect={() => { setSelectedIndex('all'); setIndexPickerOpen(false); }}>
+                          <Check className={cn('mr-2 h-4 w-4', selectedIndex === 'all' ? 'opacity-100' : 'opacity-0')} />
+                          All Indices
+                        </CommandItem>
+                      </CommandGroup>
+                      <CommandGroup heading="Indices">
+                        {allIndices.map(idx => (
+                          <CommandItem key={idx.id} value={`${idx.ticker} ${idx.name}`} onSelect={() => { setSelectedIndex(idx.id); setIndexPickerOpen(false); }}>
+                            <Check className={cn('mr-2 h-4 w-4', selectedIndex === idx.id ? 'opacity-100' : 'opacity-0')} />
+                            <span className="font-mono text-xs mr-2">{idx.ticker}</span>
+                            <span>{idx.name}</span>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
             <div className="flex items-center gap-2">
               {(Object.entries(eventTypeConfig) as [EventType, typeof eventTypeConfig[EventType]][]).map(([type, cfg]) => (
