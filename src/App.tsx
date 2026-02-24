@@ -9,7 +9,7 @@ import Inventory from "./pages/Inventory";
 import StarredIndices from "./pages/StarredIndices";
 import IndexDetails from "./pages/IndexDetails";
 import Dashboards from "./pages/Dashboards";
-import Events from "./pages/Events";
+import Manage from "./pages/Manage";
 import Login from "./pages/Login";
 import Portal from "./pages/Portal";
 import NotFound from "./pages/NotFound";
@@ -19,7 +19,6 @@ import ChatBot from "./components/ChatBot";
 import DashboardEditor from "./components/dashboards/DashboardEditor";
 import WhatsNewModal from "./components/WhatsNewModal";
 import CorporateEvents from "./pages/CorporateEvents";
-import Manage from "./pages/Manage";
 
 const queryClient = new QueryClient();
 
@@ -84,13 +83,7 @@ const App = () => (
                 </SideLayout>
               </ProtectedRoute>
             } />
-            <Route path="/events" element={
-              <ProtectedRoute>
-                <SideLayout>
-                  <Events />
-                </SideLayout>
-              </ProtectedRoute>
-            } />
+            <Route path="/events" element={<Navigate to="/manage" replace />} />
             <Route path="/starred" element={
               <ProtectedRoute>
                 <SideLayout>

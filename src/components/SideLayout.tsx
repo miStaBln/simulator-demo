@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Package, BarChart2, Star, LayoutDashboard, Calendar, Bell, LayoutGrid, ClipboardList } from 'lucide-react';
+import { Package, BarChart2, Star, LayoutDashboard, Calendar, LayoutGrid, ClipboardList } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -55,11 +55,6 @@ const SideLayout = ({ children }: SideLayoutProps) => {
       title: 'Manage',
       path: '/manage',
       icon: ClipboardList,
-    },
-    {
-      title: 'Events',
-      path: '/events',
-      icon: Bell,
     },
     {
       title: 'Corporate Events',
