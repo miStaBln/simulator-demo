@@ -1053,7 +1053,7 @@ const OperateKPIs: React.FC = () => {
                       isMismatch && !isExpanded && "border-destructive/50",
                     )}
                   >
-                    {hasAlerts && (
+                    {(isMismatch || bucket.indices.some((idx) => idx.status === "error")) && (
                       <span className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-destructive rounded-full" />
                     )}
                     <div className="flex items-center gap-2 mb-2">
