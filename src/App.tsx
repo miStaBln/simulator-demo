@@ -19,6 +19,7 @@ import ChatBot from "./components/ChatBot";
 import DashboardEditor from "./components/dashboards/DashboardEditor";
 import WhatsNewModal from "./components/WhatsNewModal";
 import CorporateEvents from "./pages/CorporateEvents";
+import Rollback from "./pages/Rollback";
 
 const queryClient = new QueryClient();
 
@@ -114,6 +115,13 @@ const App = () => (
                     // Store the data in localStorage for retrieval
                     localStorage.setItem('newDashboardData', JSON.stringify({ name, widgets }));
                   }} />
+                </SideLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/rollback" element={
+              <ProtectedRoute>
+                <SideLayout>
+                  <Rollback />
                 </SideLayout>
               </ProtectedRoute>
             } />
