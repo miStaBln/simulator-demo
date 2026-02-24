@@ -27,6 +27,15 @@ import {
   ChevronRight as ChevronRightIcon,
   AlertCircle,
   Calendar,
+  AlertTriangle,
+  CheckCircle2,
+  ArrowRight,
+  Zap,
+  Eye,
+  RefreshCw,
+  FileCheck,
+  Rocket,
+  BarChart3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -878,6 +887,288 @@ export const IndexEventsWidget = ({ indices, standalone = false }: { indices: an
   );
 };
 
+// ─── Operate KPIs — Lifecycle Pipeline ─────────────────────────────
+
+type LifecycleStage = "newly_created" | "calculating" | "publishing" | "proforma" | "proforma_ex_tomorrow" | "rebalanced_today";
+
+interface StageConfig {
+  key: LifecycleStage;
+  label: string;
+  icon: React.ElementType;
+  description: string;
+}
+
+const lifecycleStages: StageConfig[] = [
+  { key: "newly_created", label: "Newly Created", icon: Rocket, description: "Indices recently onboarded" },
+  { key: "calculating", label: "Calculating", icon: RefreshCw, description: "Index level computation in progress" },
+  { key: "publishing", label: "Publishing", icon: Eye, description: "Levels calculated, pending publication" },
+  { key: "proforma", label: "Proforma Period", icon: FileCheck, description: "Proforma baskets active" },
+  { key: "proforma_ex_tomorrow", label: "Proforma Ex Tomorrow", icon: Zap, description: "Proforma going ex tomorrow" },
+  { key: "rebalanced_today", label: "Rebalanced Today", icon: CheckCircle2, description: "Rebalancing applied today" },
+];
+
+interface StageIndex {
+  id: string;
+  ticker: string;
+  name: string;
+  status: "ok" | "warning" | "error";
+  detail: string;
+  timestamp: string;
+}
+
+interface StageBucket {
+  current: number;
+  expected: number;
+  indices: StageIndex[];
+  alerts: string[];
+}
+
+const mockStageBuckets: Record<LifecycleStage, StageBucket> = {
+  newly_created: {
+    current: 2,
+    expected: 2,
+    indices: [
+      { id: "idx-new-1", ticker: "AIESG", name: "AI-Powered ESG Leaders", status: "ok", detail: "Created 2026-02-23, awaiting first calculation", timestamp: "2026-02-23 14:30" },
+      { id: "idx-new-2", ticker: "CBOND", name: "Corporate Bond Select", status: "ok", detail: "Created 2026-02-24, setup complete", timestamp: "2026-02-24 09:15" },
+    ],
+    alerts: [],
+  },
+  calculating: {
+    current: 6,
+    expected: 6,
+    indices: [
+      { id: "idx-1", ticker: "GTECH", name: "Global Tech Leaders", status: "ok", detail: "Calculation started at 08:00, ETA 08:45", timestamp: "08:00" },
+      { id: "idx-2", ticker: "EUMOM", name: "European Momentum", status: "ok", detail: "Calculation started at 08:05, ETA 08:50", timestamp: "08:05" },
+      { id: "idx-3", ticker: "SENRG", name: "Sustainable Energy", status: "warning", detail: "Slow data feed from provider — delayed by ~10 min", timestamp: "08:02" },
+      { id: "idx-4", ticker: "FINSERV", name: "Financial Services", status: "ok", detail: "Calculation started at 08:10, ETA 09:00", timestamp: "08:10" },
+      { id: "idx-5", ticker: "HLTHIN", name: "Healthcare Innovation", status: "ok", detail: "Calculation started at 08:08", timestamp: "08:08" },
+      { id: "idx-6", ticker: "CSTAPLE", name: "Consumer Staples", status: "ok", detail: "Calculation started at 08:12", timestamp: "08:12" },
+    ],
+    alerts: ["SENRG: Slow data feed from provider — delayed by ~10 min"],
+  },
+  publishing: {
+    current: 4,
+    expected: 6,
+    indices: [
+      { id: "idx-1", ticker: "GTECH", name: "Global Tech Leaders", status: "ok", detail: "Published at 09:01 — all dissemination channels confirmed", timestamp: "09:01" },
+      { id: "idx-2", ticker: "EUMOM", name: "European Momentum", status: "ok", detail: "Published at 09:05", timestamp: "09:05" },
+      { id: "idx-4", ticker: "FINSERV", name: "Financial Services", status: "ok", detail: "Published at 09:12", timestamp: "09:12" },
+      { id: "idx-6", ticker: "CSTAPLE", name: "Consumer Staples", status: "ok", detail: "Published at 09:15", timestamp: "09:15" },
+    ],
+    alerts: ["2 indices still calculating (SENRG, HLTHIN) — expected by 09:30"],
+  },
+  proforma: {
+    current: 3,
+    expected: 3,
+    indices: [
+      { id: "idx-1", ticker: "GTECH", name: "Global Tech Leaders", status: "ok", detail: "Proforma basket created Feb 20 — selection on Feb 14, rebalancing Feb 27", timestamp: "Feb 20" },
+      { id: "idx-5", ticker: "HLTHIN", name: "Healthcare Innovation", status: "ok", detail: "Proforma basket created Feb 19 — 5 constituent changes pending", timestamp: "Feb 19" },
+      { id: "idx-4", ticker: "FINSERV", name: "Financial Services", status: "warning", detail: "Proforma has 2 unresolved corporate actions (GS spin-off)", timestamp: "Feb 22" },
+    ],
+    alerts: ["FINSERV: 2 unresolved corporate actions in proforma period"],
+  },
+  proforma_ex_tomorrow: {
+    current: 1,
+    expected: 1,
+    indices: [
+      { id: "idx-6", ticker: "CSTAPLE", name: "Consumer Staples", status: "ok", detail: "Proforma goes ex tomorrow Feb 25 — quarterly rebalancing, 2 additions, 1 deletion", timestamp: "Feb 24" },
+    ],
+    alerts: [],
+  },
+  rebalanced_today: {
+    current: 0,
+    expected: 1,
+    indices: [],
+    alerts: ["EUMOM: Expected rebalancing today but not yet applied — check manually"],
+  },
+};
+
+const stageColors: Record<LifecycleStage, string> = {
+  newly_created: "bg-sky-500",
+  calculating: "bg-amber-500",
+  publishing: "bg-violet-500",
+  proforma: "bg-teal-500",
+  proforma_ex_tomorrow: "bg-orange-500",
+  rebalanced_today: "bg-emerald-500",
+};
+
+const OperateKPIs: React.FC = () => {
+  const [expandedStage, setExpandedStage] = useState<LifecycleStage | null>(null);
+  const navigate = useNavigate();
+
+  const totalAlerts = Object.values(mockStageBuckets).reduce((sum, b) => sum + b.alerts.length, 0);
+  const mismatchCount = Object.values(mockStageBuckets).filter((b) => b.current !== b.expected).length;
+
+  return (
+    <div className="space-y-6">
+      {/* Alerts banner */}
+      {(totalAlerts > 0 || mismatchCount > 0) && (
+        <Card className="border-destructive/50 bg-destructive/5">
+          <CardContent className="py-4">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-destructive">
+                  {totalAlerts} alert{totalAlerts !== 1 ? "s" : ""} · {mismatchCount} stage{mismatchCount !== 1 ? "s" : ""} with mismatched counts
+                </p>
+                {Object.entries(mockStageBuckets).flatMap(([key, bucket]) =>
+                  bucket.alerts.map((alert, i) => (
+                    <p key={`${key}-${i}`} className="text-xs text-muted-foreground flex items-center gap-2">
+                      <span className={cn("w-2 h-2 rounded-full shrink-0", stageColors[key as LifecycleStage])} />
+                      {alert}
+                    </p>
+                  ))
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Pipeline visualisation */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <BarChart3 className="h-5 w-5 text-primary" />
+            Index Lifecycle Pipeline
+          </CardTitle>
+          <p className="text-xs text-muted-foreground">Click any stage to see detailed index list</p>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-1 overflow-x-auto pb-2">
+            {lifecycleStages.map((stage, i) => {
+              const bucket = mockStageBuckets[stage.key];
+              const isMismatch = bucket.current !== bucket.expected;
+              const hasAlerts = bucket.alerts.length > 0;
+              const isExpanded = expandedStage === stage.key;
+              const Icon = stage.icon;
+
+              return (
+                <React.Fragment key={stage.key}>
+                  <button
+                    onClick={() => setExpandedStage(isExpanded ? null : stage.key)}
+                    className={cn(
+                      "flex-1 min-w-[140px] rounded-lg border p-3 transition-all text-left relative group",
+                      isExpanded ? "ring-2 ring-primary bg-accent" : "hover:bg-accent/50",
+                      isMismatch && !isExpanded && "border-destructive/50",
+                    )}
+                  >
+                    {hasAlerts && (
+                      <span className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-destructive rounded-full" />
+                    )}
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className={cn("w-7 h-7 rounded-md flex items-center justify-center text-white", stageColors[stage.key])}>
+                        <Icon className="h-4 w-4" />
+                      </div>
+                      <span className="text-xs font-medium leading-tight">{stage.label}</span>
+                    </div>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className={cn("text-2xl font-bold", isMismatch ? "text-destructive" : "text-foreground")}>
+                        {bucket.current}
+                      </span>
+                      <span className="text-xs text-muted-foreground">/ {bucket.expected} expected</span>
+                    </div>
+                    {isMismatch && (
+                      <p className="text-[10px] text-destructive mt-1 font-medium">
+                        {bucket.current < bucket.expected ? `${bucket.expected - bucket.current} missing` : `${bucket.current - bucket.expected} extra`}
+                      </p>
+                    )}
+                  </button>
+                  {i < lifecycleStages.length - 1 && (
+                    <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Expanded detail list */}
+      {expandedStage && (() => {
+        const stage = lifecycleStages.find((s) => s.key === expandedStage)!;
+        const bucket = mockStageBuckets[expandedStage];
+        const Icon = stage.icon;
+
+        return (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <div className={cn("w-6 h-6 rounded-md flex items-center justify-center text-white", stageColors[expandedStage])}>
+                  <Icon className="h-3.5 w-3.5" />
+                </div>
+                {stage.label}
+                <Badge variant="outline" className="ml-auto font-mono text-xs">
+                  {bucket.current} / {bucket.expected}
+                </Badge>
+              </CardTitle>
+              <p className="text-xs text-muted-foreground">{stage.description}</p>
+            </CardHeader>
+            <CardContent>
+              {bucket.alerts.length > 0 && (
+                <div className="mb-4 space-y-2">
+                  {bucket.alerts.map((alert, i) => (
+                    <div key={i} className="flex items-center gap-2 text-xs p-2 rounded-md bg-destructive/10 text-destructive border border-destructive/20">
+                      <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                      {alert}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {bucket.indices.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p className="text-sm">No indices in this stage currently.</p>
+                  {bucket.expected > 0 && (
+                    <p className="text-xs mt-1 text-destructive">Expected {bucket.expected} — check alerts above.</p>
+                  )}
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-10">Status</TableHead>
+                      <TableHead>Ticker</TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Detail</TableHead>
+                      <TableHead className="w-24">Time</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {bucket.indices.map((idx) => (
+                      <TableRow key={idx.id} className="group">
+                        <TableCell>
+                          {idx.status === "ok" && <CheckCircle2 className="h-4 w-4 text-emerald-500" />}
+                          {idx.status === "warning" && <AlertTriangle className="h-4 w-4 text-amber-500" />}
+                          {idx.status === "error" && <AlertCircle className="h-4 w-4 text-destructive" />}
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="link"
+                            className="p-0 h-auto font-mono text-sm text-primary hover:text-primary/80"
+                            onClick={() => {
+                              const indexData = allIndices.find((a) => a.id === idx.id);
+                              if (indexData) navigate("/index-details", { state: { indexData: { ...indexData, name: idx.name }, defaultTab: "timeline" } });
+                            }}
+                          >
+                            {idx.ticker}
+                          </Button>
+                        </TableCell>
+                        <TableCell className="text-sm">{idx.name}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground max-w-xs">{idx.detail}</TableCell>
+                        <TableCell className="text-xs font-mono text-muted-foreground">{idx.timestamp}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })()}
+    </div>
+  );
+};
+
 // ─── Main Manage page ──────────────────────────────────────────────
 
 const Manage: React.FC = () => {
@@ -944,9 +1235,9 @@ const Manage: React.FC = () => {
             <CalendarDays className="h-4 w-4" />
             Lifecycle Calendar
           </TabsTrigger>
-          <TabsTrigger value="running-selections" className="flex items-center gap-2">
+        <TabsTrigger value="operate-kpis" className="flex items-center gap-2">
             <Activity className="h-4 w-4" />
-            Running Selections
+            Operate KPIs
           </TabsTrigger>
           <TabsTrigger value="upcoming-events" className="flex items-center gap-2">
             <Clock className="h-4 w-4" />
@@ -1212,13 +1503,9 @@ const Manage: React.FC = () => {
           </div>
         </TabsContent>
 
-        {/* ─── Running Selections Tab ─── */}
-        <TabsContent value="running-selections" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <GaugeView title="Nr of Active Proforma" value={activeProforma} maxValue={10} color="teal" />
-            <GaugeView title="Ex Tomorrow" value={exTomorrow} maxValue={5} color="yellow" />
-          </div>
-          <RunningSelectionsTable />
+        {/* ─── Operate KPIs Tab ─── */}
+        <TabsContent value="operate-kpis" className="space-y-6">
+          <OperateKPIs />
         </TabsContent>
 
         {/* ─── Upcoming Events Tab ─── */}
