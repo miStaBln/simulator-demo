@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Package, BarChart2, Star, LayoutDashboard, Calendar, Bell, LayoutGrid, ClipboardList, RotateCcw } from "lucide-react";
+import { BarChart2, Star, LayoutDashboard, Calendar, LayoutGrid, ClipboardList, RotateCcw } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -30,9 +30,9 @@ const SideLayout = ({ children }: SideLayoutProps) => {
       icon: LayoutGrid,
     },
     {
-      title: "Index Inventory / Report",
-      path: "/inventory",
-      icon: Package,
+      title: "My Dashboards",
+      path: "/dashboards",
+      icon: LayoutDashboard,
     },
     {
       title: "Starred Indices",
@@ -41,9 +41,9 @@ const SideLayout = ({ children }: SideLayoutProps) => {
       badge: starredIndices.length > 0 ? starredIndices.length : undefined,
     },
     {
-      title: "My Dashboards",
-      path: "/dashboards",
-      icon: LayoutDashboard,
+      title: "Operate",
+      path: "/manage",
+      icon: ClipboardList,
     },
     {
       title: "Simulate / Backtest",
@@ -51,24 +51,14 @@ const SideLayout = ({ children }: SideLayoutProps) => {
       icon: BarChart2,
     },
     {
-      title: "Operate",
-      path: "/manage",
-      icon: ClipboardList,
-    },
-    {
-      title: "Events",
-      path: "/events",
-      icon: Bell,
+      title: "Rollback / Correction",
+      path: "/rollback",
+      icon: RotateCcw,
     },
     {
       title: "Corporate Events",
       path: "/corporate-events",
       icon: Calendar,
-    },
-    {
-      title: "Rollback / Correction",
-      path: "/rollback",
-      icon: RotateCcw,
     },
   ];
 
