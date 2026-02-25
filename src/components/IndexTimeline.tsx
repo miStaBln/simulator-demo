@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { IndexItem } from '@/contexts/StarredContext';
-import { ArrowRight, CalendarIcon, PlayCircle } from 'lucide-react';
+import { ArrowRight, CalendarIcon, PlayCircle, RotateCcw } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
@@ -229,6 +229,45 @@ const IndexTimeline: React.FC<IndexTimelineProps> = ({ indexData }) => {
     navigate('/simulator');
   };
 
+  const handleRollback = (event: TimelineEvent) => {
+    if (!event.effectiveDate || !event.instruments) {
+      toast({
+        title: "Cannot rollback",
+        description: "This event doesn't have enough data for a rollback.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Parse effective date (DD.MM.YYYY)
+    const [day, month, year] = event.effectiveDate.split('.');
+    const effectiveDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    const startDate = subDays(effectiveDate, 1);
+
+    // Navigate to rollback page with prefilled state
+    navigate('/rollback', {
+      state: {
+        prefill: {
+          correctionType: 'rebalancing',
+          selectedIndices: [indexData.id || indexData.name],
+          startDate: format(startDate, 'yyyy-MM-dd'),
+          endDate: format(effectiveDate, 'yyyy-MM-dd'),
+          eventDescription: `${event.rebalancingType || 'Rebalancing'} from ${event.effectiveDate}`,
+          rebalancingData: event.instruments.map(inst => ({
+            ric: inst.ric,
+            sharesAfter: inst.sharesAfter,
+            weightAfter: inst.weightAfter,
+          }))
+        }
+      }
+    });
+
+    toast({
+      title: "Navigating to Rollback",
+      description: `Correcting ${event.rebalancingType || 'event'} from ${event.effectiveDate}`,
+    });
+  };
+
   return (
     <Card>
       <CardContent className="pt-6">
@@ -390,16 +429,24 @@ const IndexTimeline: React.FC<IndexTimelineProps> = ({ indexData }) => {
                   )}
                 </div>
                 
-                {/* Re:play Button - Only show for past events with instruments */}
+                {/* Action buttons - Only show for past events with instruments */}
                 {selectedEvent.type !== 'today' && selectedEvent.date < new Date() && selectedEvent.instruments && (
-                  <Button 
-                    onClick={() => handleReplay(selectedEvent)}
-                    className="ml-4"
-                    variant="default"
-                  >
-                    <PlayCircle className="mr-2 h-4 w-4" />
-                    Re:play
-                  </Button>
+                  <div className="flex items-center gap-2 ml-4">
+                    <Button 
+                      onClick={() => handleReplay(selectedEvent)}
+                      variant="default"
+                    >
+                      <PlayCircle className="mr-2 h-4 w-4" />
+                      Re:play
+                    </Button>
+                    <Button 
+                      onClick={() => handleRollback(selectedEvent)}
+                      variant="outline"
+                    >
+                      <RotateCcw className="mr-2 h-4 w-4" />
+                      Rollback
+                    </Button>
+                  </div>
                 )}
               </div>
               
