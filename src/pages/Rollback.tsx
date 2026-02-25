@@ -1,10 +1,11 @@
 import React, { useState, useMemo } from 'react';
-import { RotateCcw, ChevronRight, Check, AlertTriangle, Download, Upload, Search, ArrowLeft } from 'lucide-react';
+import { RotateCcw, ChevronRight, Check, AlertTriangle, Download, Upload, Search, ArrowLeft, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select,
   SelectContent,
@@ -25,14 +26,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import DatePicker from '@/components/DatePicker';
 import { cn } from '@/lib/utils';
 
-// Steps
 const STEPS = [
   { id: 'context', label: 'Context', description: 'Choose correction type' },
-  { id: 'preparation', label: 'Preparation', description: 'Select index, dates & upload data' },
+  { id: 'preparation', label: 'Preparation', description: 'Select indices, dates & upload data' },
   { id: 'preview', label: 'Preview', description: 'Review impact & KPIs' },
   { id: 'execute', label: 'Execute', description: 'Confirm & apply' },
 ];
@@ -50,27 +50,28 @@ const MOCK_INDICES = [
   { id: 'SOL_HEALTH', name: 'Solactive Digital Health', ticker: 'HEALTH' },
 ];
 
-// Mock preview data generation
-const generatePreviewData = () => {
+const generatePreviewData = (seed: number) => {
   const data = [];
-  let actualLevel = 1000;
-  let correctedLevel = 1000;
-  let actualDivisor = 50000000;
-  let correctedDivisor = 50000000;
-  
+  let actualLevel = 1000 + seed * 50;
+  let correctedLevel = actualLevel;
+  let actualDivisor = 50000000 + seed * 1000000;
+  let correctedDivisor = actualDivisor;
+
+  // Simple seeded pseudo-random
+  let s = seed * 9301 + 49297;
+  const rand = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+
   for (let i = 0; i < 20; i++) {
     const date = new Date(2026, 1, 1 + i);
     const dayStr = `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`;
-    
-    const change = (Math.random() - 0.48) * 8;
+
+    const change = (rand() - 0.48) * 8;
     actualLevel += change;
-    correctedLevel += change + (i > 5 ? (Math.random() - 0.3) * 2 : 0);
-    
-    if (i === 6) {
-      actualDivisor *= 1.002;
-    }
+    correctedLevel += change + (i > 5 ? (rand() - 0.3) * 2 : 0);
+
+    if (i === 6) actualDivisor *= 1.002;
     correctedDivisor = actualDivisor * (1 + (i > 5 ? 0.0005 : 0));
-    
+
     data.push({
       date: dayStr,
       actualLevel: parseFloat(actualLevel.toFixed(4)),
@@ -86,7 +87,7 @@ const generatePreviewData = () => {
 const Rollback = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [correctionType, setCorrectionType] = useState<CorrectionType>(null);
-  const [selectedIndex, setSelectedIndex] = useState('');
+  const [selectedIndices, setSelectedIndices] = useState<string[]>([]);
   const [indexPickerOpen, setIndexPickerOpen] = useState(false);
   const [startDate, setStartDate] = useState('01.02.2026');
   const [endDate, setEndDate] = useState('20.02.2026');
@@ -94,42 +95,50 @@ const Rollback = () => {
   const [isExecuting, setIsExecuting] = useState(false);
   const [isExecuted, setIsExecuted] = useState(false);
   const [description, setDescription] = useState('');
+  const [activePreviewTab, setActivePreviewTab] = useState('');
 
-  const previewData = useMemo(() => generatePreviewData(), []);
-  const maxDeviation = useMemo(() => Math.max(...previewData.map(d => d.deviation)), [previewData]);
-  const avgDeviation = useMemo(() => previewData.reduce((s, d) => s + d.deviation, 0) / previewData.length, [previewData]);
+  // Generate preview data per selected index (seeded by index position for variety)
+  const previewDataMap = useMemo(() => {
+    const map: Record<string, ReturnType<typeof generatePreviewData>> = {};
+    selectedIndices.forEach((id, i) => { map[id] = generatePreviewData(i + 1); });
+    return map;
+  }, [selectedIndices]);
 
-  const selectedIndexData = MOCK_INDICES.find(idx => idx.id === selectedIndex);
+  const selectedIndicesData = MOCK_INDICES.filter(idx => selectedIndices.includes(idx.id));
+
+  // Set default active tab when entering preview
+  React.useEffect(() => {
+    if (currentStep === 2 && selectedIndices.length > 0 && !selectedIndices.includes(activePreviewTab)) {
+      setActivePreviewTab(selectedIndices[0]);
+    }
+  }, [currentStep, selectedIndices, activePreviewTab]);
+
+  const toggleIndex = (id: string) => {
+    setSelectedIndices(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  };
 
   const canProceed = () => {
     switch (currentStep) {
       case 0: return correctionType !== null;
-      case 1: return selectedIndex !== '' && startDate && endDate;
+      case 1: return selectedIndices.length > 0 && startDate && endDate;
       case 2: return true;
       case 3: return true;
       default: return false;
     }
   };
 
-  const handleNext = () => {
-    if (currentStep < STEPS.length - 1) setCurrentStep(currentStep + 1);
-  };
-  const handleBack = () => {
-    if (currentStep > 0) setCurrentStep(currentStep - 1);
-  };
+  const handleNext = () => { if (currentStep < STEPS.length - 1) setCurrentStep(currentStep + 1); };
+  const handleBack = () => { if (currentStep > 0) setCurrentStep(currentStep - 1); };
 
   const handleExecute = () => {
     setIsExecuting(true);
-    setTimeout(() => {
-      setIsExecuting(false);
-      setIsExecuted(true);
-    }, 2500);
+    setTimeout(() => { setIsExecuting(false); setIsExecuted(true); }, 2500);
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setUploadedFile(e.target.files[0].name);
-    }
+    if (e.target.files && e.target.files[0]) setUploadedFile(e.target.files[0].name);
   };
 
   // --- Step Renderers ---
@@ -156,9 +165,7 @@ const Rollback = () => {
               <div className="text-3xl mb-3">{item.icon}</div>
               <h4 className="font-semibold mb-2">{item.title}</h4>
               <p className="text-sm text-muted-foreground">{item.desc}</p>
-              {correctionType === item.type && (
-                <Badge className="mt-3" variant="default">Selected</Badge>
-              )}
+              {correctionType === item.type && <Badge className="mt-3" variant="default">Selected</Badge>}
             </CardContent>
           </Card>
         ))}
@@ -172,13 +179,17 @@ const Rollback = () => {
         Prepare {correctionType === 'rebalancing' ? 'Rebalancing' : correctionType === 'corporate_event' ? 'Corporate Event' : 'Price'} Correction
       </h3>
 
-      {/* Index Selection */}
+      {/* Multi-Index Selection */}
       <div>
-        <label className="block text-sm font-medium mb-1">Select Index</label>
+        <label className="block text-sm font-medium mb-1">Select Indices</label>
         <Popover open={indexPickerOpen} onOpenChange={setIndexPickerOpen}>
           <PopoverTrigger asChild>
-            <Button variant="outline" role="combobox" className="w-full justify-between h-9">
-              {selectedIndexData ? `${selectedIndexData.ticker} - ${selectedIndexData.name}` : 'Search for an index...'}
+            <Button variant="outline" role="combobox" className="w-full justify-between h-auto min-h-9 py-1.5">
+              {selectedIndices.length > 0 ? (
+                <span className="text-sm">{selectedIndices.length} index{selectedIndices.length > 1 ? 'es' : ''} selected</span>
+              ) : (
+                <span className="text-muted-foreground">Search and select indices...</span>
+              )}
               <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
@@ -192,9 +203,14 @@ const Rollback = () => {
                     <CommandItem
                       key={idx.id}
                       value={`${idx.ticker} ${idx.name}`}
-                      onSelect={() => { setSelectedIndex(idx.id); setIndexPickerOpen(false); }}
+                      onSelect={() => toggleIndex(idx.id)}
                     >
-                      <Check className={cn('mr-2 h-4 w-4', selectedIndex === idx.id ? 'opacity-100' : 'opacity-0')} />
+                      <div className={cn(
+                        'mr-2 h-4 w-4 border rounded-sm flex items-center justify-center',
+                        selectedIndices.includes(idx.id) ? 'bg-primary border-primary' : 'border-muted-foreground/40'
+                      )}>
+                        {selectedIndices.includes(idx.id) && <Check className="h-3 w-3 text-primary-foreground" />}
+                      </div>
                       <span className="font-medium mr-2">{idx.ticker}</span>
                       <span className="text-muted-foreground">{idx.name}</span>
                     </CommandItem>
@@ -204,6 +220,18 @@ const Rollback = () => {
             </Command>
           </PopoverContent>
         </Popover>
+
+        {/* Selected indices chips */}
+        {selectedIndices.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-2">
+            {selectedIndicesData.map(idx => (
+              <Badge key={idx.id} variant="secondary" className="gap-1">
+                {idx.ticker}
+                <X className="h-3 w-3 cursor-pointer" onClick={() => toggleIndex(idx.id)} />
+              </Badge>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Date Range */}
@@ -215,22 +243,15 @@ const Rollback = () => {
       {/* Description */}
       <div>
         <label className="block text-sm font-medium mb-1">Description / Reason</label>
-        <Input
-          placeholder="Describe why this correction is needed..."
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          className="h-9"
-        />
+        <Input placeholder="Describe why this correction is needed..." value={description} onChange={(e) => setDescription(e.target.value)} className="h-9" />
       </div>
 
       {/* Context-specific upload */}
       {correctionType === 'rebalancing' && (
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Upload Corrected Rebalancing Data</CardTitle>
-          </CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-base">Upload Corrected Rebalancing Data</CardTitle></CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground mb-3">Upload a CSV/Excel file with the correct constituents, weights, and shares.</p>
+            <p className="text-sm text-muted-foreground mb-3">Upload a CSV/Excel file with the correct constituents, weights, and shares. This rebalancing will be applied to all selected indices.</p>
             <div className="flex items-center gap-3">
               <label className="cursor-pointer">
                 <input type="file" className="hidden" accept=".csv,.xlsx,.xls" onChange={handleFileUpload} />
@@ -244,9 +265,7 @@ const Rollback = () => {
 
       {correctionType === 'price' && (
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Upload Corrected Prices</CardTitle>
-          </CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-base">Upload Corrected Prices</CardTitle></CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-3">Upload a CSV file with instrument identifiers and corrected prices per date.</p>
             <div className="flex items-center gap-3">
@@ -262,9 +281,7 @@ const Rollback = () => {
 
       {correctionType === 'corporate_event' && (
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Corporate Event Details</CardTitle>
-          </CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-base">Corporate Event Details</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             <div>
               <label className="block text-sm font-medium mb-1">Event Type</label>
@@ -297,39 +314,42 @@ const Rollback = () => {
     </div>
   );
 
-  const renderPreviewStep = () => {
+  const renderPreviewForIndex = (indexId: string) => {
+    const data = previewDataMap[indexId] || [];
+    const idxData = MOCK_INDICES.find(i => i.id === indexId);
+    const maxDev = Math.max(...data.map(d => d.deviation));
+    const avgDev = data.reduce((s, d) => s + d.deviation, 0) / data.length;
+
     const levelDomain: [number, number] = [
-      Math.min(...previewData.map(d => Math.min(d.actualLevel, d.correctedLevel))) * 0.998,
-      Math.max(...previewData.map(d => Math.max(d.actualLevel, d.correctedLevel))) * 1.002,
+      Math.min(...data.map(d => Math.min(d.actualLevel, d.correctedLevel))) * 0.998,
+      Math.max(...data.map(d => Math.max(d.actualLevel, d.correctedLevel))) * 1.002,
     ];
     const divisorDomain: [number, number] = [
-      Math.min(...previewData.map(d => Math.min(d.actualDivisor, d.correctedDivisor))) * 0.999,
-      Math.max(...previewData.map(d => Math.max(d.actualDivisor, d.correctedDivisor))) * 1.001,
+      Math.min(...data.map(d => Math.min(d.actualDivisor, d.correctedDivisor))) * 0.999,
+      Math.max(...data.map(d => Math.max(d.actualDivisor, d.correctedDivisor))) * 1.001,
     ];
 
     return (
       <div className="space-y-6">
-        <h3 className="text-lg font-semibold">Rollback Preview — {selectedIndexData?.ticker || 'Index'}</h3>
-
         {/* KPI Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card>
             <CardContent className="pt-4 pb-3">
               <div className="text-xs text-muted-foreground">Max Level Deviation</div>
-              <div className="text-xl font-bold text-destructive">{maxDeviation.toFixed(4)}</div>
-              <div className="text-xs text-muted-foreground">{((maxDeviation / 1000) * 100).toFixed(3)}%</div>
+              <div className="text-xl font-bold text-destructive">{maxDev.toFixed(4)}</div>
+              <div className="text-xs text-muted-foreground">{((maxDev / data[0]?.actualLevel || 1) * 100).toFixed(3)}%</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-4 pb-3">
               <div className="text-xs text-muted-foreground">Avg Level Deviation</div>
-              <div className="text-xl font-bold">{avgDeviation.toFixed(4)}</div>
+              <div className="text-xl font-bold">{avgDev.toFixed(4)}</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-4 pb-3">
               <div className="text-xs text-muted-foreground">Affected Days</div>
-              <div className="text-xl font-bold">{previewData.filter(d => d.deviation > 0.5).length}</div>
+              <div className="text-xl font-bold">{data.filter(d => d.deviation > 0.5).length}</div>
             </CardContent>
           </Card>
           <Card>
@@ -340,23 +360,21 @@ const Rollback = () => {
           </Card>
         </div>
 
-        {maxDeviation > 2 && (
+        {maxDev > 2 && (
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
-              Large deviation detected ({maxDeviation.toFixed(4)}). Please verify the uploaded correction data is accurate.
+              Large deviation detected for <strong>{idxData?.ticker}</strong> ({maxDev.toFixed(4)}). Please verify the uploaded correction data.
             </AlertDescription>
           </Alert>
         )}
 
-        {/* Level Comparison Chart */}
+        {/* Level Chart */}
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Index Level — Actual vs Corrected</CardTitle>
-          </CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-base">Index Level — Actual vs Corrected</CardTitle></CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={350}>
-              <LineChart data={previewData} margin={{ top: 10, right: 30, left: 20, bottom: 60 }}>
+              <LineChart data={data} margin={{ top: 10, right: 30, left: 20, bottom: 60 }}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" tick={{ fontSize: 11 }} angle={-45} textAnchor="end" height={70} />
                 <YAxis yAxisId="level" domain={levelDomain} tickFormatter={(v) => v.toFixed(1)} tick={{ fontSize: 11 }} />
@@ -372,14 +390,12 @@ const Rollback = () => {
           </CardContent>
         </Card>
 
-        {/* Divisor Comparison Chart */}
+        {/* Divisor Chart */}
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Divisor — Actual vs Corrected</CardTitle>
-          </CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-base">Divisor — Actual vs Corrected</CardTitle></CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={250}>
-              <LineChart data={previewData} margin={{ top: 10, right: 30, left: 20, bottom: 60 }}>
+              <LineChart data={data} margin={{ top: 10, right: 30, left: 20, bottom: 60 }}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" tick={{ fontSize: 11 }} angle={-45} textAnchor="end" height={70} />
                 <YAxis domain={divisorDomain} tickFormatter={(v) => v.toLocaleString()} tick={{ fontSize: 11 }} />
@@ -395,7 +411,7 @@ const Rollback = () => {
           </CardContent>
         </Card>
 
-        {/* Download section */}
+        {/* Download */}
         <div className="flex gap-3">
           <Button variant="outline" size="sm"><Download className="h-4 w-4 mr-2" />Download Corrected Time Series</Button>
           <Button variant="outline" size="sm"><Download className="h-4 w-4 mr-2" />Download Deviation Report</Button>
@@ -405,6 +421,36 @@ const Rollback = () => {
     );
   };
 
+  const renderPreviewStep = () => (
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold">Rollback Preview</h3>
+
+      {selectedIndices.length === 1 ? (
+        renderPreviewForIndex(selectedIndices[0])
+      ) : (
+        <Tabs value={activePreviewTab} onValueChange={setActivePreviewTab}>
+          <TabsList className="mb-4 flex-wrap h-auto gap-1">
+            {selectedIndicesData.map(idx => {
+              const data = previewDataMap[idx.id] || [];
+              const maxDev = Math.max(...data.map(d => d.deviation));
+              return (
+                <TabsTrigger key={idx.id} value={idx.id} className="gap-1.5">
+                  {idx.ticker}
+                  {maxDev > 2 && <AlertTriangle className="h-3 w-3 text-destructive" />}
+                </TabsTrigger>
+              );
+            })}
+          </TabsList>
+          {selectedIndices.map(id => (
+            <TabsContent key={id} value={id}>
+              {renderPreviewForIndex(id)}
+            </TabsContent>
+          ))}
+        </Tabs>
+      )}
+    </div>
+  );
+
   const renderExecuteStep = () => (
     <div className="space-y-6">
       {!isExecuted ? (
@@ -413,21 +459,19 @@ const Rollback = () => {
           <Alert>
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
-              This action will overwrite production index data for <strong>{selectedIndexData?.ticker || 'the selected index'}</strong> between <strong>{startDate}</strong> and <strong>{endDate}</strong>. This cannot be undone automatically.
+              This action will overwrite production index data for <strong>{selectedIndicesData.map(i => i.ticker).join(', ')}</strong> between <strong>{startDate}</strong> and <strong>{endDate}</strong>. This cannot be undone automatically.
             </AlertDescription>
           </Alert>
 
           <Card>
             <CardContent className="pt-6 space-y-3">
               <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
-                <span className="text-muted-foreground">Index:</span>
-                <span className="font-medium">{selectedIndexData?.ticker} — {selectedIndexData?.name}</span>
+                <span className="text-muted-foreground">Indices:</span>
+                <span className="font-medium">{selectedIndicesData.map(i => i.ticker).join(', ')}</span>
                 <span className="text-muted-foreground">Correction Type:</span>
                 <span className="font-medium capitalize">{correctionType?.replace('_', ' ')}</span>
                 <span className="text-muted-foreground">Period:</span>
                 <span className="font-medium">{startDate} → {endDate}</span>
-                <span className="text-muted-foreground">Max Deviation:</span>
-                <span className="font-medium text-destructive">{maxDeviation.toFixed(4)}</span>
                 <span className="text-muted-foreground">Uploaded File:</span>
                 <span className="font-medium">{uploadedFile || 'None'}</span>
                 {description && (
@@ -445,7 +489,7 @@ const Rollback = () => {
               {isExecuting ? (
                 <><RotateCcw className="h-4 w-4 mr-2 animate-spin" />Executing Rollback...</>
               ) : (
-                <><RotateCcw className="h-4 w-4 mr-2" />Execute Rollback</>
+                <><RotateCcw className="h-4 w-4 mr-2" />Execute Rollback ({selectedIndices.length} {selectedIndices.length === 1 ? 'index' : 'indices'})</>
               )}
             </Button>
             <Button variant="outline" onClick={handleBack} disabled={isExecuting}>Go Back</Button>
@@ -458,9 +502,13 @@ const Rollback = () => {
           </div>
           <h3 className="text-xl font-semibold mb-2">Rollback Executed Successfully</h3>
           <p className="text-muted-foreground mb-6">
-            Index <strong>{selectedIndexData?.ticker}</strong> has been corrected for the period {startDate} — {endDate}.
+            {selectedIndices.length === 1 ? (
+              <>Index <strong>{selectedIndicesData[0]?.ticker}</strong> has been corrected for the period {startDate} — {endDate}.</>
+            ) : (
+              <><strong>{selectedIndices.length}</strong> indices ({selectedIndicesData.map(i => i.ticker).join(', ')}) have been corrected for the period {startDate} — {endDate}.</>
+            )}
           </p>
-          <Button variant="outline" onClick={() => { setCurrentStep(0); setCorrectionType(null); setSelectedIndex(''); setUploadedFile(null); setIsExecuted(false); setDescription(''); }}>
+          <Button variant="outline" onClick={() => { setCurrentStep(0); setCorrectionType(null); setSelectedIndices([]); setUploadedFile(null); setIsExecuted(false); setDescription(''); }}>
             Start New Rollback
           </Button>
         </div>
@@ -485,10 +533,7 @@ const Rollback = () => {
         {STEPS.map((step, i) => (
           <React.Fragment key={step.id}>
             <div
-              className={cn(
-                'flex items-center gap-2 cursor-pointer',
-                i <= currentStep ? 'text-foreground' : 'text-muted-foreground'
-              )}
+              className={cn('flex items-center gap-2 cursor-pointer', i <= currentStep ? 'text-foreground' : 'text-muted-foreground')}
               onClick={() => { if (i < currentStep) setCurrentStep(i); }}
             >
               <div className={cn(
