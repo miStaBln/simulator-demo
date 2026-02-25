@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 
 // Helper to convert yyyy-MM-dd to dd.MM.yyyy
@@ -6,7 +6,7 @@ const formatDateForPicker = (isoDate: string) => {
   const [y, m, d] = isoDate.split('-');
   return `${d}.${m}.${y}`;
 };
-import { RotateCcw, ChevronRight, Check, AlertTriangle, Download, Upload, Search, ArrowLeft, X } from 'lucide-react';
+import { RotateCcw, ChevronRight, Check, AlertTriangle, Download, Upload, Search, ArrowLeft, X, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -64,7 +64,6 @@ const generatePreviewData = (seed: number) => {
   let actualDivisor = 50000000 + seed * 1000000;
   let correctedDivisor = actualDivisor;
 
-  // Simple seeded pseudo-random
   let s = seed * 9301 + 49297;
   const rand = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
 
@@ -91,64 +90,134 @@ const generatePreviewData = (seed: number) => {
   return data;
 };
 
+// --- State for a single rollback session ---
+interface RollbackSession {
+  id: string;
+  label: string;
+  currentStep: number;
+  correctionType: CorrectionType;
+  selectedIndices: string[];
+  indexPickerOpen: boolean;
+  startDate: string;
+  endDate: string;
+  uploadedFile: string | null;
+  isExecuting: boolean;
+  isExecuted: boolean;
+  description: string;
+  activePreviewTab: string;
+}
+
+let sessionCounter = 1;
+
+const createSession = (prefill?: any): RollbackSession => {
+  const id = `session-${sessionCounter++}`;
+  return {
+    id,
+    label: `Rollback ${sessionCounter - 1}`,
+    currentStep: prefill ? 1 : 0,
+    correctionType: prefill?.correctionType || null,
+    selectedIndices: prefill?.selectedIndices || [],
+    indexPickerOpen: false,
+    startDate: prefill?.startDate ? formatDateForPicker(prefill.startDate) : '01.02.2026',
+    endDate: prefill?.endDate ? formatDateForPicker(prefill.endDate) : '20.02.2026',
+    uploadedFile: null,
+    isExecuting: false,
+    isExecuted: false,
+    description: prefill?.eventDescription || '',
+    activePreviewTab: '',
+  };
+};
+
 const Rollback = () => {
   const location = useLocation();
   const prefill = (location.state as any)?.prefill;
 
-  const [currentStep, setCurrentStep] = useState(prefill ? 1 : 0);
-  const [correctionType, setCorrectionType] = useState<CorrectionType>(prefill?.correctionType || null);
-  const [selectedIndices, setSelectedIndices] = useState<string[]>(prefill?.selectedIndices || []);
-  const [indexPickerOpen, setIndexPickerOpen] = useState(false);
-  const [startDate, setStartDate] = useState(prefill?.startDate ? formatDateForPicker(prefill.startDate) : '01.02.2026');
-  const [endDate, setEndDate] = useState(prefill?.endDate ? formatDateForPicker(prefill.endDate) : '20.02.2026');
-  const [uploadedFile, setUploadedFile] = useState<string | null>(null);
-  const [isExecuting, setIsExecuting] = useState(false);
-  const [isExecuted, setIsExecuted] = useState(false);
-  const [description, setDescription] = useState(prefill?.eventDescription || '');
-  const [activePreviewTab, setActivePreviewTab] = useState('');
+  const [sessions, setSessions] = useState<RollbackSession[]>([createSession(prefill)]);
+  const [activeSessionId, setActiveSessionId] = useState(sessions[0].id);
 
-  // Generate preview data per selected index (seeded by index position for variety)
+  const activeSession = sessions.find(s => s.id === activeSessionId) || sessions[0];
+
+  const updateSession = useCallback((sessionId: string, updates: Partial<RollbackSession>) => {
+    setSessions(prev => prev.map(s => s.id === sessionId ? { ...s, ...updates } : s));
+  }, []);
+
+  const addSession = () => {
+    const newSession = createSession();
+    setSessions(prev => [...prev, newSession]);
+    setActiveSessionId(newSession.id);
+  };
+
+  const closeSession = (sessionId: string) => {
+    setSessions(prev => {
+      const next = prev.filter(s => s.id !== sessionId);
+      if (next.length === 0) {
+        const fresh = createSession();
+        setActiveSessionId(fresh.id);
+        return [fresh];
+      }
+      if (activeSessionId === sessionId) {
+        setActiveSessionId(next[0].id);
+      }
+      return next;
+    });
+  };
+
+  // Shortcut setters for active session
+  const s = activeSession;
+  const update = (updates: Partial<RollbackSession>) => updateSession(s.id, updates);
+
   const previewDataMap = useMemo(() => {
     const map: Record<string, ReturnType<typeof generatePreviewData>> = {};
-    selectedIndices.forEach((id, i) => { map[id] = generatePreviewData(i + 1); });
+    s.selectedIndices.forEach((id, i) => { map[id] = generatePreviewData(i + 1); });
     return map;
-  }, [selectedIndices]);
+  }, [s.selectedIndices]);
 
-  const selectedIndicesData = MOCK_INDICES.filter(idx => selectedIndices.includes(idx.id));
+  const selectedIndicesData = MOCK_INDICES.filter(idx => s.selectedIndices.includes(idx.id));
 
-  // Set default active tab when entering preview
   React.useEffect(() => {
-    if (currentStep === 2 && selectedIndices.length > 0 && !selectedIndices.includes(activePreviewTab)) {
-      setActivePreviewTab(selectedIndices[0]);
+    if (s.currentStep === 2 && s.selectedIndices.length > 0 && !s.selectedIndices.includes(s.activePreviewTab)) {
+      update({ activePreviewTab: s.selectedIndices[0] });
     }
-  }, [currentStep, selectedIndices, activePreviewTab]);
+  }, [s.currentStep, s.selectedIndices, s.activePreviewTab]);
+
+  // Auto-update tab label based on selected indices
+  React.useEffect(() => {
+    if (s.selectedIndices.length === 1) {
+      const idx = MOCK_INDICES.find(i => i.id === s.selectedIndices[0]);
+      if (idx) update({ label: `${idx.ticker}` });
+    } else if (s.selectedIndices.length > 1) {
+      update({ label: `${s.selectedIndices.length} indices` });
+    }
+  }, [s.selectedIndices]);
 
   const toggleIndex = (id: string) => {
-    setSelectedIndices(prev =>
-      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
-    );
+    update({
+      selectedIndices: s.selectedIndices.includes(id)
+        ? s.selectedIndices.filter(x => x !== id)
+        : [...s.selectedIndices, id]
+    });
   };
 
   const canProceed = () => {
-    switch (currentStep) {
-      case 0: return correctionType !== null;
-      case 1: return selectedIndices.length > 0 && startDate && endDate;
+    switch (s.currentStep) {
+      case 0: return s.correctionType !== null;
+      case 1: return s.selectedIndices.length > 0 && s.startDate && s.endDate;
       case 2: return true;
       case 3: return true;
       default: return false;
     }
   };
 
-  const handleNext = () => { if (currentStep < STEPS.length - 1) setCurrentStep(currentStep + 1); };
-  const handleBack = () => { if (currentStep > 0) setCurrentStep(currentStep - 1); };
+  const handleNext = () => { if (s.currentStep < STEPS.length - 1) update({ currentStep: s.currentStep + 1 }); };
+  const handleBack = () => { if (s.currentStep > 0) update({ currentStep: s.currentStep - 1 }); };
 
   const handleExecute = () => {
-    setIsExecuting(true);
-    setTimeout(() => { setIsExecuting(false); setIsExecuted(true); }, 2500);
+    update({ isExecuting: true });
+    setTimeout(() => { updateSession(s.id, { isExecuting: false, isExecuted: true }); }, 2500);
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) setUploadedFile(e.target.files[0].name);
+    if (e.target.files && e.target.files[0]) update({ uploadedFile: e.target.files[0].name });
   };
 
   // --- Step Renderers ---
@@ -167,15 +236,15 @@ const Rollback = () => {
             key={item.type}
             className={cn(
               'cursor-pointer transition-all hover:shadow-md border-2',
-              correctionType === item.type ? 'border-primary bg-primary/5' : 'border-border'
+              s.correctionType === item.type ? 'border-primary bg-primary/5' : 'border-border'
             )}
-            onClick={() => setCorrectionType(item.type)}
+            onClick={() => update({ correctionType: item.type })}
           >
             <CardContent className="pt-6">
               <div className="text-3xl mb-3">{item.icon}</div>
               <h4 className="font-semibold mb-2">{item.title}</h4>
               <p className="text-sm text-muted-foreground">{item.desc}</p>
-              {correctionType === item.type && <Badge className="mt-3" variant="default">Selected</Badge>}
+              {s.correctionType === item.type && <Badge className="mt-3" variant="default">Selected</Badge>}
             </CardContent>
           </Card>
         ))}
@@ -186,17 +255,26 @@ const Rollback = () => {
   const renderPreparationStep = () => (
     <div className="space-y-6">
       <h3 className="text-lg font-semibold">
-        Prepare {correctionType === 'rebalancing' ? 'Rebalancing' : correctionType === 'corporate_event' ? 'Corporate Event' : 'Price'} Correction
+        Prepare {s.correctionType === 'rebalancing' ? 'Rebalancing' : s.correctionType === 'corporate_event' ? 'Corporate Event' : 'Price'} Correction
       </h3>
+
+      {/* Single index info banner */}
+      {selectedIndicesData.length === 1 && (
+        <Alert>
+          <AlertDescription>
+            <strong>Index:</strong> {selectedIndicesData[0].name} ({selectedIndicesData[0].ticker}) — <span className="text-muted-foreground">{selectedIndicesData[0].id}</span>
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Multi-Index Selection */}
       <div>
         <label className="block text-sm font-medium mb-1">Select Indices</label>
-        <Popover open={indexPickerOpen} onOpenChange={setIndexPickerOpen}>
+        <Popover open={s.indexPickerOpen} onOpenChange={(open) => update({ indexPickerOpen: open })}>
           <PopoverTrigger asChild>
             <Button variant="outline" role="combobox" className="w-full justify-between h-auto min-h-9 py-1.5">
-              {selectedIndices.length > 0 ? (
-                <span className="text-sm">{selectedIndices.length} index{selectedIndices.length > 1 ? 'es' : ''} selected</span>
+              {s.selectedIndices.length > 0 ? (
+                <span className="text-sm">{s.selectedIndices.length} index{s.selectedIndices.length > 1 ? 'es' : ''} selected</span>
               ) : (
                 <span className="text-muted-foreground">Search and select indices...</span>
               )}
@@ -217,9 +295,9 @@ const Rollback = () => {
                     >
                       <div className={cn(
                         'mr-2 h-4 w-4 border rounded-sm flex items-center justify-center',
-                        selectedIndices.includes(idx.id) ? 'bg-primary border-primary' : 'border-muted-foreground/40'
+                        s.selectedIndices.includes(idx.id) ? 'bg-primary border-primary' : 'border-muted-foreground/40'
                       )}>
-                        {selectedIndices.includes(idx.id) && <Check className="h-3 w-3 text-primary-foreground" />}
+                        {s.selectedIndices.includes(idx.id) && <Check className="h-3 w-3 text-primary-foreground" />}
                       </div>
                       <span className="font-medium mr-2">{idx.ticker}</span>
                       <span className="text-muted-foreground">{idx.name}</span>
@@ -231,8 +309,7 @@ const Rollback = () => {
           </PopoverContent>
         </Popover>
 
-        {/* Selected indices chips */}
-        {selectedIndices.length > 0 && (
+        {s.selectedIndices.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mt-2">
             {selectedIndicesData.map(idx => (
               <Badge key={idx.id} variant="secondary" className="gap-1">
@@ -246,34 +323,59 @@ const Rollback = () => {
 
       {/* Date Range */}
       <div className="grid grid-cols-2 gap-4">
-        <DatePicker label="Correction Start Date" value={startDate} onChange={setStartDate} />
-        <DatePicker label="Correction End Date" value={endDate} onChange={setEndDate} />
+        <DatePicker label="Correction Start Date" value={s.startDate} onChange={(v) => update({ startDate: v })} />
+        <DatePicker label="Correction End Date" value={s.endDate} onChange={(v) => update({ endDate: v })} />
       </div>
 
       {/* Description */}
       <div>
         <label className="block text-sm font-medium mb-1">Description / Reason</label>
-        <Input placeholder="Describe why this correction is needed..." value={description} onChange={(e) => setDescription(e.target.value)} className="h-9" />
+        <Input placeholder="Describe why this correction is needed..." value={s.description} onChange={(e) => update({ description: e.target.value })} className="h-9" />
       </div>
 
-      {/* Context-specific upload */}
-      {correctionType === 'rebalancing' && (
-        <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-base">Upload Corrected Rebalancing Data</CardTitle></CardHeader>
+      {/* Summary card for preparation */}
+      {s.selectedIndices.length > 0 && (
+        <Card className="bg-muted/30">
+          <CardHeader className="pb-2"><CardTitle className="text-base">Summary</CardTitle></CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground mb-3">Upload a CSV/Excel file with the correct constituents, weights, and shares. This rebalancing will be applied to all selected indices.</p>
-            <div className="flex items-center gap-3">
-              <label className="cursor-pointer">
-                <input type="file" className="hidden" accept=".csv,.xlsx,.xls" onChange={handleFileUpload} />
-                <Button variant="outline" size="sm" asChild><span><Upload className="h-4 w-4 mr-2" />Choose File</span></Button>
-              </label>
-              {uploadedFile && <span className="text-sm text-muted-foreground">{uploadedFile}</span>}
+            <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
+              <span className="text-muted-foreground">Correction Type:</span>
+              <span className="font-medium capitalize">{s.correctionType?.replace('_', ' ')}</span>
+              <span className="text-muted-foreground">{s.selectedIndices.length === 1 ? 'Index:' : 'Indices:'}</span>
+              <span className="font-medium">
+                {selectedIndicesData.map(i => `${i.name} (${i.ticker})`).join(', ')}
+              </span>
+              <span className="text-muted-foreground">Period:</span>
+              <span className="font-medium">{s.startDate} → {s.endDate}</span>
+              {s.description && (
+                <>
+                  <span className="text-muted-foreground">Reason:</span>
+                  <span className="font-medium">{s.description}</span>
+                </>
+              )}
             </div>
           </CardContent>
         </Card>
       )}
 
-      {correctionType === 'price' && (
+      {/* Context-specific upload */}
+      {s.correctionType === 'rebalancing' && (
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-base">Upload Corrected Rebalancing Data</CardTitle></CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-3">Upload a CSV/Excel file with the correct constituents, weights, and shares.</p>
+            <div className="flex items-center gap-3">
+              <label className="cursor-pointer">
+                <input type="file" className="hidden" accept=".csv,.xlsx,.xls" onChange={handleFileUpload} />
+                <Button variant="outline" size="sm" asChild><span><Upload className="h-4 w-4 mr-2" />Choose File</span></Button>
+              </label>
+              {s.uploadedFile && <span className="text-sm text-muted-foreground">{s.uploadedFile}</span>}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {s.correctionType === 'price' && (
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-base">Upload Corrected Prices</CardTitle></CardHeader>
           <CardContent>
@@ -283,13 +385,13 @@ const Rollback = () => {
                 <input type="file" className="hidden" accept=".csv,.xlsx,.xls" onChange={handleFileUpload} />
                 <Button variant="outline" size="sm" asChild><span><Upload className="h-4 w-4 mr-2" />Choose File</span></Button>
               </label>
-              {uploadedFile && <span className="text-sm text-muted-foreground">{uploadedFile}</span>}
+              {s.uploadedFile && <span className="text-sm text-muted-foreground">{s.uploadedFile}</span>}
             </div>
           </CardContent>
         </Card>
       )}
 
-      {correctionType === 'corporate_event' && (
+      {s.correctionType === 'corporate_event' && (
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-base">Corporate Event Details</CardTitle></CardHeader>
           <CardContent className="space-y-3">
@@ -316,7 +418,7 @@ const Rollback = () => {
                 <input type="file" className="hidden" accept=".csv,.xlsx,.xls" onChange={handleFileUpload} />
                 <Button variant="outline" size="sm" asChild><span><Upload className="h-4 w-4 mr-2" />Upload Override Data</span></Button>
               </label>
-              {uploadedFile && <span className="text-sm text-muted-foreground">{uploadedFile}</span>}
+              {s.uploadedFile && <span className="text-sm text-muted-foreground">{s.uploadedFile}</span>}
             </div>
           </CardContent>
         </Card>
@@ -341,7 +443,6 @@ const Rollback = () => {
 
     return (
       <div className="space-y-6">
-        {/* KPI Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card>
             <CardContent className="pt-4 pb-3">
@@ -365,7 +466,7 @@ const Rollback = () => {
           <Card>
             <CardContent className="pt-4 pb-3">
               <div className="text-xs text-muted-foreground">Correction Type</div>
-              <div className="text-xl font-bold capitalize">{correctionType?.replace('_', ' ')}</div>
+              <div className="text-xl font-bold capitalize">{s.correctionType?.replace('_', ' ')}</div>
             </CardContent>
           </Card>
         </div>
@@ -379,7 +480,6 @@ const Rollback = () => {
           </Alert>
         )}
 
-        {/* Level Chart */}
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-base">Index Level — Actual vs Corrected</CardTitle></CardHeader>
           <CardContent>
@@ -400,7 +500,6 @@ const Rollback = () => {
           </CardContent>
         </Card>
 
-        {/* Divisor Chart */}
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-base">Divisor — Actual vs Corrected</CardTitle></CardHeader>
           <CardContent>
@@ -421,7 +520,6 @@ const Rollback = () => {
           </CardContent>
         </Card>
 
-        {/* Download */}
         <div className="flex gap-3">
           <Button variant="outline" size="sm"><Download className="h-4 w-4 mr-2" />Download Corrected Time Series</Button>
           <Button variant="outline" size="sm"><Download className="h-4 w-4 mr-2" />Download Deviation Report</Button>
@@ -435,10 +533,15 @@ const Rollback = () => {
     <div className="space-y-4">
       <h3 className="text-lg font-semibold">Rollback Preview</h3>
 
-      {selectedIndices.length === 1 ? (
-        renderPreviewForIndex(selectedIndices[0])
+      {s.selectedIndices.length === 1 ? (
+        <>
+          <p className="text-sm text-muted-foreground">
+            Previewing correction for <strong>{selectedIndicesData[0]?.name}</strong> ({selectedIndicesData[0]?.ticker})
+          </p>
+          {renderPreviewForIndex(s.selectedIndices[0])}
+        </>
       ) : (
-        <Tabs value={activePreviewTab} onValueChange={setActivePreviewTab}>
+        <Tabs value={s.activePreviewTab} onValueChange={(v) => update({ activePreviewTab: v })}>
           <TabsList className="mb-4 flex-wrap h-auto gap-1">
             {selectedIndicesData.map(idx => {
               const data = previewDataMap[idx.id] || [];
@@ -451,7 +554,7 @@ const Rollback = () => {
               );
             })}
           </TabsList>
-          {selectedIndices.map(id => (
+          {s.selectedIndices.map(id => (
             <TabsContent key={id} value={id}>
               {renderPreviewForIndex(id)}
             </TabsContent>
@@ -463,31 +566,33 @@ const Rollback = () => {
 
   const renderExecuteStep = () => (
     <div className="space-y-6">
-      {!isExecuted ? (
+      {!s.isExecuted ? (
         <>
           <h3 className="text-lg font-semibold">Confirm & Execute Rollback</h3>
           <Alert>
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
-              This action will overwrite production index data for <strong>{selectedIndicesData.map(i => i.ticker).join(', ')}</strong> between <strong>{startDate}</strong> and <strong>{endDate}</strong>. This cannot be undone automatically.
+              This action will overwrite production index data for <strong>{selectedIndicesData.map(i => `${i.name} (${i.ticker})`).join(', ')}</strong> between <strong>{s.startDate}</strong> and <strong>{s.endDate}</strong>. This cannot be undone automatically.
             </AlertDescription>
           </Alert>
 
           <Card>
             <CardContent className="pt-6 space-y-3">
               <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
-                <span className="text-muted-foreground">Indices:</span>
-                <span className="font-medium">{selectedIndicesData.map(i => i.ticker).join(', ')}</span>
+                <span className="text-muted-foreground">{s.selectedIndices.length === 1 ? 'Index:' : 'Indices:'}</span>
+                <span className="font-medium">
+                  {selectedIndicesData.map(i => `${i.name} (${i.ticker})`).join(', ')}
+                </span>
                 <span className="text-muted-foreground">Correction Type:</span>
-                <span className="font-medium capitalize">{correctionType?.replace('_', ' ')}</span>
+                <span className="font-medium capitalize">{s.correctionType?.replace('_', ' ')}</span>
                 <span className="text-muted-foreground">Period:</span>
-                <span className="font-medium">{startDate} → {endDate}</span>
+                <span className="font-medium">{s.startDate} → {s.endDate}</span>
                 <span className="text-muted-foreground">Uploaded File:</span>
-                <span className="font-medium">{uploadedFile || 'None'}</span>
-                {description && (
+                <span className="font-medium">{s.uploadedFile || 'None'}</span>
+                {s.description && (
                   <>
                     <span className="text-muted-foreground">Reason:</span>
-                    <span className="font-medium">{description}</span>
+                    <span className="font-medium">{s.description}</span>
                   </>
                 )}
               </div>
@@ -495,14 +600,14 @@ const Rollback = () => {
           </Card>
 
           <div className="flex gap-3">
-            <Button variant="destructive" onClick={handleExecute} disabled={isExecuting} className="min-w-[200px]">
-              {isExecuting ? (
+            <Button variant="destructive" onClick={handleExecute} disabled={s.isExecuting} className="min-w-[200px]">
+              {s.isExecuting ? (
                 <><RotateCcw className="h-4 w-4 mr-2 animate-spin" />Executing Rollback...</>
               ) : (
-                <><RotateCcw className="h-4 w-4 mr-2" />Execute Rollback ({selectedIndices.length} {selectedIndices.length === 1 ? 'index' : 'indices'})</>
+                <><RotateCcw className="h-4 w-4 mr-2" />Execute Rollback ({s.selectedIndices.length} {s.selectedIndices.length === 1 ? 'index' : 'indices'})</>
               )}
             </Button>
-            <Button variant="outline" onClick={handleBack} disabled={isExecuting}>Go Back</Button>
+            <Button variant="outline" onClick={handleBack} disabled={s.isExecuting}>Go Back</Button>
           </div>
         </>
       ) : (
@@ -512,13 +617,13 @@ const Rollback = () => {
           </div>
           <h3 className="text-xl font-semibold mb-2">Rollback Executed Successfully</h3>
           <p className="text-muted-foreground mb-6">
-            {selectedIndices.length === 1 ? (
-              <>Index <strong>{selectedIndicesData[0]?.ticker}</strong> has been corrected for the period {startDate} — {endDate}.</>
+            {s.selectedIndices.length === 1 ? (
+              <>Index <strong>{selectedIndicesData[0]?.name} ({selectedIndicesData[0]?.ticker})</strong> has been corrected for the period {s.startDate} — {s.endDate}.</>
             ) : (
-              <><strong>{selectedIndices.length}</strong> indices ({selectedIndicesData.map(i => i.ticker).join(', ')}) have been corrected for the period {startDate} — {endDate}.</>
+              <><strong>{s.selectedIndices.length}</strong> indices ({selectedIndicesData.map(i => `${i.name} (${i.ticker})`).join(', ')}) have been corrected for the period {s.startDate} — {s.endDate}.</>
             )}
           </p>
-          <Button variant="outline" onClick={() => { setCurrentStep(0); setCorrectionType(null); setSelectedIndices([]); setUploadedFile(null); setIsExecuted(false); setDescription(''); }}>
+          <Button variant="outline" onClick={() => update({ currentStep: 0, correctionType: null, selectedIndices: [], uploadedFile: null, isExecuted: false, description: '' })}>
             Start New Rollback
           </Button>
         </div>
@@ -538,21 +643,57 @@ const Rollback = () => {
         </p>
       </div>
 
+      {/* Parallel rollback session tabs */}
+      <div className="mb-6">
+        <div className="flex items-center gap-1 border-b">
+          {sessions.map(session => (
+            <div
+              key={session.id}
+              className={cn(
+                'group flex items-center gap-1.5 px-3 py-2 text-sm cursor-pointer border-b-2 -mb-px transition-colors',
+                session.id === activeSessionId
+                  ? 'border-primary text-foreground font-medium'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+              )}
+              onClick={() => setActiveSessionId(session.id)}
+            >
+              <span>{session.label}</span>
+              {session.isExecuted && <Check className="h-3 w-3 text-primary" />}
+              {sessions.length > 1 && (
+                <X
+                  className="h-3 w-3 opacity-0 group-hover:opacity-100 hover:text-destructive transition-opacity"
+                  onClick={(e) => { e.stopPropagation(); closeSession(session.id); }}
+                />
+              )}
+            </div>
+          ))}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0 ml-1"
+            onClick={addSession}
+            title="New rollback"
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
       {/* Stepper */}
       <div className="flex items-center mb-8">
         {STEPS.map((step, i) => (
           <React.Fragment key={step.id}>
             <div
-              className={cn('flex items-center gap-2 cursor-pointer', i <= currentStep ? 'text-foreground' : 'text-muted-foreground')}
-              onClick={() => { if (i < currentStep) setCurrentStep(i); }}
+              className={cn('flex items-center gap-2 cursor-pointer', i <= s.currentStep ? 'text-foreground' : 'text-muted-foreground')}
+              onClick={() => { if (i < s.currentStep) update({ currentStep: i }); }}
             >
               <div className={cn(
                 'w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold border-2 transition-colors',
-                i < currentStep ? 'bg-primary text-primary-foreground border-primary' :
-                i === currentStep ? 'border-primary text-primary' :
+                i < s.currentStep ? 'bg-primary text-primary-foreground border-primary' :
+                i === s.currentStep ? 'border-primary text-primary' :
                 'border-muted-foreground/30 text-muted-foreground'
               )}>
-                {i < currentStep ? <Check className="h-4 w-4" /> : i + 1}
+                {i < s.currentStep ? <Check className="h-4 w-4" /> : i + 1}
               </div>
               <div className="hidden sm:block">
                 <div className="text-sm font-medium">{step.label}</div>
@@ -560,7 +701,7 @@ const Rollback = () => {
               </div>
             </div>
             {i < STEPS.length - 1 && (
-              <div className={cn('flex-1 h-0.5 mx-3', i < currentStep ? 'bg-primary' : 'bg-border')} />
+              <div className={cn('flex-1 h-0.5 mx-3', i < s.currentStep ? 'bg-primary' : 'bg-border')} />
             )}
           </React.Fragment>
         ))}
@@ -568,19 +709,19 @@ const Rollback = () => {
 
       {/* Step Content */}
       <div className="min-h-[400px]">
-        {currentStep === 0 && renderContextStep()}
-        {currentStep === 1 && renderPreparationStep()}
-        {currentStep === 2 && renderPreviewStep()}
-        {currentStep === 3 && renderExecuteStep()}
+        {s.currentStep === 0 && renderContextStep()}
+        {s.currentStep === 1 && renderPreparationStep()}
+        {s.currentStep === 2 && renderPreviewStep()}
+        {s.currentStep === 3 && renderExecuteStep()}
       </div>
 
       {/* Navigation */}
-      {!(currentStep === 3 && isExecuted) && (
+      {!(s.currentStep === 3 && s.isExecuted) && (
         <div className="flex justify-between mt-8 pt-4 border-t">
-          <Button variant="outline" onClick={handleBack} disabled={currentStep === 0}>
+          <Button variant="outline" onClick={handleBack} disabled={s.currentStep === 0}>
             <ArrowLeft className="h-4 w-4 mr-2" />Back
           </Button>
-          {currentStep < 3 && (
+          {s.currentStep < 3 && (
             <Button onClick={handleNext} disabled={!canProceed()}>
               Next<ChevronRight className="h-4 w-4 ml-2" />
             </Button>
