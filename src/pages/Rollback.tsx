@@ -150,7 +150,16 @@ const Rollback = () => {
   const [sessions, setSessions] = useState<RollbackSession[]>([createSession(prefill)]);
   const [activeSessionId, setActiveSessionId] = useState(sessions[0].id);
 
-  const activeSession = sessions.find(s => s.id === activeSessionId) || sessions[0];
+  const activeSession = React.useMemo(() => {
+    const found = sessions.find(s => s.id === activeSessionId) || sessions[0];
+    // Ensure new fields have defaults for sessions created before they were added
+    return {
+      ...found,
+      rebalancings: found.rebalancings ?? [],
+      rebalancingInputMode: found.rebalancingInputMode ?? 'upload',
+      shareOrWeight: found.shareOrWeight ?? 'shares',
+    };
+  }, [sessions, activeSessionId]);
 
   const updateSession = useCallback((sessionId: string, updates: Partial<RollbackSession>) => {
     setSessions(prev => prev.map(s => s.id === sessionId ? { ...s, ...updates } : s));
