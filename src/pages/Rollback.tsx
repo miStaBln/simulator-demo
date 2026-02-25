@@ -6,7 +6,7 @@ const formatDateForPicker = (isoDate: string) => {
   const [y, m, d] = isoDate.split('-');
   return `${d}.${m}.${y}`;
 };
-import { RotateCcw, ChevronRight, Check, AlertTriangle, Download, Upload, Search, ArrowLeft, X, Plus } from 'lucide-react';
+import { RotateCcw, ChevronRight, Check, AlertTriangle, Download, Upload, Search, ArrowLeft, X, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -90,6 +90,15 @@ const generatePreviewData = (seed: number) => {
   return data;
 };
 
+interface RebalancingEntry {
+  id: string;
+  selectionDate: string;
+  rebalancingDate: string;
+  components: Array<{ ric: string; shares: string; weight: string; weightingCapFactor: string }>;
+}
+
+type RebalancingInputMode = 'upload' | 'manual';
+
 // --- State for a single rollback session ---
 interface RollbackSession {
   id: string;
@@ -105,6 +114,9 @@ interface RollbackSession {
   isExecuted: boolean;
   description: string;
   activePreviewTab: string;
+  rebalancingInputMode: RebalancingInputMode;
+  rebalancings: RebalancingEntry[];
+  shareOrWeight: string;
 }
 
 let sessionCounter = 1;
@@ -125,6 +137,9 @@ const createSession = (prefill?: any): RollbackSession => {
     isExecuted: false,
     description: prefill?.eventDescription || '',
     activePreviewTab: '',
+    rebalancingInputMode: 'upload',
+    rebalancings: [],
+    shareOrWeight: 'shares',
   };
 };
 
@@ -218,6 +233,58 @@ const Rollback = () => {
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) update({ uploadedFile: e.target.files[0].name });
+  };
+
+  // --- Rebalancing helpers ---
+  const addRebalancing = () => {
+    const newEntry: RebalancingEntry = {
+      id: `reb-${Date.now()}`,
+      selectionDate: '',
+      rebalancingDate: '',
+      components: [{ ric: '', shares: '', weight: '', weightingCapFactor: '1.0' }],
+    };
+    update({ rebalancings: [...s.rebalancings, newEntry] });
+  };
+
+  const removeRebalancing = (index: number) => {
+    update({ rebalancings: s.rebalancings.filter((_, i) => i !== index) });
+  };
+
+  const updateRebalancingDate = (index: number, field: 'selectionDate' | 'rebalancingDate', value: string) => {
+    const updated = [...s.rebalancings];
+    updated[index] = { ...updated[index], [field]: value };
+    update({ rebalancings: updated });
+  };
+
+  const addRebalancingComponent = (rebIndex: number) => {
+    const updated = [...s.rebalancings];
+    updated[rebIndex] = {
+      ...updated[rebIndex],
+      components: [...updated[rebIndex].components, { ric: '', shares: '', weight: '', weightingCapFactor: '1.0' }],
+    };
+    update({ rebalancings: updated });
+  };
+
+  const updateRebalancingComponent = (
+    rebIndex: number,
+    compIndex: number,
+    field: 'ric' | 'shares' | 'weight' | 'weightingCapFactor',
+    value: string
+  ) => {
+    const updated = [...s.rebalancings];
+    const comps = [...updated[rebIndex].components];
+    comps[compIndex] = { ...comps[compIndex], [field]: value };
+    updated[rebIndex] = { ...updated[rebIndex], components: comps };
+    update({ rebalancings: updated });
+  };
+
+  const removeRebalancingComponent = (rebIndex: number, compIndex: number) => {
+    const updated = [...s.rebalancings];
+    updated[rebIndex] = {
+      ...updated[rebIndex],
+      components: updated[rebIndex].components.filter((_, i) => i !== compIndex),
+    };
+    update({ rebalancings: updated });
   };
 
   // --- Step Renderers ---
@@ -358,19 +425,141 @@ const Rollback = () => {
         </Card>
       )}
 
-      {/* Context-specific upload */}
+      {/* Context-specific: Rebalancing */}
       {s.correctionType === 'rebalancing' && (
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-base">Upload Corrected Rebalancing Data</CardTitle></CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground mb-3">Upload a CSV/Excel file with the correct constituents, weights, and shares.</p>
-            <div className="flex items-center gap-3">
-              <label className="cursor-pointer">
-                <input type="file" className="hidden" accept=".csv,.xlsx,.xls" onChange={handleFileUpload} />
-                <Button variant="outline" size="sm" asChild><span><Upload className="h-4 w-4 mr-2" />Choose File</span></Button>
-              </label>
-              {s.uploadedFile && <span className="text-sm text-muted-foreground">{s.uploadedFile}</span>}
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base">Corrected Rebalancing Data</CardTitle>
+              <div className="flex items-center gap-1 rounded-md border p-0.5">
+                <Button
+                  variant={s.rebalancingInputMode === 'upload' ? 'default' : 'ghost'}
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={() => update({ rebalancingInputMode: 'upload' })}
+                >
+                  <Upload className="h-3 w-3 mr-1" />Upload
+                </Button>
+                <Button
+                  variant={s.rebalancingInputMode === 'manual' ? 'default' : 'ghost'}
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={() => update({ rebalancingInputMode: 'manual' })}
+                >
+                  <Plus className="h-3 w-3 mr-1" />Manual
+                </Button>
+              </div>
             </div>
+          </CardHeader>
+          <CardContent>
+            {s.rebalancingInputMode === 'upload' ? (
+              <>
+                <p className="text-sm text-muted-foreground mb-3">Upload a CSV/Excel file with the correct constituents, weights, and shares.</p>
+                <div className="flex items-center gap-3">
+                  <label className="cursor-pointer">
+                    <input type="file" className="hidden" accept=".csv,.xlsx,.xls" onChange={handleFileUpload} />
+                    <Button variant="outline" size="sm" asChild><span><Upload className="h-4 w-4 mr-2" />Choose File</span></Button>
+                  </label>
+                  {s.uploadedFile && <span className="text-sm text-muted-foreground">{s.uploadedFile}</span>}
+                </div>
+              </>
+            ) : (
+              <div className="space-y-4">
+                {/* Entry type toggle */}
+                <div>
+                  <label className="block text-sm font-medium mb-1">Entry Type</label>
+                  <Select value={s.shareOrWeight} onValueChange={(v) => update({ shareOrWeight: v })}>
+                    <SelectTrigger className="w-48 h-9"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="shares">Shares</SelectItem>
+                      <SelectItem value="weight">Weight</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Rebalancing entries */}
+                {s.rebalancings.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No rebalancing entries yet. Add one below.</p>
+                ) : (
+                  <div className="space-y-4">
+                    {s.rebalancings.map((reb, rebIdx) => (
+                      <Card key={reb.id} className="border">
+                        <CardHeader className="pb-2 pt-4 px-4">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium">Rebalancing #{rebIdx + 1}</span>
+                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive" onClick={() => removeRebalancing(rebIdx)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="px-4 pb-4 space-y-3">
+                          {/* Dates */}
+                          <div className="grid grid-cols-2 gap-4">
+                            <DatePicker label="Selection Date" value={reb.selectionDate} onChange={(v) => updateRebalancingDate(rebIdx, 'selectionDate', v)} />
+                            <DatePicker label="Rebalancing Date" value={reb.rebalancingDate} onChange={(v) => updateRebalancingDate(rebIdx, 'rebalancingDate', v)} />
+                          </div>
+
+                          {/* Components table */}
+                          <div>
+                            <div className="text-sm font-medium mb-2">Components</div>
+                            <div className="border rounded-md">
+                              <div className="grid grid-cols-12 gap-2 p-2 bg-muted/50 border-b text-xs font-medium">
+                                <div className="col-span-3">Identifier</div>
+                                <div className="col-span-3">{s.shareOrWeight === 'shares' ? 'Shares' : 'Weight (%)'}</div>
+                                <div className="col-span-4">Weighting Cap Factor</div>
+                                <div className="col-span-2">Actions</div>
+                              </div>
+                              {reb.components.map((comp, compIdx) => (
+                                <div key={compIdx} className="grid grid-cols-12 gap-2 p-2 items-center border-b last:border-b-0">
+                                  <div className="col-span-3">
+                                    <Input
+                                      value={comp.ric}
+                                      onChange={(e) => updateRebalancingComponent(rebIdx, compIdx, 'ric', e.target.value)}
+                                      placeholder="e.g. AAPL.O"
+                                      className="h-8 text-sm"
+                                    />
+                                  </div>
+                                  <div className="col-span-3">
+                                    <Input
+                                      value={s.shareOrWeight === 'shares' ? comp.shares : comp.weight}
+                                      onChange={(e) => updateRebalancingComponent(rebIdx, compIdx, s.shareOrWeight === 'shares' ? 'shares' : 'weight', e.target.value)}
+                                      placeholder={s.shareOrWeight === 'shares' ? '1000' : '5.0'}
+                                      className="h-8 text-sm"
+                                    />
+                                  </div>
+                                  <div className="col-span-4">
+                                    <Input
+                                      type="number"
+                                      value={comp.weightingCapFactor}
+                                      onChange={(e) => updateRebalancingComponent(rebIdx, compIdx, 'weightingCapFactor', e.target.value)}
+                                      placeholder="1.0"
+                                      step="0.01"
+                                      className="h-8 text-sm"
+                                    />
+                                  </div>
+                                  <div className="col-span-2">
+                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive" onClick={() => removeRebalancingComponent(rebIdx, compIdx)}>
+                                      <Trash2 className="h-3.5 w-3.5" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            <Button variant="outline" size="sm" className="mt-2" onClick={() => addRebalancingComponent(rebIdx)}>
+                              <Plus className="h-3 w-3 mr-1" />Add Component
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+
+                <Button onClick={addRebalancing} size="sm">
+                  <Plus className="h-4 w-4 mr-2" />Add Rebalancing
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
