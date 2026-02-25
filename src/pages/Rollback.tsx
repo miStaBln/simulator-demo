@@ -1,4 +1,11 @@
 import React, { useState, useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
+
+// Helper to convert yyyy-MM-dd to dd.MM.yyyy
+const formatDateForPicker = (isoDate: string) => {
+  const [y, m, d] = isoDate.split('-');
+  return `${d}.${m}.${y}`;
+};
 import { RotateCcw, ChevronRight, Check, AlertTriangle, Download, Upload, Search, ArrowLeft, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -85,16 +92,19 @@ const generatePreviewData = (seed: number) => {
 };
 
 const Rollback = () => {
-  const [currentStep, setCurrentStep] = useState(0);
-  const [correctionType, setCorrectionType] = useState<CorrectionType>(null);
-  const [selectedIndices, setSelectedIndices] = useState<string[]>([]);
+  const location = useLocation();
+  const prefill = (location.state as any)?.prefill;
+
+  const [currentStep, setCurrentStep] = useState(prefill ? 1 : 0);
+  const [correctionType, setCorrectionType] = useState<CorrectionType>(prefill?.correctionType || null);
+  const [selectedIndices, setSelectedIndices] = useState<string[]>(prefill?.selectedIndices || []);
   const [indexPickerOpen, setIndexPickerOpen] = useState(false);
-  const [startDate, setStartDate] = useState('01.02.2026');
-  const [endDate, setEndDate] = useState('20.02.2026');
+  const [startDate, setStartDate] = useState(prefill?.startDate ? formatDateForPicker(prefill.startDate) : '01.02.2026');
+  const [endDate, setEndDate] = useState(prefill?.endDate ? formatDateForPicker(prefill.endDate) : '20.02.2026');
   const [uploadedFile, setUploadedFile] = useState<string | null>(null);
   const [isExecuting, setIsExecuting] = useState(false);
   const [isExecuted, setIsExecuted] = useState(false);
-  const [description, setDescription] = useState('');
+  const [description, setDescription] = useState(prefill?.eventDescription || '');
   const [activePreviewTab, setActivePreviewTab] = useState('');
 
   // Generate preview data per selected index (seeded by index position for variety)
