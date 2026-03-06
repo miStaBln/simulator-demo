@@ -1297,18 +1297,23 @@ const Manage: React.FC = () => {
                       ? `⭐ Starred Indices ${starredIndices.length > 0 ? `(${starredIndices.length})` : "(all)"}`
                       : selectedIndex === "all"
                         ? "All Indices"
-                        : (() => {
-                            const idx = allIndices.find((i) => i.id === selectedIndex);
-                            return idx ? `${idx.ticker} — ${idx.name}` : "Select index";
-                          })()}
+                        : selectedIndex.startsWith("client-")
+                          ? (() => {
+                              const client = mockClients.find((c) => c.id === selectedIndex);
+                              return client ? `🏢 ${client.name} (${client.indexIds.length})` : "Select client";
+                            })()
+                          : (() => {
+                              const idx = allIndices.find((i) => i.id === selectedIndex);
+                              return idx ? `${idx.ticker} — ${idx.name}` : "Select index";
+                            })()}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-64 p-0" align="start">
                   <Command>
-                    <CommandInput placeholder="Search index by name or ticker..." />
+                    <CommandInput placeholder="Search index, client..." />
                     <CommandList>
-                      <CommandEmpty>No index found.</CommandEmpty>
+                      <CommandEmpty>No match found.</CommandEmpty>
                       <CommandGroup heading="Quick filters">
                         <CommandItem
                           value="starred"
@@ -1334,6 +1339,25 @@ const Manage: React.FC = () => {
                           />
                           All Indices
                         </CommandItem>
+                      </CommandGroup>
+                      <CommandGroup heading="Clients">
+                        {mockClients.map((client) => (
+                          <CommandItem
+                            key={client.id}
+                            value={`client ${client.name}`}
+                            onSelect={() => {
+                              setSelectedIndex(client.id);
+                              setIndexPickerOpen(false);
+                            }}
+                          >
+                            <Check
+                              className={cn("mr-2 h-4 w-4", selectedIndex === client.id ? "opacity-100" : "opacity-0")}
+                            />
+                            <span className="mr-2">🏢</span>
+                            <span>{client.name}</span>
+                            <span className="ml-auto text-xs text-muted-foreground">{client.indexIds.length}</span>
+                          </CommandItem>
+                        ))}
                       </CommandGroup>
                       <CommandGroup heading="Indices">
                         {allIndices.map((idx) => (
