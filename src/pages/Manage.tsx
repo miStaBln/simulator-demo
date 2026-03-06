@@ -73,6 +73,36 @@ const allIndices = [
   { id: "idx-6", name: "Consumer Staples", ticker: "CSTAPLE", currency: "EUR", type: "administered" },
 ];
 
+// Mock clients (would come from DB)
+interface Client {
+  id: string;
+  name: string;
+  indexIds: string[];
+}
+
+const mockClients: Client[] = [
+  { id: "client-1", name: "Acme Capital", indexIds: ["idx-1", "idx-3", "idx-5"] },
+  { id: "client-2", name: "BlueStar Wealth", indexIds: ["idx-2", "idx-4"] },
+  { id: "client-3", name: "Nordica Investments", indexIds: ["idx-1", "idx-2", "idx-6"] },
+  { id: "client-4", name: "Pacific Asset Management", indexIds: ["idx-3", "idx-4", "idx-5", "idx-6"] },
+];
+
+// Mock event detail data for the detail panel
+const mockEventDetails: Record<string, {
+  constituentsAffected?: number;
+  totalDelta?: string;
+  instruments?: Array<{ ric: string; action: string; weight: string }>;
+  notes?: string;
+  status?: string;
+  createdBy?: string;
+}> = {
+  e1: { constituentsAffected: 12, totalDelta: "+3.2%", status: "Completed", createdBy: "System", instruments: [{ ric: "AAPL.OQ", action: "Weight increase", weight: "+1.2%" }, { ric: "NVDA.OQ", action: "Addition", weight: "+2.8%" }, { ric: "INTC.OQ", action: "Deletion", weight: "-0.8%" }], notes: "Standard quarterly rebalancing" },
+  e5: { constituentsAffected: 1, totalDelta: "0%", status: "Completed", createdBy: "System", instruments: [{ ric: "AAPL.OQ", action: "Stock split 4:1", weight: "0%" }], notes: "Shares adjusted, no weight change" },
+  e8: { constituentsAffected: 1, totalDelta: "+0.5%", status: "Completed", createdBy: "System", instruments: [{ ric: "ENPH.OQ", action: "Rights issue", weight: "+0.5%" }], notes: "Rights issue processed" },
+  e13: { constituentsAffected: 8, totalDelta: "+4.1%", status: "Pending", createdBy: "John D.", instruments: [{ ric: "SAP.DE", action: "Weight increase", weight: "+1.5%" }, { ric: "ASML.AS", action: "Addition", weight: "+2.6%" }], notes: "Annual selection review pending approval" },
+  e14: { constituentsAffected: 5, totalDelta: "+2.8%", status: "Scheduled", createdBy: "System", instruments: [{ ric: "MSFT.OQ", action: "Weight increase", weight: "+0.9%" }, { ric: "GOOGL.OQ", action: "Weight decrease", weight: "-0.4%" }, { ric: "META.OQ", action: "Addition", weight: "+2.3%" }], notes: "Quarterly rebalancing scheduled" },
+};
+
 const mockEvents: LifecycleEvent[] = [
   // Past events
   {
@@ -1173,9 +1203,11 @@ const OperateKPIs: React.FC = () => {
 
 const Manage: React.FC = () => {
   const { starredIndices } = useStarred();
+  const navigate = useNavigate();
   const [currentMonth, setCurrentMonth] = useState(new Date(2026, 1, 1));
   const [selectedIndex, setSelectedIndex] = useState<string>("starred");
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<LifecycleEvent | null>(null);
   const [activeTypes, setActiveTypes] = useState<Set<EventType>>(
     new Set(["REBALANCING", "SELECTION", "CORPORATE_ACTION"]),
   );
@@ -1200,6 +1232,9 @@ const Manage: React.FC = () => {
       indexIds = starredIndices.length > 0 ? starredIndices.map((i) => i.id) : allIndices.map((i) => i.id);
     } else if (selectedIndex === "all") {
       indexIds = allIndices.map((i) => i.id);
+    } else if (selectedIndex.startsWith("client-")) {
+      const client = mockClients.find((c) => c.id === selectedIndex);
+      indexIds = client ? client.indexIds : [];
     } else {
       indexIds = [selectedIndex];
     }
@@ -1262,18 +1297,23 @@ const Manage: React.FC = () => {
                       ? `⭐ Starred Indices ${starredIndices.length > 0 ? `(${starredIndices.length})` : "(all)"}`
                       : selectedIndex === "all"
                         ? "All Indices"
-                        : (() => {
-                            const idx = allIndices.find((i) => i.id === selectedIndex);
-                            return idx ? `${idx.ticker} — ${idx.name}` : "Select index";
-                          })()}
+                        : selectedIndex.startsWith("client-")
+                          ? (() => {
+                              const client = mockClients.find((c) => c.id === selectedIndex);
+                              return client ? `🏢 ${client.name} (${client.indexIds.length})` : "Select client";
+                            })()
+                          : (() => {
+                              const idx = allIndices.find((i) => i.id === selectedIndex);
+                              return idx ? `${idx.ticker} — ${idx.name}` : "Select index";
+                            })()}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-64 p-0" align="start">
                   <Command>
-                    <CommandInput placeholder="Search index by name or ticker..." />
+                    <CommandInput placeholder="Search index, client..." />
                     <CommandList>
-                      <CommandEmpty>No index found.</CommandEmpty>
+                      <CommandEmpty>No match found.</CommandEmpty>
                       <CommandGroup heading="Quick filters">
                         <CommandItem
                           value="starred"
@@ -1299,6 +1339,25 @@ const Manage: React.FC = () => {
                           />
                           All Indices
                         </CommandItem>
+                      </CommandGroup>
+                      <CommandGroup heading="Clients">
+                        {mockClients.map((client) => (
+                          <CommandItem
+                            key={client.id}
+                            value={`client ${client.name}`}
+                            onSelect={() => {
+                              setSelectedIndex(client.id);
+                              setIndexPickerOpen(false);
+                            }}
+                          >
+                            <Check
+                              className={cn("mr-2 h-4 w-4", selectedIndex === client.id ? "opacity-100" : "opacity-0")}
+                            />
+                            <span className="mr-2">🏢</span>
+                            <span>{client.name}</span>
+                            <span className="ml-auto text-xs text-muted-foreground">{client.indexIds.length}</span>
+                          </CommandItem>
+                        ))}
                       </CommandGroup>
                       <CommandGroup heading="Indices">
                         {allIndices.map((idx) => (
@@ -1346,8 +1405,30 @@ const Manage: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <Card className="lg:col-span-2">
+          {/* Client info banner */}
+          {selectedIndex.startsWith("client-") && (() => {
+            const client = mockClients.find((c) => c.id === selectedIndex);
+            if (!client) return null;
+            const clientIndices = allIndices.filter((i) => client.indexIds.includes(i.id));
+            return (
+              <Card className="border-primary/20 bg-primary/5">
+                <CardContent className="py-3">
+                  <div className="flex items-center gap-3">
+                    <span className="text-lg">🏢</span>
+                    <div>
+                      <p className="text-sm font-medium">{client.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {clientIndices.map((i) => i.ticker).join(", ")} ({clientIndices.length} indices)
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })()}
+
+          <div className={cn("grid grid-cols-1 gap-6", selectedEvent ? "lg:grid-cols-12" : "lg:grid-cols-3")}>
+            <Card className={cn(selectedEvent ? "lg:col-span-5" : "lg:col-span-2")}>
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <Button variant="ghost" size="icon" onClick={() => setCurrentMonth((p) => subMonths(p, 1))}>
@@ -1378,7 +1459,7 @@ const Manage: React.FC = () => {
                     return (
                       <button
                         key={day.toISOString()}
-                        onClick={() => setSelectedDay(isSelected ? null : day)}
+                        onClick={() => { setSelectedDay(isSelected ? null : day); setSelectedEvent(null); }}
                         className={cn(
                           "h-24 border border-border/30 p-1 text-left transition-colors relative",
                           "hover:bg-accent/50",
@@ -1418,7 +1499,7 @@ const Manage: React.FC = () => {
               </CardContent>
             </Card>
 
-            <div className="space-y-4">
+            <div className={cn("space-y-4", selectedEvent ? "lg:col-span-3" : "")}>
               {selectedDay ? (
                 <Card>
                   <CardHeader className="pb-3">
@@ -1432,7 +1513,16 @@ const Manage: React.FC = () => {
                       <p className="text-sm text-muted-foreground">No events on this day.</p>
                     ) : (
                       dayEvents.map((ev) => (
-                        <div key={ev.id} className="border border-border rounded-lg p-3 space-y-1">
+                        <button
+                          key={ev.id}
+                          onClick={() => setSelectedEvent(selectedEvent?.id === ev.id ? null : ev)}
+                          className={cn(
+                            "w-full text-left border rounded-lg p-3 space-y-1 transition-all",
+                            selectedEvent?.id === ev.id
+                              ? "ring-2 ring-primary border-primary"
+                              : "border-border hover:border-primary/50 hover:bg-accent/30",
+                          )}
+                        >
                           <div className="flex items-center justify-between">
                             <Badge
                               variant="outline"
@@ -1448,7 +1538,7 @@ const Manage: React.FC = () => {
                           </div>
                           <p className="text-sm font-medium">{ev.indexName}</p>
                           <p className="text-xs text-muted-foreground">{ev.description}</p>
-                        </div>
+                        </button>
                       ))
                     )}
                   </CardContent>
@@ -1467,9 +1557,15 @@ const Manage: React.FC = () => {
                       .sort((a, b) => a.date.getTime() - b.date.getTime())
                       .slice(0, 8)
                       .map((ev) => (
-                        <div
+                        <button
                           key={ev.id}
-                          className="flex items-start gap-3 py-2 border-b border-border/40 last:border-0"
+                          onClick={() => setSelectedEvent(selectedEvent?.id === ev.id ? null : ev)}
+                          className={cn(
+                            "w-full text-left flex items-start gap-3 py-2 border-b border-border/40 last:border-0 rounded px-1 transition-all",
+                            selectedEvent?.id === ev.id
+                              ? "bg-primary/10 ring-1 ring-primary/30"
+                              : "hover:bg-accent/50",
+                          )}
                         >
                           <div className="text-center min-w-[40px]">
                             <div className="text-xs text-muted-foreground">{format(ev.date, "MMM")}</div>
@@ -1491,7 +1587,7 @@ const Manage: React.FC = () => {
                             </div>
                             <p className="text-xs text-muted-foreground mt-0.5 truncate">{ev.description}</p>
                           </div>
-                        </div>
+                        </button>
                       ))}
                     {filteredEvents.filter((e) => e.date >= new Date()).length === 0 && (
                       <p className="text-sm text-muted-foreground">No upcoming events.</p>
@@ -1500,6 +1596,163 @@ const Manage: React.FC = () => {
                 </Card>
               )}
             </div>
+
+            {/* Event Detail Panel (third column) */}
+            {selectedEvent && (
+              <Card className="lg:col-span-4">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Eye className="h-4 w-4 text-primary" />
+                      Event Details
+                    </CardTitle>
+                    <Button variant="ghost" size="sm" onClick={() => setSelectedEvent(null)}>
+                      ✕
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Event header */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          eventTypeConfig[selectedEvent.type].bgClass,
+                          eventTypeConfig[selectedEvent.type].textClass,
+                        )}
+                      >
+                        {eventTypeConfig[selectedEvent.type].label}
+                      </Badge>
+                      <span className={cn(
+                        "text-xs px-2 py-0.5 rounded-full",
+                        selectedEvent.date < new Date() ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"
+                      )}>
+                        {selectedEvent.date < new Date() ? "Past" : "Upcoming"}
+                      </span>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold">{selectedEvent.indexName}</h3>
+                      <p className="text-sm text-muted-foreground">{selectedEvent.description}</p>
+                    </div>
+                  </div>
+
+                  {/* Key info grid */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-accent/50 rounded-lg p-3">
+                      <p className="text-xs text-muted-foreground">Date</p>
+                      <p className="text-sm font-medium">{format(selectedEvent.date, "MMM d, yyyy")}</p>
+                    </div>
+                    <div className="bg-accent/50 rounded-lg p-3">
+                      <p className="text-xs text-muted-foreground">Ticker</p>
+                      <p className="text-sm font-mono font-medium">{selectedEvent.ticker}</p>
+                    </div>
+                    {(() => {
+                      const details = mockEventDetails[selectedEvent.id];
+                      if (!details) return null;
+                      return (
+                        <>
+                          <div className="bg-accent/50 rounded-lg p-3">
+                            <p className="text-xs text-muted-foreground">Status</p>
+                            <p className={cn("text-sm font-medium",
+                              details.status === "Completed" ? "text-emerald-600" :
+                              details.status === "Pending" ? "text-amber-600" : "text-primary"
+                            )}>{details.status}</p>
+                          </div>
+                          <div className="bg-accent/50 rounded-lg p-3">
+                            <p className="text-xs text-muted-foreground">Constituents Affected</p>
+                            <p className="text-sm font-medium">{details.constituentsAffected}</p>
+                          </div>
+                          {details.totalDelta && (
+                            <div className="bg-accent/50 rounded-lg p-3 col-span-2">
+                              <p className="text-xs text-muted-foreground">Total Delta</p>
+                              <p className="text-sm font-bold">{details.totalDelta}</p>
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </div>
+
+                  {/* Instruments table */}
+                  {(() => {
+                    const details = mockEventDetails[selectedEvent.id];
+                    if (!details?.instruments) return null;
+                    return (
+                      <div>
+                        <h4 className="text-sm font-medium mb-2">Instrument Changes</h4>
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className="text-xs">RIC</TableHead>
+                              <TableHead className="text-xs">Action</TableHead>
+                              <TableHead className="text-xs text-right">Weight Δ</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {details.instruments.map((inst, i) => (
+                              <TableRow key={i}>
+                                <TableCell className="text-xs font-mono">{inst.ric}</TableCell>
+                                <TableCell className="text-xs">{inst.action}</TableCell>
+                                <TableCell className={cn("text-xs text-right font-medium",
+                                  inst.weight.startsWith("+") ? "text-emerald-600" :
+                                  inst.weight.startsWith("-") ? "text-destructive" : "text-muted-foreground"
+                                )}>{inst.weight}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Notes */}
+                  {(() => {
+                    const details = mockEventDetails[selectedEvent.id];
+                    if (!details?.notes) return null;
+                    return (
+                      <div className="border-t border-border pt-3">
+                        <p className="text-xs text-muted-foreground mb-1">Notes</p>
+                        <p className="text-sm">{details.notes}</p>
+                        {details.createdBy && (
+                          <p className="text-xs text-muted-foreground mt-2">Created by: {details.createdBy}</p>
+                        )}
+                      </div>
+                    );
+                  })()}
+
+                  {/* No details fallback */}
+                  {!mockEventDetails[selectedEvent.id] && (
+                    <div className="text-center py-6 text-muted-foreground">
+                      <Eye className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                      <p className="text-sm">Detailed data not available for this event.</p>
+                      <p className="text-xs mt-1">Event information will be loaded from the database.</p>
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  <div className="border-t border-border pt-3 flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => {
+                        const indexData = allIndices.find((i) => i.id === selectedEvent.indexId);
+                        if (indexData)
+                          navigate("/index-details", {
+                            state: { indexData: { ...indexData, name: selectedEvent.indexName }, defaultTab: "timeline" },
+                          });
+                      }}
+                    >
+                      View Index
+                    </Button>
+                    <Button variant="outline" size="sm" className="flex-1">
+                      View in Timeline
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </TabsContent>
 
