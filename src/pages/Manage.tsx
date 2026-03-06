@@ -1203,9 +1203,11 @@ const OperateKPIs: React.FC = () => {
 
 const Manage: React.FC = () => {
   const { starredIndices } = useStarred();
+  const navigate = useNavigate();
   const [currentMonth, setCurrentMonth] = useState(new Date(2026, 1, 1));
   const [selectedIndex, setSelectedIndex] = useState<string>("starred");
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<LifecycleEvent | null>(null);
   const [activeTypes, setActiveTypes] = useState<Set<EventType>>(
     new Set(["REBALANCING", "SELECTION", "CORPORATE_ACTION"]),
   );
