@@ -1232,6 +1232,9 @@ const Manage: React.FC = () => {
       indexIds = starredIndices.length > 0 ? starredIndices.map((i) => i.id) : allIndices.map((i) => i.id);
     } else if (selectedIndex === "all") {
       indexIds = allIndices.map((i) => i.id);
+    } else if (selectedIndex.startsWith("client-")) {
+      const client = mockClients.find((c) => c.id === selectedIndex);
+      indexIds = client ? client.indexIds : [];
     } else {
       indexIds = [selectedIndex];
     }
