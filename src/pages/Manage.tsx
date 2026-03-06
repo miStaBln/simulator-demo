@@ -73,6 +73,36 @@ const allIndices = [
   { id: "idx-6", name: "Consumer Staples", ticker: "CSTAPLE", currency: "EUR", type: "administered" },
 ];
 
+// Mock clients (would come from DB)
+interface Client {
+  id: string;
+  name: string;
+  indexIds: string[];
+}
+
+const mockClients: Client[] = [
+  { id: "client-1", name: "Acme Capital", indexIds: ["idx-1", "idx-3", "idx-5"] },
+  { id: "client-2", name: "BlueStar Wealth", indexIds: ["idx-2", "idx-4"] },
+  { id: "client-3", name: "Nordica Investments", indexIds: ["idx-1", "idx-2", "idx-6"] },
+  { id: "client-4", name: "Pacific Asset Management", indexIds: ["idx-3", "idx-4", "idx-5", "idx-6"] },
+];
+
+// Mock event detail data for the detail panel
+const mockEventDetails: Record<string, {
+  constituentsAffected?: number;
+  totalDelta?: string;
+  instruments?: Array<{ ric: string; action: string; weight: string }>;
+  notes?: string;
+  status?: string;
+  createdBy?: string;
+}> = {
+  e1: { constituentsAffected: 12, totalDelta: "+3.2%", status: "Completed", createdBy: "System", instruments: [{ ric: "AAPL.OQ", action: "Weight increase", weight: "+1.2%" }, { ric: "NVDA.OQ", action: "Addition", weight: "+2.8%" }, { ric: "INTC.OQ", action: "Deletion", weight: "-0.8%" }], notes: "Standard quarterly rebalancing" },
+  e5: { constituentsAffected: 1, totalDelta: "0%", status: "Completed", createdBy: "System", instruments: [{ ric: "AAPL.OQ", action: "Stock split 4:1", weight: "0%" }], notes: "Shares adjusted, no weight change" },
+  e8: { constituentsAffected: 1, totalDelta: "+0.5%", status: "Completed", createdBy: "System", instruments: [{ ric: "ENPH.OQ", action: "Rights issue", weight: "+0.5%" }], notes: "Rights issue processed" },
+  e13: { constituentsAffected: 8, totalDelta: "+4.1%", status: "Pending", createdBy: "John D.", instruments: [{ ric: "SAP.DE", action: "Weight increase", weight: "+1.5%" }, { ric: "ASML.AS", action: "Addition", weight: "+2.6%" }], notes: "Annual selection review pending approval" },
+  e14: { constituentsAffected: 5, totalDelta: "+2.8%", status: "Scheduled", createdBy: "System", instruments: [{ ric: "MSFT.OQ", action: "Weight increase", weight: "+0.9%" }, { ric: "GOOGL.OQ", action: "Weight decrease", weight: "-0.4%" }, { ric: "META.OQ", action: "Addition", weight: "+2.3%" }], notes: "Quarterly rebalancing scheduled" },
+};
+
 const mockEvents: LifecycleEvent[] = [
   // Past events
   {
