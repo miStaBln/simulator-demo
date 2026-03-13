@@ -183,6 +183,12 @@ const SimulationData = ({
     const stored = localStorage.getItem('sim_priceOverrides');
     return stored ? JSON.parse(stored) : [];
   });
+
+  // Corporate actions
+  const [corporateActions, setCorporateActions] = useState<CorporateActionEntry[]>(() => {
+    const stored = localStorage.getItem('sim_corporateActions');
+    return stored ? JSON.parse(stored) : [];
+  });
   
   // Rebalancing upload data
   const [rebalancingUploads, setRebalancingUploads] = useState<Array<{selectionDate: string, rebalancingDate: string, file: string}>>(() => {
