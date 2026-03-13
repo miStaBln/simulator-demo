@@ -339,7 +339,7 @@ const SimulationData = ({
       'sim_specialDividendTaxHandling', 'sim_considerStockDividend', 'sim_considerStockSplit', 
       'sim_considerRightsIssue', 'sim_considerDividendFee', 'sim_drDividendTreatment', 
       'sim_globalDrTaxRate', 'sim_shareOrWeight', 'sim_stocks', 'sim_rebalancings', 
-      'sim_priceOverrides', 'sim_rebalancingUploads'
+      'sim_priceOverrides', 'sim_rebalancingUploads', 'sim_corporateActions'
     ];
     
     keysToRemove.forEach(key => localStorage.removeItem(key));
