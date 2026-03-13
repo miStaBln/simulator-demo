@@ -7,6 +7,7 @@ import SimulationParameters from './simulator/SimulationParameters';
 import Composition from './simulator/Composition';
 import RebalancingSection from './simulator/RebalancingSection';
 import PriceOverrides from './simulator/PriceOverrides';
+import CorporateActionsOverrides, { CorporateActionEntry } from './simulator/CorporateActionsOverrides';
 import BottomActions from './simulator/BottomActions';
 
 // Mock index data with parameters
@@ -182,6 +183,12 @@ const SimulationData = ({
     const stored = localStorage.getItem('sim_priceOverrides');
     return stored ? JSON.parse(stored) : [];
   });
+
+  // Corporate actions
+  const [corporateActions, setCorporateActions] = useState<CorporateActionEntry[]>(() => {
+    const stored = localStorage.getItem('sim_corporateActions');
+    return stored ? JSON.parse(stored) : [];
+  });
   
   // Rebalancing upload data
   const [rebalancingUploads, setRebalancingUploads] = useState<Array<{selectionDate: string, rebalancingDate: string, file: string}>>(() => {
@@ -307,6 +314,10 @@ const SimulationData = ({
   }, [rebalancingUploads]);
 
   useEffect(() => {
+    localStorage.setItem('sim_corporateActions', JSON.stringify(corporateActions));
+  }, [corporateActions]);
+
+  useEffect(() => {
     localStorage.setItem('sim_previousRebalancingIndexValue', previousRebalancingIndexValue);
   }, [previousRebalancingIndexValue]);
 
@@ -328,7 +339,7 @@ const SimulationData = ({
       'sim_specialDividendTaxHandling', 'sim_considerStockDividend', 'sim_considerStockSplit', 
       'sim_considerRightsIssue', 'sim_considerDividendFee', 'sim_drDividendTreatment', 
       'sim_globalDrTaxRate', 'sim_shareOrWeight', 'sim_stocks', 'sim_rebalancings', 
-      'sim_priceOverrides', 'sim_rebalancingUploads'
+      'sim_priceOverrides', 'sim_rebalancingUploads', 'sim_corporateActions'
     ];
     
     keysToRemove.forEach(key => localStorage.removeItem(key));
@@ -368,6 +379,7 @@ const SimulationData = ({
     ]);
     setPriceOverrides([]);
     setRebalancingUploads([]);
+    setCorporateActions([]);
     
     setPreviousRebalancingIndexValue('100.00');
     
@@ -404,6 +416,28 @@ const SimulationData = ({
 
   const removePriceOverride = (index: number) => {
     setPriceOverrides(priceOverrides.filter((_, i) => i !== index));
+  };
+
+  const addCorporateAction = () => {
+    setCorporateActions([...corporateActions, {
+      action: 'add',
+      eventId: '',
+      ric: '',
+      eventType: 'CASH_DIVIDEND',
+      executionDate: startDate,
+      value: '',
+      currency: 'USD',
+    }]);
+  };
+
+  const updateCorporateAction = (index: number, field: keyof CorporateActionEntry, value: string) => {
+    const updated = [...corporateActions];
+    (updated[index] as any)[field] = value;
+    setCorporateActions(updated);
+  };
+
+  const removeCorporateAction = (index: number) => {
+    setCorporateActions(corporateActions.filter((_, i) => i !== index));
   };
 
   const addRebalancingUpload = (selectionDate: string, rebalancingDate: string, file: string) => {
@@ -707,6 +741,14 @@ const SimulationData = ({
         addPriceOverride={addPriceOverride}
         updatePriceOverride={updatePriceOverride}
         removePriceOverride={removePriceOverride}
+      />
+
+      {/* Corporate Actions Panel */}
+      <CorporateActionsOverrides
+        corporateActions={corporateActions}
+        addCorporateAction={addCorporateAction}
+        updateCorporateAction={updateCorporateAction}
+        removeCorporateAction={removeCorporateAction}
       />
     </div>
   );
