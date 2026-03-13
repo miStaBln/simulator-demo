@@ -418,6 +418,28 @@ const SimulationData = ({
     setPriceOverrides(priceOverrides.filter((_, i) => i !== index));
   };
 
+  const addCorporateAction = () => {
+    setCorporateActions([...corporateActions, {
+      action: 'add',
+      eventId: '',
+      ric: '',
+      eventType: 'CASH_DIVIDEND',
+      executionDate: startDate,
+      value: '',
+      currency: 'USD',
+    }]);
+  };
+
+  const updateCorporateAction = (index: number, field: keyof CorporateActionEntry, value: string) => {
+    const updated = [...corporateActions];
+    (updated[index] as any)[field] = value;
+    setCorporateActions(updated);
+  };
+
+  const removeCorporateAction = (index: number) => {
+    setCorporateActions(corporateActions.filter((_, i) => i !== index));
+  };
+
   const addRebalancingUpload = (selectionDate: string, rebalancingDate: string, file: string) => {
     setRebalancingUploads([...rebalancingUploads, { selectionDate, rebalancingDate, file }]);
     toast({
