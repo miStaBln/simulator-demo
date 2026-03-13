@@ -742,6 +742,14 @@ const SimulationData = ({
         updatePriceOverride={updatePriceOverride}
         removePriceOverride={removePriceOverride}
       />
+
+      {/* Corporate Actions Panel */}
+      <CorporateActionsOverrides
+        corporateActions={corporateActions}
+        addCorporateAction={addCorporateAction}
+        updateCorporateAction={updateCorporateAction}
+        removeCorporateAction={removeCorporateAction}
+      />
     </div>
   );
 };
