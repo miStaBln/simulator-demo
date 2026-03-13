@@ -314,6 +314,10 @@ const SimulationData = ({
   }, [rebalancingUploads]);
 
   useEffect(() => {
+    localStorage.setItem('sim_corporateActions', JSON.stringify(corporateActions));
+  }, [corporateActions]);
+
+  useEffect(() => {
     localStorage.setItem('sim_previousRebalancingIndexValue', previousRebalancingIndexValue);
   }, [previousRebalancingIndexValue]);
 
