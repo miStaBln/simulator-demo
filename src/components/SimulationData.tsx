@@ -379,6 +379,7 @@ const SimulationData = ({
     ]);
     setPriceOverrides([]);
     setRebalancingUploads([]);
+    setCorporateActions([]);
     
     setPreviousRebalancingIndexValue('100.00');
     
