@@ -50,12 +50,8 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
-            <Route path="/" element={<Navigate to="/portal" replace />} />
-            <Route path="/portal" element={
-              <ProtectedRoute>
-                <Portal />
-              </ProtectedRoute>
-            } />
+            <Route path="/" element={<Navigate to="/manage" replace />} />
+            <Route path="/portal" element={<Navigate to="/manage" replace />} />
             <Route path="/simulator" element={
               <ProtectedRoute>
                 <SideLayout>
