@@ -35,6 +35,7 @@ import {
 } from '@/components/ui/popover';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import DatePicker from '@/components/DatePicker';
+import CorrectionReport from '@/components/rollback/CorrectionReport';
 import { cn } from '@/lib/utils';
 
 const STEPS = [
@@ -718,11 +719,16 @@ const Rollback = () => {
           </CardContent>
         </Card>
 
-        <div className="flex gap-3">
-          <Button variant="outline" size="sm"><Download className="h-4 w-4 mr-2" />Download Corrected Time Series</Button>
-          <Button variant="outline" size="sm"><Download className="h-4 w-4 mr-2" />Download Deviation Report</Button>
-          <Button variant="outline" size="sm"><Download className="h-4 w-4 mr-2" />Download Constituents Diff</Button>
-        </div>
+        <CorrectionReport
+          indexName={idxData?.name || ''}
+          indexTicker={idxData?.ticker || ''}
+          indexId={indexId}
+          correctionType={s.correctionType || ''}
+          startDate={s.startDate}
+          endDate={s.endDate}
+          description={s.description}
+          previewData={data}
+        />
       </div>
     );
   };
