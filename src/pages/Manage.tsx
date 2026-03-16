@@ -1839,24 +1839,45 @@ const Manage: React.FC = () => {
                   )}
 
                   {/* Actions */}
-                  <div className="border-t border-border pt-3 flex gap-2">
+                  <div className="border-t border-border pt-3 space-y-2">
                     <Button
-                      variant="outline"
+                      variant="default"
                       size="sm"
-                      className="flex-1"
+                      className="w-full"
                       onClick={() => {
                         const indexData = allIndices.find((i) => i.id === selectedEvent.indexId);
                         if (indexData)
                           navigate("/index-details", {
-                            state: { indexData: { ...indexData, name: selectedEvent.indexName }, defaultTab: "timeline" },
+                            state: {
+                              indexData: { ...indexData, name: selectedEvent.indexName },
+                              defaultTab: "report",
+                              reportDate: selectedEvent.date.toISOString(),
+                            },
                           });
                       }}
                     >
-                      View Index
+                      <FileBarChart className="h-4 w-4 mr-2" />
+                      View Report for {format(selectedEvent.date, "MMM d, yyyy")}
                     </Button>
-                    <Button variant="outline" size="sm" className="flex-1">
-                      View in Timeline
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => {
+                          const indexData = allIndices.find((i) => i.id === selectedEvent.indexId);
+                          if (indexData)
+                            navigate("/index-details", {
+                              state: { indexData: { ...indexData, name: selectedEvent.indexName }, defaultTab: "timeline" },
+                            });
+                        }}
+                      >
+                        View Index
+                      </Button>
+                      <Button variant="outline" size="sm" className="flex-1">
+                        View in Timeline
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
