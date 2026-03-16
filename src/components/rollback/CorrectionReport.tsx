@@ -187,6 +187,16 @@ const CorrectionReport: React.FC<CorrectionReportProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* Reason */}
+      {description && (
+        <Card className="bg-muted/30">
+          <CardContent className="py-3">
+            <div className="text-xs text-muted-foreground mb-1">Reason for Correction</div>
+            <p className="text-sm font-medium">{description}</p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Max deviation day highlight */}
       <Alert className="border-destructive/50 bg-destructive/5">
         <AlertTriangle className="h-4 w-4 text-destructive" />
