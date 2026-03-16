@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Package, BarChart2, Star, LayoutDashboard, Calendar, LayoutGrid, ClipboardList, RotateCcw } from "lucide-react";
+import { Package, BarChart2, Star, LayoutDashboard, Calendar, LayoutGrid, ClipboardList, RotateCcw, FileChartLine, ShoppingBasket, Briefcase, Database, X } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -13,21 +13,36 @@ import {
 } from "@/components/ui/sidebar";
 import { useStarred } from "@/contexts/StarredContext";
 import { UserMenu } from "@/components/UserMenu";
+import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 interface SideLayoutProps {
   children: React.ReactNode;
 }
 
+const portalApps = [
+  { id: "index-insights", name: "Index Insights", description: "View and manage index data, simulations and dashboards", icon: FileChartLine, path: "/manage", active: true },
+  { id: "basket-insights", name: "Basket Insights", description: "Analyze and manage basket instruments", icon: ShoppingBasket, path: "/basket-insights", active: false },
+  { id: "corporate-action-insights", name: "Corporate Action Insights", description: "Monitor and handle corporate actions", icon: Briefcase, path: "/corporate-action-insights", active: false },
+  { id: "index-platform", name: "Index Platform", description: "Comprehensive index management platform", icon: Database, path: "/index-platform", active: false },
+];
+
 const SideLayout = ({ children }: SideLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { starredIndices } = useStarred();
+  const [showAppPicker, setShowAppPicker] = useState(false);
 
   const menuItems = [
     {
       title: "Portal Home",
-      path: "/portal",
+      path: "__portal_picker__",
       icon: LayoutGrid,
+    },
+    {
+      title: "Operate",
+      path: "/manage",
+      icon: ClipboardList,
     },
     {
       title: "Index Inventory",
@@ -44,11 +59,6 @@ const SideLayout = ({ children }: SideLayoutProps) => {
       path: "/starred",
       icon: Star,
       badge: starredIndices.length > 0 ? starredIndices.length : undefined,
-    },
-    {
-      title: "Operate",
-      path: "/manage",
-      icon: ClipboardList,
     },
     {
       title: "Simulate / Backtest",
