@@ -36,6 +36,8 @@ import {
   FileCheck,
   Rocket,
   BarChart3,
+  Sun,
+  FileBarChart,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
