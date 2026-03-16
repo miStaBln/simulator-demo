@@ -737,6 +737,28 @@ const Rollback = () => {
     <div className="space-y-4">
       <h3 className="text-lg font-semibold">Rollback Preview</h3>
 
+      {/* Summary card (same as preparation step) */}
+      <Card className="bg-muted/30">
+        <CardContent className="pt-4 pb-4">
+          <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
+            <span className="text-muted-foreground">Correction Type:</span>
+            <span className="font-medium capitalize">{s.correctionType?.replace('_', ' ')}</span>
+            <span className="text-muted-foreground">{s.selectedIndices.length === 1 ? 'Index:' : 'Indices:'}</span>
+            <span className="font-medium">
+              {selectedIndicesData.map(i => `${i.name} (${i.ticker})`).join(', ')}
+            </span>
+            <span className="text-muted-foreground">Period:</span>
+            <span className="font-medium">{s.startDate} → {s.endDate}</span>
+            {s.description && (
+              <>
+                <span className="text-muted-foreground">Reason:</span>
+                <span className="font-medium">{s.description}</span>
+              </>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       {s.selectedIndices.length === 1 ? (
         <>
           <p className="text-sm text-muted-foreground">
