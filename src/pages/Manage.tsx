@@ -36,6 +36,8 @@ import {
   FileCheck,
   Rocket,
   BarChart3,
+  Sun,
+  FileBarChart,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -1199,6 +1201,109 @@ const OperateKPIs: React.FC = () => {
   );
 };
 
+// ─── Morning Briefing ──────────────────────────────────────────────
+
+const MorningBriefing: React.FC = () => {
+  const today = new Date();
+  const todayEvents = mockEvents.filter((e) => isSameDay(e.date, today));
+  const tomorrowDate = new Date(); tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+  const tomorrowEvents = mockEvents.filter((e) => isSameDay(e.date, tomorrowDate));
+  const thisWeekEnd = new Date(); thisWeekEnd.setDate(thisWeekEnd.getDate() + 7);
+  const weekEvents = mockEvents.filter((e) => e.date >= today && e.date <= thisWeekEnd);
+
+  const rebalancingsToday = todayEvents.filter((e) => e.type === "REBALANCING");
+  const corporateActionsToday = todayEvents.filter((e) => e.type === "CORPORATE_ACTION");
+  const selectionsToday = todayEvents.filter((e) => e.type === "SELECTION");
+
+  const publishingBucket = mockStageBuckets.publishing;
+  const publishingMismatch = publishingBucket.current !== publishingBucket.expected;
+  const totalAlerts = Object.values(mockStageBuckets).reduce((sum, b) => sum + b.alerts.length, 0);
+
+  const proformaExTomorrow = mockStageBuckets.proforma_ex_tomorrow;
+
+  return (
+    <Card className="border-primary/20 bg-gradient-to-r from-primary/5 via-background to-accent/10">
+      <CardContent className="py-5">
+        <div className="flex items-start gap-4">
+          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+            <Sun className="h-5 w-5 text-primary" />
+          </div>
+          <div className="flex-1 space-y-3">
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">Morning Briefing</h2>
+              <p className="text-xs text-muted-foreground">{format(today, "EEEE, MMMM d, yyyy")}</p>
+            </div>
+
+            {/* Summary line */}
+            <p className="text-sm text-foreground leading-relaxed">
+              {todayEvents.length === 0 ? (
+                "No events scheduled for today. "
+              ) : (
+                <>
+                  <strong>{todayEvents.length} event{todayEvents.length !== 1 ? "s" : ""}</strong> today
+                  {rebalancingsToday.length > 0 && (
+                    <> — <span className="text-primary font-medium">{rebalancingsToday.length} rebalancing{rebalancingsToday.length !== 1 ? "s" : ""}</span></>
+                  )}
+                  {corporateActionsToday.length > 0 && (
+                    <>, <span className="text-amber-600 font-medium">{corporateActionsToday.length} corporate action{corporateActionsToday.length !== 1 ? "s" : ""}</span></>
+                  )}
+                  {selectionsToday.length > 0 && (
+                    <>, <span className="text-teal-600 font-medium">{selectionsToday.length} selection{selectionsToday.length !== 1 ? "s" : ""}</span></>
+                  )}
+                  .{" "}
+                </>
+              )}
+              {tomorrowEvents.length > 0 && (
+                <><strong>{tomorrowEvents.length}</strong> event{tomorrowEvents.length !== 1 ? "s" : ""} tomorrow. </>
+              )}
+              <strong>{weekEvents.length}</strong> total this week.
+            </p>
+
+            {/* Key alerts */}
+            <div className="flex flex-wrap gap-3">
+              {totalAlerts > 0 && (
+                <div className="flex items-center gap-1.5 text-xs bg-destructive/10 text-destructive px-2.5 py-1.5 rounded-md">
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  <span>{totalAlerts} pipeline alert{totalAlerts !== 1 ? "s" : ""} require attention</span>
+                </div>
+              )}
+              {publishingMismatch && (
+                <div className="flex items-center gap-1.5 text-xs bg-amber-100 text-amber-700 px-2.5 py-1.5 rounded-md">
+                  <Eye className="h-3.5 w-3.5" />
+                  <span>{publishingBucket.expected - publishingBucket.current} indices pending publication</span>
+                </div>
+              )}
+              {proformaExTomorrow.current > 0 && (
+                <div className="flex items-center gap-1.5 text-xs bg-orange-100 text-orange-700 px-2.5 py-1.5 rounded-md">
+                  <Zap className="h-3.5 w-3.5" />
+                  <span>{proformaExTomorrow.current} proforma{proformaExTomorrow.current !== 1 ? "s" : ""} going ex tomorrow</span>
+                </div>
+              )}
+              {todayEvents.length === 0 && totalAlerts === 0 && (
+                <div className="flex items-center gap-1.5 text-xs bg-emerald-100 text-emerald-700 px-2.5 py-1.5 rounded-md">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  <span>All clear — no issues detected</span>
+                </div>
+              )}
+            </div>
+
+            {/* Today's events list */}
+            {todayEvents.length > 0 && (
+              <div className="flex flex-wrap gap-2 pt-1">
+                {todayEvents.map((ev) => (
+                  <Badge key={ev.id} variant="outline" className={cn("text-xs gap-1", eventTypeConfig[ev.type].bgClass, eventTypeConfig[ev.type].textClass)}>
+                    {ev.ticker} — {ev.description}
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
 // ─── Main Manage page ──────────────────────────────────────────────
 
 const Manage: React.FC = () => {
@@ -1263,6 +1368,9 @@ const Manage: React.FC = () => {
           </p>
         </div>
       </div>
+
+      {/* Morning Briefing */}
+      <MorningBriefing />
 
       <Tabs defaultValue="calendar" className="w-full">
         <TabsList className="mb-6">
@@ -1731,24 +1839,45 @@ const Manage: React.FC = () => {
                   )}
 
                   {/* Actions */}
-                  <div className="border-t border-border pt-3 flex gap-2">
+                  <div className="border-t border-border pt-3 space-y-2">
                     <Button
-                      variant="outline"
+                      variant="default"
                       size="sm"
-                      className="flex-1"
+                      className="w-full"
                       onClick={() => {
                         const indexData = allIndices.find((i) => i.id === selectedEvent.indexId);
                         if (indexData)
                           navigate("/index-details", {
-                            state: { indexData: { ...indexData, name: selectedEvent.indexName }, defaultTab: "timeline" },
+                            state: {
+                              indexData: { ...indexData, name: selectedEvent.indexName },
+                              defaultTab: "report",
+                              reportDate: selectedEvent.date.toISOString(),
+                            },
                           });
                       }}
                     >
-                      View Index
+                      <FileBarChart className="h-4 w-4 mr-2" />
+                      View Report for {format(selectedEvent.date, "MMM d, yyyy")}
                     </Button>
-                    <Button variant="outline" size="sm" className="flex-1">
-                      View in Timeline
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => {
+                          const indexData = allIndices.find((i) => i.id === selectedEvent.indexId);
+                          if (indexData)
+                            navigate("/index-details", {
+                              state: { indexData: { ...indexData, name: selectedEvent.indexName }, defaultTab: "timeline" },
+                            });
+                        }}
+                      >
+                        View Index
+                      </Button>
+                      <Button variant="outline" size="sm" className="flex-1">
+                        View in Timeline
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
