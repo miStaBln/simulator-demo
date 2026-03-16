@@ -719,11 +719,16 @@ const Rollback = () => {
           </CardContent>
         </Card>
 
-        <div className="flex gap-3">
-          <Button variant="outline" size="sm"><Download className="h-4 w-4 mr-2" />Download Corrected Time Series</Button>
-          <Button variant="outline" size="sm"><Download className="h-4 w-4 mr-2" />Download Deviation Report</Button>
-          <Button variant="outline" size="sm"><Download className="h-4 w-4 mr-2" />Download Constituents Diff</Button>
-        </div>
+        <CorrectionReport
+          indexName={idxData?.name || ''}
+          indexTicker={idxData?.ticker || ''}
+          indexId={indexId}
+          correctionType={s.correctionType || ''}
+          startDate={s.startDate}
+          endDate={s.endDate}
+          description={s.description}
+          previewData={data}
+        />
       </div>
     );
   };
