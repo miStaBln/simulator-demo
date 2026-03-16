@@ -33,7 +33,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+
 import DatePicker from '@/components/DatePicker';
 import CorrectionReport from '@/components/rollback/CorrectionReport';
 import { cn } from '@/lib/utils';
@@ -631,15 +631,6 @@ const Rollback = () => {
     const maxDev = Math.max(...data.map(d => d.deviation));
     const avgDev = data.reduce((s, d) => s + d.deviation, 0) / data.length;
 
-    const levelDomain: [number, number] = [
-      Math.min(...data.map(d => Math.min(d.actualLevel, d.correctedLevel))) * 0.998,
-      Math.max(...data.map(d => Math.max(d.actualLevel, d.correctedLevel))) * 1.002,
-    ];
-    const divisorDomain: [number, number] = [
-      Math.min(...data.map(d => Math.min(d.actualDivisor, d.correctedDivisor))) * 0.999,
-      Math.max(...data.map(d => Math.max(d.actualDivisor, d.correctedDivisor))) * 1.001,
-    ];
-
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -678,46 +669,6 @@ const Rollback = () => {
             </AlertDescription>
           </Alert>
         )}
-
-        <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-base">Index Level — Actual vs Corrected</CardTitle></CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={350}>
-              <LineChart data={data} margin={{ top: 10, right: 30, left: 20, bottom: 60 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" tick={{ fontSize: 11 }} angle={-45} textAnchor="end" height={70} />
-                <YAxis yAxisId="level" domain={levelDomain} tickFormatter={(v) => v.toFixed(1)} tick={{ fontSize: 11 }} />
-                <Tooltip formatter={(value: number, name: string) => {
-                  const label = name === 'actualLevel' ? 'Actual Level' : 'Corrected Level';
-                  return [value.toFixed(4), label];
-                }} />
-                <Legend formatter={(v) => v === 'actualLevel' ? 'Actual' : 'Corrected'} />
-                <Line yAxisId="level" type="monotone" dataKey="actualLevel" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
-                <Line yAxisId="level" type="monotone" dataKey="correctedLevel" stroke="hsl(var(--destructive))" strokeWidth={2} dot={false} strokeDasharray="5 5" />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-base">Divisor — Actual vs Corrected</CardTitle></CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <LineChart data={data} margin={{ top: 10, right: 30, left: 20, bottom: 60 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" tick={{ fontSize: 11 }} angle={-45} textAnchor="end" height={70} />
-                <YAxis domain={divisorDomain} tickFormatter={(v) => v.toLocaleString()} tick={{ fontSize: 11 }} />
-                <Tooltip formatter={(value: number, name: string) => {
-                  const label = name === 'actualDivisor' ? 'Actual Divisor' : 'Corrected Divisor';
-                  return [value.toLocaleString(), label];
-                }} />
-                <Legend formatter={(v) => v === 'actualDivisor' ? 'Actual' : 'Corrected'} />
-                <Line type="monotone" dataKey="actualDivisor" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="correctedDivisor" stroke="hsl(var(--destructive))" strokeWidth={2} dot={false} strokeDasharray="5 5" />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
 
         <CorrectionReport
           indexName={idxData?.name || ''}
