@@ -68,26 +68,47 @@ const Section = ({
   icon: Icon,
   title,
   description,
+  defaultOpen = true,
   children,
 }: {
   icon: React.ElementType;
   title: string;
   description?: string;
+  defaultOpen?: boolean;
   children: React.ReactNode;
-}) => (
-  <section className="rounded-lg border border-border bg-card p-4">
-    <header className="mb-3 flex items-start gap-2">
-      <Icon className="h-4 w-4 mt-0.5 text-primary" />
-      <div>
-        <h3 className="text-sm font-semibold text-foreground">{title}</h3>
-        {description && (
-          <p className="text-xs text-muted-foreground">{description}</p>
+}) => {
+  const [open, setOpen] = React.useState(defaultOpen);
+  return (
+    <section className="rounded-lg border border-border bg-card">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="flex items-center justify-between w-full text-left p-4"
+      >
+        <div className="flex items-start gap-2">
+          <Icon className="h-4 w-4 mt-0.5 text-primary" />
+          <div>
+            <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+            {description && (
+              <p className="text-xs text-muted-foreground">{description}</p>
+            )}
+          </div>
+        </div>
+        {open ? (
+          <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" />
+        ) : (
+          <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
         )}
-      </div>
-    </header>
-    <div className="space-y-3">{children}</div>
-  </section>
-);
+      </button>
+      {open && (
+        <div className="px-4 pb-4 space-y-3 border-t border-border pt-3">
+          {children}
+        </div>
+      )}
+    </section>
+  );
+};
+
 
 const Field = ({
   label,
