@@ -320,9 +320,12 @@ const SimulationParameters = ({
             onClick={() => setShowAdvancedParameters(!showAdvancedParameters)}
             className="flex items-center justify-between w-full text-left p-4"
           >
-            <div className="flex items-center gap-2">
-              <Sliders className="h-4 w-4 text-primary" />
-              <h3 className="text-sm font-semibold">Advanced Parameters</h3>
+            <div className="flex items-start gap-2">
+              <Sliders className="h-4 w-4 mt-0.5 text-primary" />
+              <div>
+                <h3 className="text-sm font-semibold">Advanced Parameters</h3>
+                <p className="text-xs text-muted-foreground">Additional settings for corporate event handling</p>
+              </div>
             </div>
             {showAdvancedParameters ? (
               <ChevronUp className="h-4 w-4 text-muted-foreground" />
