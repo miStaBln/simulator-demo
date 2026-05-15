@@ -290,18 +290,6 @@ const SimulationParameters = ({
         )}
       </Section>
 
-      {/* Reference */}
-      <Section icon={Link2} title="Reference" description="Optional benchmark to compare against.">
-        <Field label="Reference Index ID">
-          <Input
-            type="text"
-            value={referenceIndexId}
-            onChange={(e) => setReferenceIndexId(e.target.value)}
-            placeholder="e.g. SPX"
-            className="w-full h-9"
-          />
-        </Field>
-      </Section>
 
       {/* Advanced */}
       {!isBondIndex && (
