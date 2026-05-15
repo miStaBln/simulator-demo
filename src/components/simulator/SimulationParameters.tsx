@@ -208,7 +208,7 @@ const SimulationParameters = ({
       </Section>
 
       {/* Identity */}
-      <Section icon={Settings2} title="Index Identity" description="Core classification of the index.">
+      <Section icon={Settings2} title="Index Identity" description="Core classification of the index." defaultOpen={false}>
         <Field label="Index Family">
           <Select value={indexFamily} onValueChange={setIndexFamily}>
             <SelectTrigger className="w-full h-9">
