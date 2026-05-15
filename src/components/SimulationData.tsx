@@ -680,6 +680,10 @@ const SimulationData = ({
           setDrDividendTreatment={setDrDividendTreatment}
           globalDrTaxRate={globalDrTaxRate}
           setGlobalDrTaxRate={setGlobalDrTaxRate}
+          selectedIndex={selectedIndex}
+          setSelectedIndex={handleSelectedIndexChange}
+          mockIndices={mockIndices}
+          fetchIndexData={fetchIndexData}
         />
       </div>
       
