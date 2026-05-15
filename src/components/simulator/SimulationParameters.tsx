@@ -179,6 +179,7 @@ const SimulationParameters = ({
         icon={Library}
         title="Parent Index"
         description="Optionally start from an existing index. Composition is loaded for the simulation start date."
+        defaultOpen={false}
       >
         <Field label="Select Parent Index">
           <Select value={selectedIndex} onValueChange={setSelectedIndex}>
@@ -207,7 +208,7 @@ const SimulationParameters = ({
       </Section>
 
       {/* Identity */}
-      <Section icon={Settings2} title="Index Identity" description="Core classification of the index.">
+      <Section icon={Settings2} title="Index Identity" description="Core classification of the index." defaultOpen={false}>
         <Field label="Index Family">
           <Select value={indexFamily} onValueChange={setIndexFamily}>
             <SelectTrigger className="w-full h-9">
@@ -274,7 +275,7 @@ const SimulationParameters = ({
       </Section>
 
       {/* Calculation */}
-      <Section icon={Calculator} title="Calculation" description="Starting values used by the index engine.">
+      <Section icon={Calculator} title="Calculation" description="Starting values used by the index engine." defaultOpen={false}>
         {!isBondIndex && (
           <Field label="Divisor">
             <Input
