@@ -179,6 +179,7 @@ const SimulationParameters = ({
         icon={Library}
         title="Parent Index"
         description="Optionally start from an existing index. Composition is loaded for the simulation start date."
+        defaultOpen={false}
       >
         <Field label="Select Parent Index">
           <Select value={selectedIndex} onValueChange={setSelectedIndex}>
