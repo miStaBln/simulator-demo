@@ -699,27 +699,13 @@ const SimulationData = ({
       
       {/* Composition Panel */}
       <Composition
-        inputMethod={inputMethod}
-        setInputMethod={setInputMethod}
         stocks={stocks}
         shareOrWeight={shareOrWeight}
         setShareOrWeight={setShareOrWeight}
         updateStock={updateStock}
         removeStock={removeStock}
         addRow={addRow}
-        selectedIndex={selectedIndex}
-        setSelectedIndex={handleSelectedIndexChange}
-        indexDate={indexDate}
-        setIndexDate={setIndexDate}
-        priceType={priceType}
-        setPriceType={setPriceType}
-        fetchIndexData={fetchIndexData}
         indexFamily={indexFamily}
-        mockIndices={mockIndices}
-        cashes={[]}
-        addCash={() => {}}
-        updateCash={() => {}}
-        removeCash={() => {}}
       />
       
       {/* Combined Rebalancing Section */}
