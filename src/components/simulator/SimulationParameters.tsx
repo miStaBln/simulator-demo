@@ -275,7 +275,7 @@ const SimulationParameters = ({
       </Section>
 
       {/* Calculation */}
-      <Section icon={Calculator} title="Calculation" description="Starting values used by the index engine.">
+      <Section icon={Calculator} title="Calculation" description="Starting values used by the index engine." defaultOpen={false}>
         {!isBondIndex && (
           <Field label="Divisor">
             <Input
